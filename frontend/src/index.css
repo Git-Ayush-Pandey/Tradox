@@ -1,0 +1,94 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.container {
+  max-width: 1150px;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+}
+
+.nav-link {
+  margin-left: 40px;
+}
+
+#supportHero {
+  background-color: rgb(56, 126, 209);
+  color: white;
+}
+
+#supportHero a {
+  color: white;
+}
+
+#supportWrapper {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 150px;
+}
+
+#supportHero input {
+  padding: 20px 50px;
+  width: 100%;
+  font-size: 20px;
+  border-radius: 10px;
+  border: none;
+}
+#supportHero .row {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 150px;
+  padding: 0 30px;
+  height: 320px;
+}
+#supportHero a {
+  padding: 0 10px;
+}
+
+.footer div div div {
+  font-size: large;
+  font-weight: 500;
+}
+.footer div div div div a {
+  text-decoration: none;
+  color: #606060;
+  font-weight: 400;
+  font-size: 15px;
+}
+.footer div div div a:hover {
+  color: #004c99;
+}
+.footer div div div p {
+  line-height: 35px;
+}
+
+.blue-link {
+  text-decoration: none;
+  color: #004c99;
+}
+.blue-link:hover {
+  color: #404040;
+}
+footer i {
+  font-size: 40px;
+  margin-right: 20px;
+  color: #606060;
+}
+footer i:hover {
+  font-size: medium;
+  color: burlywood;
+}
+.product-universe img {
+  width: 50%;
+  margin-bottom: 20px;
+}
+.product-universe .col-4 p {
+  font-size: 13px;
+}
