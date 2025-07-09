@@ -1,23 +1,28 @@
-import  { useState, useContext } from "react";
-
+import { useState, useContext, useEffect } from "react";
 import { Link } from "react-router-dom";
-
 import axios from "axios";
-
-import GeneralContext from "./GeneralContext";
-
-import "./BuyActionWindow.css";
+import GeneralContext from "../contexts/GeneralContext";
+import "./Window.css";
 
 const BuyActionWindow = ({ uid }) => {
   const [stockQuantity, setStockQuantity] = useState(1);
   const [stockPrice, setStockPrice] = useState(0.0);
+  const [marginRequired, setMarginRequired] = useState(0.0);
 
   const { closeBuyWindow } = useContext(GeneralContext);
+
+  // Calculate margin dynamically
+  useEffect(() => {
+    const total = stockQuantity * stockPrice;
+    const margin = total; // For full upfront payment; use * 0.2 for 20% margin trades
+    setMarginRequired(margin);
+  }, [stockQuantity, stockPrice]);
+
   const handleBuyClick = () => {
     axios.post("http://localhost:3002/newOrder", {
       name: uid,
-      qty: stockQuantity,
-      price: stockPrice,
+      qty: Number(stockQuantity),
+      price: Number(stockPrice),
       mode: "BUY",
     });
 
@@ -38,7 +43,8 @@ const BuyActionWindow = ({ uid }) => {
               type="number"
               name="qty"
               id="qty"
-              onChange={(e) => setStockQuantity(e.target.value)}
+              min="1"
+              onChange={(e) => setStockQuantity(Number(e.target.value))}
               value={stockQuantity}
             />
           </fieldset>
@@ -49,7 +55,7 @@ const BuyActionWindow = ({ uid }) => {
               name="price"
               id="price"
               step="0.05"
-              onChange={(e) => setStockPrice(e.target.value)}
+              onChange={(e) => setStockPrice(Number(e.target.value))}
               value={stockPrice}
             />
           </fieldset>
@@ -57,7 +63,7 @@ const BuyActionWindow = ({ uid }) => {
       </div>
 
       <div className="buttons">
-        <span>Margin required ₹140.65</span>
+        <span>Margin required ₹{marginRequired.toFixed(2)}</span>
         <div>
           <Link className="btn btn-blue" onClick={handleBuyClick}>
             Buy

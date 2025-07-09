@@ -1,12 +1,12 @@
 import { useState, useContext, useEffect } from "react";
 import { Tooltip, Grow } from "@mui/material";
-import GeneralContext from "./GeneralContext";
+import GeneralContext from "../contexts/GeneralContext";
 import axios from "axios";
 import {
   BarChartOutlined,
   KeyboardArrowDown,
   KeyboardArrowUp,
-  MoreHoriz,
+  Delete,
 } from "@mui/icons-material";
 import { DoughnoutChart } from "./DoughnoutChart";
 
@@ -46,6 +46,7 @@ const WatchList = () => {
       },
     ],
   };
+
   return (
     <div className="watchlist-container">
       <div className="search-container">
@@ -56,13 +57,17 @@ const WatchList = () => {
           placeholder="Search eg:infy, bse, nifty fut weekly, gold mcx"
           className="search"
         />
-        <span className="counts"> {data.length} / 50</span>
+        <span className="counts"> {watchlist.length} / 50</span>
       </div>
 
       <ul className="list">
-        {watchlist.map((stock, index) => {
-          return <WatchListItem stock={stock} key={index} />;
-        })}
+        {watchlist.map((stock) => (
+          <WatchListItem
+            stock={stock}
+            key={stock._id}
+            setWatchlist={setWatchlist}
+          />
+        ))}
       </ul>
       <DoughnoutChart data={data} />
     </div>
@@ -71,19 +76,14 @@ const WatchList = () => {
 
 export default WatchList;
 
-const WatchListItem = ({ stock }) => {
+const WatchListItem = ({ stock, setWatchlist }) => {
   const [showWatchlistActions, setShowWatchlistActions] = useState(false);
 
-  const handleMouseEnter = (e) => {
-    setShowWatchlistActions(true);
-  };
-
-  const handleMouseLeave = (e) => {
-    setShowWatchlistActions(false);
-  };
-
   return (
-    <li onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+    <li
+      onMouseEnter={() => setShowWatchlistActions(true)}
+      onMouseLeave={() => setShowWatchlistActions(false)}
+    >
       <div className="item">
         <p className={stock.isDown ? "down" : "up"}>{stock.name}</p>
         <div className="itemInfo">
@@ -91,25 +91,42 @@ const WatchListItem = ({ stock }) => {
           {stock.isDown ? (
             <KeyboardArrowDown className="down" />
           ) : (
-            <KeyboardArrowUp className="down" />
+            <KeyboardArrowUp className="up" />
           )}
           <span className="price">{stock.price}</span>
         </div>
       </div>
-      {showWatchlistActions && <WatchListActions uid={stock.name} />}
+      {showWatchlistActions && (
+        <WatchListActions uid={stock._id} setWatchlist={setWatchlist} />
+      )}
     </li>
   );
 };
 
-const WatchListActions = ({ uid }) => {
+const WatchListActions = ({ uid, setWatchlist }) => {
   const generalContext = useContext(GeneralContext);
 
   const handleBuyClick = () => {
     generalContext.openBuyWindow(uid);
   };
+
+  const handleSellClick = () => {
+    generalContext.openSellWindow(uid);
+  };
+
+  const handleDeletaWatchlist = async () => {
+    try {
+      await axios.delete(`http://localhost:3002/delWatchlist/${uid}`);
+      setWatchlist((prev) => prev.filter((item) => item._id !== uid));
+    } catch (error) {
+      console.error("Failed to delete watchlist item", error);
+      alert("Failed to delete item from watchlist");
+    }
+  };
+
   return (
     <span className="actions">
-      <span>
+      <span style={{ alignItems: "center" }}>
         <Tooltip
           title="Buy (B)"
           placement="top"
@@ -124,22 +141,18 @@ const WatchListActions = ({ uid }) => {
           placement="top"
           arrow
           TransitionComponent={Grow}
+          onClick={handleSellClick}
         >
           <button className="sell">Sell</button>
         </Tooltip>
-        <Tooltip
-          title="Analytics (A)"
-          placement="top"
-          arrow
-          TransitionComponent={Grow}
-        >
+        <Tooltip title="Analytics (A)" placement="top" arrow TransitionComponent={Grow}>
           <button className="action">
             <BarChartOutlined className="icon" />
           </button>
         </Tooltip>
-        <Tooltip title="More" placement="top" arrow TransitionComponent={Grow}>
-          <button className="action">
-            <MoreHoriz className="icon" />
+        <Tooltip title="Delete" placement="top" arrow TransitionComponent={Grow}>
+          <button className="action" onClick={handleDeletaWatchlist}>
+            <Delete className="icon" />
           </button>
         </Tooltip>
       </span>

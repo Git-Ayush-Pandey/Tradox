@@ -6,26 +6,13 @@ const Orders = () => {
 
   useEffect(() => {
     axios.get("http://localhost:3002/orders").then((res) => {
-      console.log(res.data);
       setAllOrders(res.data);
     });
   }, []);
 
-  const labels = allOrders.map((subArray) => subArray["name"]);
-
-  const data = {
-    labels,
-    datasets: [
-      {
-        label: "Stock Price",
-        data: allOrders.map((stock) => stock.price),
-        backgroundColor: "rgba(255, 99, 132, 0.5)",
-      },
-    ],
-  };
   return (
     <>
-      <h3 className="title">Orders ({data.length})</h3>
+      <h3 className="title">Orders ({allOrders.length})</h3>
 
       <div className="order-table">
         <table>
@@ -36,7 +23,7 @@ const Orders = () => {
             <th>mode</th>
           </tr>
 
-          {data.map((stock, index) => {
+          {allOrders.map((stock, index) => {
             return (
               <tr key={index}>
                 <td>{stock.name}</td>

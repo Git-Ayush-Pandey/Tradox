@@ -11,6 +11,7 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 
 const { Order } = require("./model/OrdersModel");
+const { Watchlist } = require("./model/WatchlistModel");
 
 const orderRoute = require("./routes/OrdersRoute");
 const authRoute = require("./routes/AuthRoutes");
@@ -70,6 +71,29 @@ app.post("/newOrder", async (req, res) => {
   newOrder.save();
   res.send("Order Saved");
 });
+
+app.delete("/delWatchlist/:id", async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).send("Invalid watchlist item ID");
+  }
+
+  try {
+    const result = await Watchlist.findByIdAndDelete(id);
+
+    if (!result) {
+      return res.status(404).send("Watchlist item not found");
+    }
+
+    res.status(200).send("Deleted successfully");
+  } catch (error) {
+    console.error("Error during deletion:", error);
+    res.status(500).send("Error deleting watchlist item");
+  }
+});
+
+
 
 async function main() {
   if (!url) {

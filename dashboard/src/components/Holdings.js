@@ -7,13 +7,11 @@ const Holdings = () => {
 
   useEffect(() => {
     axios.get("http://localhost:3002/holdings").then((res) => {
-      console.log(res.data);
       setAllHoldings(res.data);
     });
   }, []);
 
   const labels = allHoldings.map((subArray) => subArray["name"]);
-
   const data = {
     labels,
     datasets: [
@@ -27,7 +25,7 @@ const Holdings = () => {
 
   return (
     <>
-      <h3 className="title">Holdings ({data.length})</h3>
+      <h3 className="title">Holdings ({allHoldings.length})</h3>
 
       <div className="order-table">
         <table>
@@ -84,7 +82,7 @@ const Holdings = () => {
           <p>P&L</p>
         </div>
       </div>
-      {data.length > 0 && <VerticalGraph data={data} />}
+      {allHoldings.length > 0 && <VerticalGraph data={data} />}
     </>
   );
 };
