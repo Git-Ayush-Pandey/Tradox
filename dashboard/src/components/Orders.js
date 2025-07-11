@@ -19,7 +19,7 @@ const Orders = () => {
           // Auto-delete all orders after 3:30 PM
           await Promise.all(
             res.data.map((order) =>
-              axios.delete(`http://localhost:3002/orders/${order._id}`)
+              axios.delete(`http://localhost:3002/orders/delete/${order._id}`)
             )
           );
           setAllOrders([]); // Clear local state
@@ -37,7 +37,7 @@ const Orders = () => {
   // Manual cancel
   const handleCancel = async (id) => {
     try {
-      await axios.delete(`http://localhost:3002/orders/${id}`);
+      await axios.delete(`http://localhost:3002/orders/delete/${id}`);
       setAllOrders((prev) => prev.filter((order) => order._id !== id));
     } catch (error) {
       console.error("Error cancelling order:", error);

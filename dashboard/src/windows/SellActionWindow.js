@@ -38,7 +38,7 @@ const SellActionWindow = ({ uid }) => {
 
  const handleSellClick = () => {
 
-  axios.post("http://localhost:3002/newOrder", {
+  axios.post("http://localhost:3002/orders/new", {
     name: stockName,
     qty: Number(stockQuantity),
     price: Number(stockPrice),

@@ -116,7 +116,7 @@ const WatchListActions = ({ stock, setWatchlist }) => {
 
   const handleDeletaWatchlist = async () => {
     try {
-      await axios.delete(`http://localhost:3002/delWatchlist/${stock._id}`);
+      await axios.delete(`http://localhost:3002/watchlist/delete/${stock._id}`);
       setWatchlist((prev) => prev.filter((item) => item._id !== stock._id));
     } catch (error) {
       console.error("Failed to delete watchlist item", error);
