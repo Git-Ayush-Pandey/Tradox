@@ -3,36 +3,87 @@ import axios from "axios";
 
 const Orders = () => {
   const [allOrders, setAllOrders] = useState([]);
+  const [hoveredRow, setHoveredRow] = useState(null);
 
+  // Fetch and auto-delete on component mount
   useEffect(() => {
-    axios.get("http://localhost:3002/orders").then((res) => {
-      setAllOrders(res.data);
-    });
+    const fetchAndMaybeDelete = async () => {
+      try {
+        const res = await axios.get("http://localhost:3002/orders");
+
+        const now = new Date();
+        const isAfter3_30PM =
+          now.getHours() > 15 || (now.getHours() === 15 && now.getMinutes() >= 30);
+
+        if (isAfter3_30PM) {
+          // Auto-delete all orders after 3:30 PM
+          await Promise.all(
+            res.data.map((order) =>
+              axios.delete(`http://localhost:3002/orders/${order._id}`)
+            )
+          );
+          setAllOrders([]); // Clear local state
+        } else {
+          setAllOrders(res.data); // Just load
+        }
+      } catch (error) {
+        console.error("Error loading or deleting orders:", error);
+      }
+    };
+
+    fetchAndMaybeDelete();
   }, []);
+
+  // Manual cancel
+  const handleCancel = async (id) => {
+    try {
+      await axios.delete(`http://localhost:3002/orders/${id}`);
+      setAllOrders((prev) => prev.filter((order) => order._id !== id));
+    } catch (error) {
+      console.error("Error cancelling order:", error);
+      alert("Failed to cancel order");
+    }
+  };
 
   return (
     <>
       <h3 className="title">Orders ({allOrders.length})</h3>
-
-      <div className="order-table">
-        <table>
-          <tr>
-            <th>name</th>
-            <th>Qty.</th>
-            <th>price</th>
-            <th>mode</th>
-          </tr>
-
-          {allOrders.map((stock, index) => {
-            return (
-              <tr key={index}>
-                <td>{stock.name}</td>
+      <div className="order-table table-responsive">
+        <table className="table table-striped">
+          <thead className="thead-dark">
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Qty.</th>
+              <th scope="col">Price</th>
+              <th scope="col">Mode</th>
+            </tr>
+          </thead>
+          <tbody>
+            {allOrders.map((stock) => (
+              <tr
+                key={stock._id}
+                onMouseEnter={() => setHoveredRow(stock._id)}
+                onMouseLeave={() => setHoveredRow(null)}
+              >
+                <td>
+                  <div className="d-flex align-items-center">
+                    <span>{stock.name}</span>
+                    {hoveredRow === stock._id && (
+                      <button
+                        className="btn btn-danger btn-sm ms-3"
+                        onClick={() => handleCancel(stock._id)}
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                </td>
                 <td>{stock.qty}</td>
                 <td>{stock.price}</td>
                 <td>{stock.mode}</td>
               </tr>
-            );
-          })}
+            ))}
+          </tbody>
         </table>
       </div>
     </>

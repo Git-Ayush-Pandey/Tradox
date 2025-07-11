@@ -1,5 +1,4 @@
 import { useState, useContext, useEffect } from "react";
-import { Link } from "react-router-dom";
 import axios from "axios";
 import GeneralContext from "../contexts/GeneralContext";
 import "./Window.css";
@@ -10,17 +9,16 @@ const BuyActionWindow = ({ uid }) => {
   const [marginRequired, setMarginRequired] = useState(0.0);
 
   const { closeBuyWindow } = useContext(GeneralContext);
-
-  // Calculate margin dynamically
   useEffect(() => {
     const total = stockQuantity * stockPrice;
-    const margin = total; // For full upfront payment; use * 0.2 for 20% margin trades
+    const margin = total;
     setMarginRequired(margin);
   }, [stockQuantity, stockPrice]);
 
   const handleBuyClick = () => {
     axios.post("http://localhost:3002/newOrder", {
-      name: uid,
+      name: uid.name,
+      id: uid.id,
       qty: Number(stockQuantity),
       price: Number(stockPrice),
       mode: "BUY",
@@ -34,43 +32,63 @@ const BuyActionWindow = ({ uid }) => {
   };
 
   return (
-    <div className="container" id="buy-window" draggable="true">
-      <div className="regular-order">
-        <div className="inputs">
-          <fieldset>
-            <legend>Qty.</legend>
-            <input
-              type="number"
-              name="qty"
-              id="qty"
-              min="1"
-              onChange={(e) => setStockQuantity(Number(e.target.value))}
-              value={stockQuantity}
-            />
-          </fieldset>
-          <fieldset>
-            <legend>Price</legend>
-            <input
-              type="number"
-              name="price"
-              id="price"
-              step="0.05"
-              onChange={(e) => setStockPrice(Number(e.target.value))}
-              value={stockPrice}
-            />
-          </fieldset>
-        </div>
-      </div>
+    <div className="container mb-5" style={{ position: "absolute", bottom: 0, zIndex: 1000 }}>
+      <div className="row justify-content-center">
+        <div className="col-md-8 col-lg-6">
+          <form className="border p-4 rounded shadow-sm bg-light">
+        <h2 className="fw-semibold" style={{ color: "#404040" }}>Place Buy Order</h2>
 
-      <div className="buttons">
-        <span>Margin required ₹{marginRequired.toFixed(2)}</span>
-        <div>
-          <Link className="btn btn-blue" onClick={handleBuyClick}>
-            Buy
-          </Link>
-          <Link to="" className="btn btn-grey" onClick={handleCancelClick}>
-            Cancel
-          </Link>
+            <div className="form-group mb-3">
+              <label htmlFor="qty" className="fw-semibold">Quantity</label>
+              <input
+                type="number"
+                className="form-control"
+                id="qty"
+                min="1"
+                name="qty"
+                value={stockQuantity}
+                onChange={(e) => setStockQuantity(Number(e.target.value))}
+                required
+              />
+            </div>
+
+            <div className="form-group mb-3">
+              <label htmlFor="price" className="fw-semibold">Price (₹)</label>
+              <input
+                type="number"
+                className="form-control"
+                id="price"
+                name="price"
+                step="0.05"
+                value={stockPrice}
+                onChange={(e) => setStockPrice(Number(e.target.value))}
+                required
+              />
+            </div>
+
+            <div className="form-group mb-3">
+              <span className="text-muted">
+                Margin required: <strong>₹{marginRequired.toFixed(2)}</strong>
+              </span>
+            </div>
+
+            <div className="d-flex gap-2">
+              <button
+                type="button"
+                className="btn btn-primary w-50"
+                onClick={handleBuyClick}
+              >
+                Buy
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary w-50"
+                onClick={handleCancelClick}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>

@@ -7,12 +7,12 @@ const GeneralContext = React.createContext({
   openBuyWindow: (uid) => {},
   closeBuyWindow: () => {},
   openSellWindow: (uid) => {},
-  closeSelllwindow: () => {},
+  closeSellWindow: () => {},
 });
 
 export const GeneralContextProvider = (props) => {
   const [isBuyWindowOpen, setIsBuyWindowOpen] = useState(false);
-  const [selectedStockUID, setSelectedStockUID] = useState("");
+  const [selectedStockUID, setSelectedStockUID] = useState(null);
   const [isSellWindowOpen, setIsSellWindowOpen] = useState(false);
 
   const handleOpenBuyWindow = (uid) => {
@@ -25,6 +25,7 @@ export const GeneralContextProvider = (props) => {
     setSelectedStockUID("");
   };
   const handleOpenSellWindow = (uid) => {
+    console.log("Opening SellActionWindow for:", uid); 
     setIsSellWindowOpen(true);
     setSelectedStockUID(uid);
   };
@@ -40,7 +41,7 @@ export const GeneralContextProvider = (props) => {
         openBuyWindow: handleOpenBuyWindow,
         closeBuyWindow: handleCloseBuyWindow,
         openSellWindow: handleOpenSellWindow,
-        closeSelllwindow: handleCloseSellWindow,
+        closeSellWindow: handleCloseSellWindow,
       }}
     >
       {props.children}

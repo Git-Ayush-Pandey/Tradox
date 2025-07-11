@@ -92,7 +92,26 @@ app.delete("/delWatchlist/:id", async (req, res) => {
     res.status(500).send("Error deleting watchlist item");
   }
 });
+app.delete("/orders/:id", async (req, res) => {
+  const { id } = req.params;
 
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).send("Invalid order ID");
+  }
+
+  try {
+    const result = await Order.findByIdAndDelete(id);
+
+    if (!result) {
+      return res.status(404).send("Order not found");
+    }
+
+    res.status(200).send("Order deleted successfully");
+  } catch (error) {
+    console.error("Error deleting order:", error);
+    res.status(500).send("Internal Server Error");
+  }
+});
 
 
 async function main() {

@@ -1,5 +1,4 @@
 import { useState, useContext, useEffect } from "react";
-import { Link } from "react-router-dom";
 import axios from "axios";
 import GeneralContext from "../contexts/GeneralContext";
 import "./Window.css";
@@ -12,7 +11,9 @@ const SellActionWindow = ({ uid }) => {
   const [holdings, setHoldings] = useState([]);
   const [availableQty, setAvailableQty] = useState(0);
 
-  // Fetch positions and holdings
+  // Destructure stock name and id from uid
+  const stockName = uid.name;
+
   useEffect(() => {
     axios.get("http://localhost:3002/positions").then((res) => {
       setPositions(res.data);
@@ -23,89 +24,99 @@ const SellActionWindow = ({ uid }) => {
     });
   }, []);
 
-  // Update available quantity when data or uid changes
   useEffect(() => {
     const posQty = positions
-      .filter((item) => item.name === uid)
+      .filter((item) => item.name === stockName)
       .reduce((acc, item) => acc + item.qty, 0);
 
     const holdQty = holdings
-      .filter((item) => item.name === uid)
+      .filter((item) => item.name === stockName)
       .reduce((acc, item) => acc + item.qty, 0);
 
     setAvailableQty(posQty + holdQty);
-  }, [positions, holdings, uid]);
+  }, [positions, holdings, stockName]);
 
-  const handleSellClick = () => {
-    if (availableQty === 0) {
-      alert("You don't own this stock.");
-      return;
-    }
+ const handleSellClick = () => {
 
-    if (stockQuantity > availableQty) {
-      alert(`You can only sell up to ${availableQty} shares.`);
-      return;
-    }
+  axios.post("http://localhost:3002/newOrder", {
+    name: stockName,
+    qty: Number(stockQuantity),
+    price: Number(stockPrice),
+    mode: "SELL",
+  }).then(() => {
+    console.log("Order submitted successfully");
+    closeSellWindow(); // make sure this is now correctly referenced
+  }).catch((err) => {
+    console.error("Error submitting order:", err);
+  });
+};
 
-    axios.post("http://localhost:3002/newOrder", {
-      name: uid,
-      qty: Number(stockQuantity),
-      price: Number(stockPrice),
-      mode: "SELL",
-    });
-
-    closeSellWindow();
-  };
 
   const handleCancelClick = () => {
     closeSellWindow();
   };
 
   return (
-    <div className="container" id="buy-window" draggable="true">
-      <div className="regular-order">
-        <div className="inputs">
-          <fieldset>
-            <legend>Qty. (Available: {availableQty})</legend>
-            <input
-              type="number"
-              name="qty"
-              id="qty"
-              min="1"
-              max={availableQty}
-              onChange={(e) => setStockQuantity(Number(e.target.value))}
-              value={stockQuantity}
-              disabled={availableQty === 0}
-            />
-          </fieldset>
-          <fieldset>
-            <legend>Price</legend>
-            <input
-              type="number"
-              name="price"
-              id="price"
-              step="0.05"
-              onChange={(e) => setStockPrice(Number(e.target.value))}
-              value={stockPrice}
-            />
-          </fieldset>
-        </div>
-      </div>
+<div className="container mb-5 sell-window-container" id="sell-window" draggable="true">
+  <div className="row justify-content-center">
+    <div className="col-md-8 col-lg-6">
+      <form className="border p-4 rounded shadow-sm bg-light">
+        <h2 className="fw-semibold text-dark">Place Sell Order</h2>
 
-      <div className="buttons" >
-        <div>
-          <Link
-            className={`btn btn-blue ${availableQty === 0 ? "disabled" : ""}`}
+        <div className="form-group mb-3">
+          <label htmlFor="qty" className="fw-semibold">
+            Quantity <span className="text-muted">(Available: {availableQty})</span>
+          </label>
+          <input
+            type="number"
+            className="form-control"
+            id="qty"
+            name="qty"
+            min="1"
+            max={availableQty}
+            value={stockQuantity}
+            onChange={(e) => setStockQuantity(Number(e.target.value))}
+            disabled={availableQty === 0}
+            required
+          />
+        </div>
+
+        <div className="form-group mb-3">
+          <label htmlFor="price" className="fw-semibold">Price (₹)</label>
+          <input
+            type="number"
+            className="form-control"
+            id="price"
+            name="price"
+            step="0.05"
+            value={stockPrice}
+            onChange={(e) => setStockPrice(Number(e.target.value))}
+            required
+          />
+        </div>
+
+        <div className="d-flex gap-2">
+          <button
+            type="button"
+            className="btn btn-danger w-50"
             onClick={handleSellClick}
+            disabled={availableQty === 0}
           >
             Sell
-          </Link>
-          <Link to="" className="btn btn-grey" onClick={handleCancelClick}>
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary w-50"
+            onClick={handleCancelClick}
+          >
             Cancel
-          </Link>
+          </button>
         </div>
-      </div>
+      </form>
     </div>
+  </div>
+</div>
+
   );
 };
 

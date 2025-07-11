@@ -97,27 +97,27 @@ const WatchListItem = ({ stock, setWatchlist }) => {
         </div>
       </div>
       {showWatchlistActions && (
-        <WatchListActions uid={stock._id} setWatchlist={setWatchlist} />
+        <WatchListActions stock={stock} setWatchlist={setWatchlist} />
       )}
     </li>
   );
 };
 
-const WatchListActions = ({ uid, setWatchlist }) => {
+const WatchListActions = ({ stock, setWatchlist }) => {
   const generalContext = useContext(GeneralContext);
 
   const handleBuyClick = () => {
-    generalContext.openBuyWindow(uid);
+    generalContext.openBuyWindow({ id: stock._id, name: stock.name });
   };
 
   const handleSellClick = () => {
-    generalContext.openSellWindow(uid);
+    generalContext.openSellWindow({ id: stock._id, name: stock.name });
   };
 
   const handleDeletaWatchlist = async () => {
     try {
-      await axios.delete(`http://localhost:3002/delWatchlist/${uid}`);
-      setWatchlist((prev) => prev.filter((item) => item._id !== uid));
+      await axios.delete(`http://localhost:3002/delWatchlist/${stock._id}`);
+      setWatchlist((prev) => prev.filter((item) => item._id !== stock._id));
     } catch (error) {
       console.error("Failed to delete watchlist item", error);
       alert("Failed to delete item from watchlist");
