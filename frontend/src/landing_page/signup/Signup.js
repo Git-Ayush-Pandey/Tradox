@@ -4,12 +4,12 @@ import { toast } from "react-toastify";
 import axios from "axios";
 function Signup() {
   const [inputValue, setInputValue] = useState({
-    username: "",
+    name: "",
     email: "",
     phone: "",
     password: "",
   });
-  const { username, email, phone, password } = inputValue;
+  const { name, email, phone, password } = inputValue;
   const handleOnChange = (e) => {
     const { name, value } = e.target;
     setInputValue({
@@ -50,7 +50,7 @@ function Signup() {
     }
     setInputValue({
       ...inputValue,
-      username: "",
+      name: "",
       email: "",
       phone: "",
       password: "",
@@ -81,7 +81,7 @@ function Signup() {
               <div className="row">
                 <div class="col-sm-3 my-1" style={{ width: "50%" }}>
                   <label class="sr-only" for="inlineFormInputGroupUsername">
-                    Username
+                    name
                   </label>
                   <div class="input-group">
                     <div class="input-group-prepend">
@@ -91,10 +91,10 @@ function Signup() {
                       type="text"
                       class="form-control"
                       id="inlineFormInputGroupUsername"
-                      placeholder="Username"
-                      name="username"
+                      placeholder="name"
+                      name="name"
                       onChange={handleOnChange}
-                      value={username}
+                      value={name}
                       required
                     />
                   </div>

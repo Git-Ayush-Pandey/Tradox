@@ -5,11 +5,13 @@ const app = express();
 const mongoose = require("mongoose");
 const PORT = process.env.PORT || 3002;
 const url = process.env.MONGO_URL;
-
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const passport = require("passport");
+const localStr = require("passport-local").Strategy;
 
+const User = require("./model/UserModel");
 const orderRoute = require("./routes/OrdersRoute");
 const authRoute = require("./routes/AuthRoutes");
 const positionsRoute = require("./routes/PositionsRoute");
@@ -52,6 +54,11 @@ app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(express.json());
 
+app.use(passport.initialize());
+passport.use(new localStr({ usernameField: "email" }, User.authenticate()));
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
 app.use("/", authRoute);
 app.use("/positions", positionsRoute);
 app.use("/holdings", holdingsRoute);
@@ -71,7 +78,6 @@ async function main() {
     process.exit(1);
   }
 }
-
 main();
 
 app.listen(PORT, () => {

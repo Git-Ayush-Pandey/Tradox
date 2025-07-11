@@ -9,9 +9,16 @@ const Holdings = () => {
   const generalContext = useContext(GeneralContext);
 
   useEffect(() => {
-    axios.get("http://localhost:3002/holdings").then((res) => {
-      setAllHoldings(res.data);
-    });
+    axios
+      .get("http://localhost:3002/holdings", {
+        withCredentials: true,
+      })
+      .then((res)=>{
+        setAllHoldings(res.data);
+      })
+      .catch((err)=>{
+        console.log("Error fetching holdings:", err)
+      })
   }, []);
 
   const labels = allHoldings.map((stock) => stock.name);
@@ -65,7 +72,7 @@ const Holdings = () => {
               const dayClass = stock.isLoss ? "loss" : "profit";
 
               const handleSellClick = () => {
-                console.log("Clicked sell on:", stock.name); 
+                console.log("Clicked sell on:", stock.name);
                 generalContext.openSellWindow({
                   id: stock._id,
                   name: stock.name,
@@ -78,22 +85,21 @@ const Holdings = () => {
                   onMouseLeave={() => setHoveredRow(null)}
                 >
                   <td className="position-relative">
-  <div className="d-flex align-items-center justify-content-between gap-2">
-    <span className="flex-grow-1">{stock.name}</span>
-    {hoveredRow === index && (
-      <button
-        className="btn btn-sm btn-outline-danger"
-        onClick={(e) => {
-          e.stopPropagation();
-          handleSellClick();
-        }}
-      >
-        Sell
-      </button>
-    )}
-  </div>
-</td>
-
+                    <div className="d-flex align-items-center justify-content-between gap-2">
+                      <span className="flex-grow-1">{stock.name}</span>
+                      {hoveredRow === index && (
+                        <button
+                          className="btn btn-sm btn-outline-danger"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSellClick();
+                          }}
+                        >
+                          Sell
+                        </button>
+                      )}
+                    </div>
+                  </td>
 
                   <td>{stock.qty}</td>
                   <td>{stock.avg.toFixed(2)}</td>

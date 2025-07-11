@@ -14,9 +14,16 @@ const WatchList = () => {
   const [watchlist, setWatchlist] = useState([]);
 
   useEffect(() => {
-    axios.get("http://localhost:3002/watchlist").then((res) => {
-      setWatchlist(res.data);
-    });
+    axios
+      .get("http://localhost:3002/watchlist", {
+        withCredentials: true,
+      })
+      .then((res)=>{
+        setWatchlist(res.data);
+      })
+      .catch((err)=>{
+        console.log("Error fetching watchlist:", err)
+      })
   }, []);
 
   const labels = watchlist.map((stock) => stock.name);

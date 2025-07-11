@@ -5,11 +5,12 @@ const Orders = () => {
   const [allOrders, setAllOrders] = useState([]);
   const [hoveredRow, setHoveredRow] = useState(null);
 
-  // Fetch and auto-delete on component mount
   useEffect(() => {
     const fetchAndMaybeDelete = async () => {
       try {
-        const res = await axios.get("http://localhost:3002/orders");
+        const res = await axios.get("http://localhost:3002/orders",{
+          withCredentials: true,
+        });
 
         const now = new Date();
         const isAfter3_30PM =

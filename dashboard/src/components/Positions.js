@@ -8,9 +8,16 @@ const Positions = () => {
   const generalContext = useContext(GeneralContext);
 
   useEffect(() => {
-    axios.get("http://localhost:3002/positions").then((res) => {
-      setAllPositions(res.data);
-    });
+    axios
+      .get("http://localhost:3002/positions", {
+        withCredentials: true,
+      })
+      .then((res) => {
+        setAllPositions(res.data);
+      })
+      .catch((err) => {
+        console.log("Error fetching positions:", err);
+      });
   }, []);
 
   const totalPositionValue = allPositions.reduce(
@@ -67,21 +74,21 @@ const Positions = () => {
                   onMouseLeave={() => setHoveredRow(null)}
                 >
                   <td className="position-relative">
-  <div className="d-flex align-items-center justify-content-between gap-2">
-    <span className="flex-grow-1">{stock.name}</span>
-    {hoveredRow === index && (
-      <button
-        className="btn btn-sm btn-outline-danger"
-        onClick={(e) => {
-          e.stopPropagation();
-          handleSellClick();
-        }}
-      >
-        Sell
-      </button>
-    )}
-  </div>
-</td>
+                    <div className="d-flex align-items-center justify-content-between gap-2">
+                      <span className="flex-grow-1">{stock.name}</span>
+                      {hoveredRow === index && (
+                        <button
+                          className="btn btn-sm btn-outline-danger"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSellClick();
+                          }}
+                        >
+                          Sell
+                        </button>
+                      )}
+                    </div>
+                  </td>
 
                   <td>{stock.qty}</td>
                   <td>{stock.avg.toFixed(2)}</td>

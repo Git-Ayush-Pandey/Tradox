@@ -1,18 +1,45 @@
-import { useState } from "react";
-
-import { Link } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const Menu = () => {
   const [selectedMenu, setSelectedMenu] = useState(0);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+  const navigate = useNavigate();
 
   const handleMenuClick = (index) => {
     setSelectedMenu(index);
   };
 
-  const handleProfileClick = (index) => {
-    setIsProfileDropdownOpen(!isProfileDropdownOpen);
+  const handleProfileClick = () => {
+    setIsProfileDropdownOpen((prev) => !prev);
   };
+
+  const handleLogoutClick = async () => {
+    try {
+      await axios.get("http://localhost:3002/logout", {
+        withCredentials: true,
+      });
+      setIsProfileDropdownOpen(false);
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout failed", error);
+    }
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsProfileDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const menuClass = "menu";
   const activeMenuClass = "menu selected";
@@ -90,9 +117,32 @@ const Menu = () => {
           </li>
         </ul>
         <hr />
-        <div className="profile" onClick={handleProfileClick}>
+        <div
+          className="profile"
+          onClick={handleProfileClick}
+          ref={dropdownRef}
+          style={{ position: "relative" }}
+        >
           <div className="avatar">ZU</div>
-          <p className="username">USERID</p>
+
+          {isProfileDropdownOpen && (
+            <div
+              className="dropdown-menu show"
+              style={{
+                position: "absolute",
+                top: "100%",
+                right: 0,
+                backgroundColor: "#fff",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+                zIndex: 1000,
+              }}
+            >
+              <button className="dropdown-item" onClick={handleLogoutClick}>
+                Logout
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
