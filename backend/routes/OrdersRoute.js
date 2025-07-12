@@ -5,7 +5,6 @@ const {isLoggedIn} = require("../middleware")
 
 router.get("/", isLoggedIn, async (req, res) => {
   let allOrders = await Order.find({});
-  res.cookie("name", "pandey")
   res.json(allOrders);
 });
 

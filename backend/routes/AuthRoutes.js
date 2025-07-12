@@ -12,8 +12,9 @@ router.post("/signup", async (req, res) => {
     console.log("User registered:", registeredUser);
     const token = createSecretToken(registeredUser._id);
     res.cookie("token", token, {
-      withCredentials: true,
-      httpOnly: false,
+      httpOnly: true,
+      sameSite: "Lax",
+      secure: false,
     });
     res.status(201).json({
       success: true,
@@ -36,15 +37,19 @@ router.post("/login", async (req, res) => {
   }
   const isValid = await user.authenticate(password);
   if (!isValid.user) {
-    return res.status(401).json({ success: false, message: "Invalid password" });
+    return res
+      .status(401)
+      .json({ success: false, message: "Invalid password" });
   }
   const token = createSecretToken(user._id);
   res.cookie("token", token, {
-    withCredentials: true,
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    sameSite: "Lax",
+    secure: false,
   });
-  return res.status(200).json({ success: true, message: "Login successful", user });
+  return res
+    .status(200)
+    .json({ success: true, message: "Login successful", user });
 });
 
 router.get("/logout", (req, res) => {
@@ -56,27 +61,17 @@ router.get("/logout", (req, res) => {
   return res.status(200).json({ success: true, message: "Logout successful" });
 });
 
-
 router.post("/", (req, res) => {
   const token = req.cookies.token;
-  if (!token) {
-    console.log("ayush");
+  if (!token) return res.json({ status: false });
+
+  jwt.verify(token, process.env.JWT_SECRET, async (err, data) => {
+    if (err) return res.json({ status: false });
+
+    const user = await User.findById(data.id);
+    if (user) return res.json({ status: true, user: user.username });
+
     return res.json({ status: false });
-  }
-  jwt.verify(token, process.env.TOKEN_KEY, async (err, data) => {
-    if (err) {
-      console.log("ayush Pandey");
-      return res.json({ status: false });
-    } else {
-      const user = await User.findById(data.id);
-      if (user) {
-        console.log("ayush pandey ki");
-        return res.json({ status: true, user: user.username });
-      } else {
-        console.log("ayush pandey ki jay");
-        return res.json({ status: false });
-      }
-    }
   });
 });
 

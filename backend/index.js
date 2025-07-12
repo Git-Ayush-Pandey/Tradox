@@ -5,7 +5,6 @@ const app = express();
 const mongoose = require("mongoose");
 const PORT = process.env.PORT || 3002;
 const url = process.env.MONGO_URL;
-const bodyParser = require("body-parser");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const passport = require("passport");
@@ -51,7 +50,6 @@ app.use(
   })
 );
 app.use(cookieParser());
-app.use(bodyParser.json());
 app.use(express.json());
 
 app.use(passport.initialize());
@@ -59,7 +57,7 @@ passport.use(new localStr({ usernameField: "email" }, User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
-app.use("/", authRoute);
+app.use("/auth", authRoute);
 app.use("/positions", positionsRoute);
 app.use("/holdings", holdingsRoute);
 app.use("/watchlist", watchlistRoute);
