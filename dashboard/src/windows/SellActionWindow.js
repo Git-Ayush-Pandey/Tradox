@@ -36,7 +36,25 @@ const SellActionWindow = ({ uid }) => {
     setAvailableQty(posQty + holdQty);
   }, [positions, holdings, stockName]);
 
+  const isMarketOpen = () => {
+  const now = new Date();
+  const day = now.getDay(); // 0 = Sun, 6 = Sat
+  const hour = now.getHours();
+  const minute = now.getMinutes();
+
+  const isWeekday = day >= 1 && day <= 5;
+  const isOpen = hour > 9 || (hour === 9 && minute >= 0);
+  const isBeforeClose = hour < 15 || (hour === 15 && minute <= 30);
+
+  return isWeekday && isOpen && isBeforeClose;
+};
+
   const handleSellClick = () => {
+      if (!isMarketOpen()) {
+    alert("Orders can only be placed between 9:00 AM and 3:30 PM on weekdays.");
+    closeSellWindow();
+    return;
+  }
     axios
       .post(
         "http://localhost:3002/orders/new",

@@ -11,6 +11,10 @@ const WatchListModel = new Schema({
     ref: "User",
     required: true,
   },
+  listName: {
+    type: String,
+    default: "Watchlist 1",
+  },
 });
 const Watchlist = new model("Watchlist", WatchListModel);
 

@@ -1,44 +1,50 @@
-import { useState, useContext, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import {
-  Tooltip,
-  Grow,
   TextField,
   Paper,
   Box,
   Typography,
   InputAdornment,
   IconButton,
+  MenuItem,
+  Select,
+  Tooltip,
+  Grow,
 } from "@mui/material";
-import GeneralContext from "../contexts/GeneralContext";
-import axios from "axios";
 import {
-  BarChartOutlined,
-  KeyboardArrowDown,
-  KeyboardArrowUp,
-  Delete,
   Search,
   Close,
+  Delete,
+  KeyboardArrowUp,
+  KeyboardArrowDown,
+  BarChartOutlined,
 } from "@mui/icons-material";
-import { DoughnoutChart } from "./DoughnoutChart";
+import axios from "axios";
+import GeneralContext from "../contexts/GeneralContext";
+const MAX_STOCKS_PER_LIST = 25;
 
 const WatchList = () => {
-  const [watchlist, setWatchlist] = useState([]);
+  const [watchlists, setWatchlists] = useState({});
+  const [activeList, setActiveList] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [typingTimeout, setTypingTimeout] = useState(null);
 
   useEffect(() => {
     axios
-      .get("http://localhost:3002/watchlist", {
-        withCredentials: true,
-      })
+      .get("http://localhost:3002/watchlist", { withCredentials: true })
       .then((res) => {
-        setWatchlist(res.data);
+        const data = res.data;
+        const firstList = Object.keys(data)[0] || "Watchlist 1";
+        setWatchlists(data);
+        setActiveList(firstList);
       })
       .catch((err) => {
-        console.log("Error fetching watchlist:", err);
+        console.error("Error fetching watchlists:", err);
       });
   }, []);
+
+  const currentList = watchlists[activeList] || [];
 
   const handleSearchChange = (e) => {
     const term = e.target.value;
@@ -48,166 +54,170 @@ const WatchList = () => {
       setSearchResults([]);
       return;
     }
+
     const timeout = setTimeout(() => {
       axios
         .get(
           `http://localhost:3002/stock?function=SYMBOL_SEARCH&keywords=${term}`,
-          { withCredentials: true }
+          {
+            withCredentials: true,
+          }
         )
         .then((res) => {
-          if (res.data.bestMatches) {
-            setSearchResults(res.data.bestMatches);
-          } else {
-            setSearchResults([]);
-          }
+          setSearchResults(res.data.bestMatches || []);
         })
-        .catch((err) => {
-          console.error("API fetch error:", err);
-          setSearchResults([]);
-        });
+        .catch(() => setSearchResults([]));
     }, 500);
     setTypingTimeout(timeout);
   };
+
   const handleAddToWatchlist = async (stock) => {
+    if (currentList.length >= MAX_STOCKS_PER_LIST) {
+      alert("Watchlist limit reached (25 stocks).");
+      return;
+    }
+
     try {
+      const payload = { ...stock, listName: activeList };
       const res = await axios.post(
         "http://localhost:3002/watchlist/add",
-        stock,
-        { withCredentials: true }
+        payload,
+        {
+          withCredentials: true,
+        }
       );
 
-      setWatchlist((prev) => [...prev, res.data.item]);
+      setWatchlists((prev) => ({
+        ...prev,
+        [activeList]: [...(prev[activeList] || []), res.data.item],
+      }));
+
       setSearchTerm("");
       setSearchResults([]);
     } catch (err) {
-      console.error("Failed to add to watchlist:", err);
       alert(err.response?.data?.message || "Failed to add to watchlist");
     }
   };
 
-  const labels = watchlist.map((stock) => stock.name);
-  const data = {
-    labels,
-    datasets: [
-      {
-        label: "price",
-        data: watchlist.map((stock) => stock.price),
-        backgroundColor: [
-          "rgba(255, 99, 132,  0.5)",
-          "rgba(54, 162, 235,  0.5)",
-          "rgba(255, 206, 86,  0.5)",
-          "rgba(75, 192, 192,  0.5)",
-          "rgba(153, 102, 255, 0.5)",
-          "rgba(255, 159, 64,  0.5)",
-        ],
-        borderColor: [
-          "rgba(255, 99, 132, 1)",
-          "rgba(54, 162, 235, 1)",
-          "rgba(255, 206, 86, 1)",
-          "rgba(75, 192, 192, 1)",
-          "rgba(153, 102, 255, 1)",
-          "rgba(255, 159, 64, 1)",
-        ],
-        borderWidth: 1,
-      },
-    ],
+  const handleDeleteStock = async (stockId) => {
+    try {
+      await axios.delete(`http://localhost:3002/watchlist/delete/${stockId}`, {
+        withCredentials: true,
+      });
+
+      const updatedList = watchlists[activeList].filter(
+        (s) => s._id !== stockId
+      );
+      if (updatedList.length === 0) {
+        // Delete watchlist if now empty
+        const updatedWatchlists = { ...watchlists };
+        delete updatedWatchlists[activeList];
+        const remainingLists = Object.keys(updatedWatchlists);
+
+        setWatchlists(updatedWatchlists);
+        setActiveList(
+          remainingLists[0] || createDefaultWatchlist(updatedWatchlists)
+        );
+      } else {
+        setWatchlists((prev) => ({
+          ...prev,
+          [activeList]: updatedList,
+        }));
+      }
+    } catch (err) {
+      alert("Failed to delete item");
+    }
+  };
+
+  const createDefaultWatchlist = (prevLists = {}) => {
+    const newName = getNextWatchlistName(prevLists);
+    setWatchlists({
+      ...prevLists,
+      [newName]: [],
+    });
+    return newName;
+  };
+
+  const getNextWatchlistName = (lists) => {
+    let index = 1;
+    while (`Watchlist ${index}` in lists) {
+      index++;
+    }
+    return `Watchlist ${index}`;
+  };
+
+  const handleCreateNewWatchlist = () => {
+    const newName = getNextWatchlistName(watchlists);
+    setWatchlists((prev) => ({
+      ...prev,
+      [newName]: [],
+    }));
+    setActiveList(newName);
   };
 
   return (
     <div className="watchlist-container">
-      {/* Centered Search Box */}
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          mt: 3,
-          mb: 4,
-        }}
-      >
-        <Box sx={{ position: "relative", width: 400 }}>
-          <TextField
-            fullWidth
-            variant="outlined"
-            placeholder="Search eg: infy, bse, gold mcx"
-            value={searchTerm}
-            onChange={handleSearchChange}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  {searchTerm ? (
-                    <IconButton
-                      edge="end"
-                      onClick={() => {
-                        setSearchTerm("");
-                        setSearchResults([]);
-                      }}
-                    >
-                      <Close />
-                    </IconButton>
-                  ) : (
-                    <Search sx={{ color: "gray", mr: 1 }} />
-                  )}
-                </InputAdornment>
-              ),
-            }}
+      {/* Search Box */}
+      <Box sx={{ position: "relative", width: 400, mb: 3 }}>
+        <TextField
+          fullWidth
+          variant="outlined"
+          placeholder="Search eg: infy, bse"
+          value={searchTerm}
+          onChange={handleSearchChange}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search />
+              </InputAdornment>
+            ),
+            endAdornment: searchTerm && (
+              <InputAdornment position="end">
+                <IconButton onClick={() => setSearchTerm("")}>
+                  <Close />
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+        />
+        {searchResults.length > 0 && (
+          <Paper
             sx={{
-              backgroundColor: "white",
-              borderRadius: 2,
-              "& .MuiOutlinedInput-root": {
-                borderRadius: 2,
-              },
+              position: "absolute",
+              top: "100%",
+              width: "100%",
+              maxHeight: 300,
+              overflowY: "auto",
+              zIndex: 10,
             }}
-          />
-
-          {searchResults.length > 0 && (
-            <Paper
-              elevation={3}
-              sx={{
-                position: "absolute",
-                top: "100%",
-                left: 0,
-                right: 0,
-                mt: 1,
-                zIndex: 10,
-                borderRadius: 2,
-                maxHeight: 300,
-                overflowY: "auto",
-              }}
-            >
-              {searchResults.map((item, index) => (
-                <Box
-                  key={index}
-                  onClick={() =>
-                    handleAddToWatchlist({
-                      name: item["1. symbol"],
-                      price: 0, // You can fetch live price later
-                      percent: "0.00%",
-                      isDown: false,
-                    })
-                  }
-                  sx={{
-                    px: 2,
-                    py: 1,
-                    "&:hover": {
-                      backgroundColor: "#f5f5f5",
-                      cursor: "pointer",
-                    },
-                  }}
-                >
-                  <Typography variant="body1" fontWeight="bold">
-                    {item["1. symbol"]}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {item["2. name"]}
-                  </Typography>
-                </Box>
-              ))}
-            </Paper>
-          )}
-        </Box>
+          >
+            {searchResults.map((item, i) => (
+              <Box
+                key={i}
+                onClick={() =>
+                  handleAddToWatchlist({
+                    name: item["1. symbol"],
+                    price: 0,
+                    percent: "0.00%",
+                    isDown: false,
+                  })
+                }
+                sx={{
+                  p: 2,
+                  "&:hover": { backgroundColor: "#eee", cursor: "pointer" },
+                }}
+              >
+                <Typography fontWeight="bold">{item["1. symbol"]}</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {item["2. name"]}
+                </Typography>
+              </Box>
+            ))}
+          </Paper>
+        )}
       </Box>
 
-      {/* Styled Watchlist Title */}
+      {/* Header with selector and new list option */}
       <Box
         sx={{
           display: "flex",
@@ -218,47 +228,72 @@ const WatchList = () => {
         }}
       >
         <Typography variant="h6" fontWeight="bold">
-          Watchlist 1
+          {activeList}
         </Typography>
         <Typography
-          variant="subtitle1"
-          sx={{
-            backgroundColor: "#e0e0e0",
-            px: 2,
-            py: 0.5,
-            borderRadius: 2,
-            fontSize: "0.9rem",
-          }}
+          sx={{ backgroundColor: "#eee", px: 2, py: 0.5, borderRadius: 2 }}
         >
-          {watchlist.length} / 50
+          {currentList.length} / 25
         </Typography>
+        {Object.keys(watchlists).length > 1 && (
+          <IconButton
+            color="error"
+            onClick={() => {
+              const updated = { ...watchlists };
+              delete updated[activeList];
+              const remaining = Object.keys(updated);
+              const newActive = remaining[0] || createDefaultWatchlist(updated);
+              setWatchlists(updated);
+              setActiveList(newActive);
+            }}
+          >
+            <Delete />
+          </IconButton>
+        )}
+        <Select
+          size="small"
+          value={activeList}
+          onChange={(e) => setActiveList(e.target.value)}
+        >
+          {Object.keys(watchlists).map((name, i) => (
+            <MenuItem key={i} value={name}>
+              {name}
+            </MenuItem>
+          ))}
+          <MenuItem onClick={handleCreateNewWatchlist} value="__new">
+            ➕ New Watchlist
+          </MenuItem>
+        </Select>
       </Box>
 
       {/* Watchlist Items */}
       <ul className="list">
-        {watchlist.map((stock) => (
-          <WatchListItem
-            stock={stock}
-            key={stock._id}
-            setWatchlist={setWatchlist}
-          />
-        ))}
+        {currentList.length > 0 ? (
+          currentList.map((stock) => (
+            <WatchListItem
+              key={stock._id}
+              stock={stock}
+              onDelete={() => handleDeleteStock(stock._id)}
+            />
+          ))
+        ) : (
+          <Typography align="center" color="text.secondary" sx={{ mt: 4 }}>
+            No stocks in this watchlist.
+          </Typography>
+        )}
       </ul>
-
-      <DoughnoutChart data={data} />
     </div>
   );
 };
 
 export default WatchList;
 
-const WatchListItem = ({ stock, setWatchlist }) => {
-  const [showWatchlistActions, setShowWatchlistActions] = useState(false);
-
+const WatchListItem = ({ stock, onDelete }) => {
+  const [hover, setHover] = useState(false);
   return (
     <li
-      onMouseEnter={() => setShowWatchlistActions(true)}
-      onMouseLeave={() => setShowWatchlistActions(false)}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
     >
       <div className="item">
         <p className={stock.isDown ? "down" : "up"}>{stock.name}</p>
@@ -272,57 +307,56 @@ const WatchListItem = ({ stock, setWatchlist }) => {
           <span className="price">{stock.price}</span>
         </div>
       </div>
-      {showWatchlistActions && (
-        <WatchListActions stock={stock} setWatchlist={setWatchlist} />
-      )}
+      {hover && <WatchListActions stock={stock} onDelete={onDelete} />}
     </li>
   );
 };
 
-const WatchListActions = ({ stock, setWatchlist }) => {
+const WatchListActions = ({ stock, onDelete }) => {
   const generalContext = useContext(GeneralContext);
 
-  const handleBuyClick = () => {
-    generalContext.openBuyWindow({ id: stock._id, name: stock.name });
-  };
-
-  const handleSellClick = () => {
-    generalContext.openSellWindow({ id: stock._id, name: stock.name });
-  };
-
-  const handleDeletaWatchlist = async () => {
+  const handleDelete = async () => {
     try {
       await axios.delete(
         `http://localhost:3002/watchlist/delete/${stock._id}`,
-        { withCredentials: true }
+        {
+          withCredentials: true,
+        }
       );
-      setWatchlist((prev) => prev.filter((item) => item._id !== stock._id));
-    } catch (error) {
-      console.error("Failed to delete watchlist item", error);
-      alert("Failed to delete item from watchlist");
+      onDelete(); // ✅ Call the onDelete handler passed as prop
+    } catch {
+      alert("Failed to delete stock from watchlist");
     }
   };
 
   return (
     <span className="actions">
-      <span style={{ alignItems: "center" }}>
+      <span>
         <Tooltip
           title="Buy (B)"
           placement="top"
           arrow
           TransitionComponent={Grow}
-          onClick={handleBuyClick}
         >
-          <button className="buy">Buy</button>
+          <button
+            className="buy"
+            onClick={() => generalContext.openBuyWindow(stock)}
+          >
+            Buy
+          </button>
         </Tooltip>
         <Tooltip
           title="Sell (S)"
           placement="top"
           arrow
           TransitionComponent={Grow}
-          onClick={handleSellClick}
         >
-          <button className="sell">Sell</button>
+          <button
+            className="sell"
+            onClick={() => generalContext.openSellWindow(stock)}
+          >
+            Sell
+          </button>
         </Tooltip>
         <Tooltip
           title="Analytics (A)"
@@ -340,7 +374,7 @@ const WatchListActions = ({ stock, setWatchlist }) => {
           arrow
           TransitionComponent={Grow}
         >
-          <button className="action" onClick={handleDeletaWatchlist}>
+          <button className="action" onClick={handleDelete}>
             <Delete className="icon" />
           </button>
         </Tooltip>
@@ -348,3 +382,4 @@ const WatchListActions = ({ stock, setWatchlist }) => {
     </span>
   );
 };
+

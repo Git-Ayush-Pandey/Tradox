@@ -3,16 +3,21 @@ const mongoose = require("mongoose");
 const { Watchlist } = require("../model/WatchlistModel");
 const { isLoggedIn } = require("../middleware");
 
-// ✅ GET: Logged-in user's watchlist
 router.get("/", isLoggedIn, async (req, res) => {
   const userId = req.user._id;
-  const allWatchlist = await Watchlist.find({ userId });
-  res.json(allWatchlist);
+  const all = await Watchlist.find({ userId });
+  const grouped = {};
+  all.forEach((item) => {
+    const list = item.listName || "Watchlist 1";
+    if (!grouped[list]) grouped[list] = [];
+    grouped[list].push(item);
+  });
+
+  res.json(grouped);
 });
 
-// ✅ POST: Add item to user's watchlist
 router.post("/add", isLoggedIn, async (req, res) => {
-  const { name, price, percent, isDown } = req.body;
+  const { name, price, percent, isDown, listName= "Watchlist_1" } = req.body;
   const userId = req.user._id;
 
   if (!name || price === undefined || !percent || isDown === undefined) {
@@ -20,7 +25,7 @@ router.post("/add", isLoggedIn, async (req, res) => {
   }
 
   try {
-    const existing = await Watchlist.findOne({ name, userId });
+    const existing = await Watchlist.findOne({ name, userId, listName });
     if (existing) {
       return res.status(409).json({ success: false, message: "Stock already in watchlist" });
     }
@@ -31,6 +36,7 @@ router.post("/add", isLoggedIn, async (req, res) => {
       percent,
       isDown,
       userId,
+      listName,
     });
 
     await newItem.save();
