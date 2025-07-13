@@ -4,11 +4,12 @@ import axios from "axios";
 const Orders = () => {
   const [allOrders, setAllOrders] = useState([]);
   const [hoveredRow, setHoveredRow] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchAndMaybeDelete = async () => {
       try {
-        const res = await axios.get("http://localhost:3002/orders",{
+        const res = await axios.get("http://localhost:3002/orders", {
           withCredentials: true,
         });
 
@@ -20,7 +21,9 @@ const Orders = () => {
           // Auto-delete all orders after 3:30 PM
           await Promise.all(
             res.data.map((order) =>
-              axios.delete(`http://localhost:3002/orders/delete/${order._id}`)
+              axios.delete(`http://localhost:3002/orders/delete/${order._id}`, {
+                withCredentials: true,
+              })
             )
           );
           setAllOrders([]); // Clear local state
@@ -29,22 +32,30 @@ const Orders = () => {
         }
       } catch (error) {
         console.error("Error loading or deleting orders:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchAndMaybeDelete();
   }, []);
 
-  // Manual cancel
   const handleCancel = async (id) => {
     try {
-      await axios.delete(`http://localhost:3002/orders/delete/${id}`);
+      await axios.delete(`http://localhost:3002/orders/delete/${id}`, {
+        withCredentials: true,
+      });
       setAllOrders((prev) => prev.filter((order) => order._id !== id));
     } catch (error) {
       console.error("Error cancelling order:", error);
       alert("Failed to cancel order");
     }
   };
+
+  if (loading) return <div className="text-center mt-4">Loading orders...</div>;
+
+  if (allOrders.length === 0)
+    return <div className="text-center mt-4 text-muted">No active orders found.</div>;
 
   return (
     <>

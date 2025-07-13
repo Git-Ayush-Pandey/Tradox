@@ -6,8 +6,12 @@ const WatchListModel = new Schema({
   price: Number,
   percent: String,
   isDown: Boolean,
+  userId: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
 });
-
 const Watchlist = new model("Watchlist", WatchListModel);
 
 module.exports = { Watchlist };

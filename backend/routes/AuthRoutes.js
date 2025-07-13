@@ -1,25 +1,49 @@
 const router = require("express").Router();
 const User = require("../model/UserModel");
+const { Fund } = require("../model/FundsModel");
 const { createSecretToken } = require("../util/secretToken");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
+const { isLoggedIn } = require("../middleware");
 
 router.post("/signup", async (req, res) => {
   try {
     const { email, phone, name, password } = req.body;
     const newUser = new User({ email, phone, name });
     const registeredUser = await User.register(newUser, password);
-    console.log("User registered:", registeredUser);
+
+    const defaultFund = new Fund({
+      userId: registeredUser._id,
+      availableMargin: 0,
+      usedMargin: 0,
+      availableCash: 0,
+      openingBalance: 0,
+      payin: 0,
+      span: 0,
+      deliveryMargin: 0,
+      exposure: 0,
+      optionsPremium: 0,
+      collateralLiquid: 0,
+      collateralEquity: 0,
+    });
+    await defaultFund.save();
+
     const token = createSecretToken(registeredUser._id);
     res.cookie("token", token, {
       httpOnly: true,
       sameSite: "Lax",
       secure: false,
     });
+    const safeUser = {
+      id: registeredUser._id,
+      name: registeredUser.name,
+      email: registeredUser.email,
+      phone: registeredUser.phone,
+    };
     res.status(201).json({
       success: true,
       message: "Account created successfully",
-      user: registeredUser,
+      user: safeUser,
     });
   } catch (err) {
     console.error("Signup error:", err);
@@ -47,9 +71,15 @@ router.post("/login", async (req, res) => {
     sameSite: "Lax",
     secure: false,
   });
+  const safeUser = {
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+  };
   return res
     .status(200)
-    .json({ success: true, message: "Login successful", user });
+    .json({ success: true, message: "Login successful", safeUser });
 });
 
 router.get("/logout", (req, res) => {
@@ -61,17 +91,37 @@ router.get("/logout", (req, res) => {
   return res.status(200).json({ success: true, message: "Logout successful" });
 });
 
-router.post("/", (req, res) => {
+router.get("/verify", async (req, res) => {
   const token = req.cookies.token;
   if (!token) return res.json({ status: false });
 
-  jwt.verify(token, process.env.JWT_SECRET, async (err, data) => {
-    if (err) return res.json({ status: false });
-
+  try {
+    const data = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(data.id);
-    if (user) return res.json({ status: true, user: user.username });
-
+    const safeUser = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+    };
+    if (user) return res.json({ status: true, safeUser });
     return res.json({ status: false });
+  } catch (err) {
+    return res.json({ status: false });
+  }
+});
+
+// GET /auth/me → return current user info
+router.get("/me", isLoggedIn, (req, res) => {
+  const user = req.user;
+  res.status(200).json({
+    success: true,
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+    },
   });
 });
 

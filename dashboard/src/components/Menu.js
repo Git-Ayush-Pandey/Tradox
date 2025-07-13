@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import axios from "axios";
 
 const Menu = () => {
   const [selectedMenu, setSelectedMenu] = useState(0);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
-  const navigate = useNavigate();
 
   const handleMenuClick = (index) => {
     setSelectedMenu(index);
@@ -18,11 +17,11 @@ const Menu = () => {
 
   const handleLogoutClick = async () => {
     try {
-      await axios.get("http://localhost:3002/logout", {
+      await axios.get("http://localhost:3002/auth/logout", {
         withCredentials: true,
       });
       setIsProfileDropdownOpen(false);
-      navigate("/login");
+      window.location.href = "http://localhost:3001/signup"; 
     } catch (error) {
       console.error("Logout failed", error);
     }

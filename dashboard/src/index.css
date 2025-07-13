@@ -841,3 +841,28 @@ hr {
 .action:hover {
   background-color: rgb(212, 212, 212);
 }
+.search-wrapper {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ccc;
+  padding: 6px 10px;
+  border-radius: 25px;
+  background-color: white;
+  width: 100%;
+  max-width: 500px;
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.search-icon {
+  color: #666;
+  margin-right: 8px;
+}
+
+.search-input {
+  border: none;
+  outline: none;
+  flex: 1;
+  font-size: 1rem;
+  background-color: transparent;
+}

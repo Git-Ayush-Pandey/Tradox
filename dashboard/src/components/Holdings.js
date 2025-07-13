@@ -6,6 +6,7 @@ import GeneralContext from "../contexts/GeneralContext";
 const Holdings = () => {
   const [allHoldings, setAllHoldings] = useState([]);
   const [hoveredRow, setHoveredRow] = useState(null);
+  const [loading, setLoading] = useState(true);
   const generalContext = useContext(GeneralContext);
 
   useEffect(() => {
@@ -13,12 +14,14 @@ const Holdings = () => {
       .get("http://localhost:3002/holdings", {
         withCredentials: true,
       })
-      .then((res)=>{
+      .then((res) => {
         setAllHoldings(res.data);
+        setLoading(false);
       })
-      .catch((err)=>{
-        console.log("Error fetching holdings:", err)
-      })
+      .catch((err) => {
+        console.log("Error fetching holdings:", err);
+        setLoading(false);
+      });
   }, []);
 
   const labels = allHoldings.map((stock) => stock.name);
@@ -28,7 +31,12 @@ const Holdings = () => {
       {
         label: "Stock Price",
         data: allHoldings.map((stock) => stock.price),
-        backgroundColor: "rgba(255, 99, 132, 0.5)",
+        backgroundColor: allHoldings.map(
+          () =>
+            `rgba(${Math.floor(Math.random() * 255)},${Math.floor(
+              Math.random() * 255
+            )},${Math.floor(Math.random() * 255)},0.5)`
+        ),
       },
     ],
   };
@@ -44,6 +52,12 @@ const Holdings = () => {
   const totalProfitLoss = totalCurrentValue - totalInvestment;
   const totalPLPercent =
     totalInvestment === 0 ? 0 : (totalProfitLoss / totalInvestment) * 100;
+
+  if (loading) return <div className="text-center mt-4">Loading holdings...</div>;
+
+  if (allHoldings.length === 0) {
+    return <div className="text-center mt-4 text-muted">No holdings available.</div>;
+  }
 
   return (
     <>
@@ -72,12 +86,12 @@ const Holdings = () => {
               const dayClass = stock.isLoss ? "loss" : "profit";
 
               const handleSellClick = () => {
-                console.log("Clicked sell on:", stock.name);
                 generalContext.openSellWindow({
                   id: stock._id,
                   name: stock.name,
                 });
               };
+
               return (
                 <tr
                   key={index}
@@ -100,7 +114,6 @@ const Holdings = () => {
                       )}
                     </div>
                   </td>
-
                   <td>{stock.qty}</td>
                   <td>{stock.avg.toFixed(2)}</td>
                   <td>{stock.price.toFixed(2)}</td>
@@ -140,7 +153,7 @@ const Holdings = () => {
         </div>
       </div>
 
-      {allHoldings.length > 0 && <VerticalGraph data={data} />}
+      <VerticalGraph data={data} />
     </>
   );
 };

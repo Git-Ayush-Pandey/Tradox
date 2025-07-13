@@ -5,6 +5,7 @@ import GeneralContext from "../contexts/GeneralContext";
 const Positions = () => {
   const [allPositions, setAllPositions] = useState([]);
   const [hoveredRow, setHoveredRow] = useState(null);
+  const [loading, setLoading] = useState(true);
   const generalContext = useContext(GeneralContext);
 
   useEffect(() => {
@@ -17,22 +18,26 @@ const Positions = () => {
       })
       .catch((err) => {
         console.log("Error fetching positions:", err);
-      });
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const totalPositionValue = allPositions.reduce(
     (acc, stock) => acc + stock.price * stock.qty,
     0
   );
-
   const totalCost = allPositions.reduce(
     (acc, stock) => acc + stock.avg * stock.qty,
     0
   );
-
   const totalProfitLoss = totalPositionValue - totalCost;
   const totalPLPercent =
     totalCost === 0 ? 0 : (totalProfitLoss / totalCost) * 100;
+
+  if (loading) return <div className="text-center mt-4">Loading positions...</div>;
+
+  if (allPositions.length === 0)
+    return <div className="text-center mt-4 text-muted">No open positions found.</div>;
 
   return (
     <>

@@ -1,5 +1,14 @@
 import { useState, useContext, useEffect } from "react";
-import { Tooltip, Grow } from "@mui/material";
+import {
+  Tooltip,
+  Grow,
+  TextField,
+  Paper,
+  Box,
+  Typography,
+  InputAdornment,
+  IconButton,
+} from "@mui/material";
 import GeneralContext from "../contexts/GeneralContext";
 import axios from "axios";
 import {
@@ -7,24 +16,58 @@ import {
   KeyboardArrowDown,
   KeyboardArrowUp,
   Delete,
+  Search,
+  Close,
 } from "@mui/icons-material";
 import { DoughnoutChart } from "./DoughnoutChart";
 
 const WatchList = () => {
   const [watchlist, setWatchlist] = useState([]);
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [typingTimeout, setTypingTimeout] = useState(null);
 
   useEffect(() => {
     axios
       .get("http://localhost:3002/watchlist", {
         withCredentials: true,
       })
-      .then((res)=>{
+      .then((res) => {
         setWatchlist(res.data);
       })
-      .catch((err)=>{
-        console.log("Error fetching watchlist:", err)
-      })
+      .catch((err) => {
+        console.log("Error fetching watchlist:", err);
+      });
   }, []);
+
+  const handleSearchChange = (e) => {
+    const term = e.target.value;
+    setSearchTerm(term);
+    if (typingTimeout) clearTimeout(typingTimeout);
+    if (term.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    const timeout = setTimeout(() => {
+      axios
+        .get(
+          `http://localhost:3002/stock?function=SYMBOL_SEARCH&keywords=${term}`,
+          { withCredentials: true }
+        )
+        .then((res) => {
+          if (res.data.bestMatches) {
+            setSearchResults(res.data.bestMatches);
+          } else {
+            setSearchResults([]);
+          }
+        })
+        .catch((err) => {
+          console.error("API fetch error:", err);
+          setSearchResults([]);
+        });
+    }, 500);
+    setTypingTimeout(timeout);
+  };
 
   const labels = watchlist.map((stock) => stock.name);
   const data = {
@@ -56,17 +99,118 @@ const WatchList = () => {
 
   return (
     <div className="watchlist-container">
-      <div className="search-container">
-        <input
-          type="text"
-          name="search"
-          id="search"
-          placeholder="Search eg:infy, bse, nifty fut weekly, gold mcx"
-          className="search"
-        />
-        <span className="counts"> {watchlist.length} / 50</span>
-      </div>
+      {/* Centered Search Box */}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          mt: 3,
+          mb: 4,
+        }}
+      >
+        <Box sx={{ position: "relative", width: 400 }}>
+          <TextField
+            fullWidth
+            variant="outlined"
+            placeholder="Search eg: infy, bse, gold mcx"
+            value={searchTerm}
+            onChange={handleSearchChange}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  {searchTerm ? (
+                    <IconButton
+                      edge="end"
+                      onClick={() => {
+                        setSearchTerm("");
+                        setSearchResults([]);
+                      }}
+                    >
+                      <Close />
+                    </IconButton>
+                  ) : (
+                    <Search sx={{ color: "gray", mr: 1 }} />
+                  )}
+                </InputAdornment>
+              ),
+            }}
+            sx={{
+              backgroundColor: "white",
+              borderRadius: 2,
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 2,
+              },
+            }}
+          />
 
+          {searchResults.length > 0 && (
+            <Paper
+              elevation={3}
+              sx={{
+                position: "absolute",
+                top: "100%",
+                left: 0,
+                right: 0,
+                mt: 1,
+                zIndex: 10,
+                borderRadius: 2,
+                maxHeight: 300,
+                overflowY: "auto",
+              }}
+            >
+              {searchResults.map((item, index) => (
+                <Box
+                  key={index}
+                  sx={{
+                    px: 2,
+                    py: 1,
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      cursor: "pointer",
+                    },
+                  }}
+                >
+                  <Typography variant="body1" fontWeight="bold">
+                    {item["1. symbol"]}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {item["2. name"]}
+                  </Typography>
+                </Box>
+              ))}
+            </Paper>
+          )}
+        </Box>
+      </Box>
+
+      {/* Styled Watchlist Title */}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          gap: 2,
+          mb: 2,
+        }}
+      >
+        <Typography variant="h6" fontWeight="bold">
+          Watchlist 1
+        </Typography>
+        <Typography
+          variant="subtitle1"
+          sx={{
+            backgroundColor: "#e0e0e0",
+            px: 2,
+            py: 0.5,
+            borderRadius: 2,
+            fontSize: "0.9rem",
+          }}
+        >
+          {watchlist.length} / 50
+        </Typography>
+      </Box>
+
+      {/* Watchlist Items */}
       <ul className="list">
         {watchlist.map((stock) => (
           <WatchListItem
@@ -76,6 +220,7 @@ const WatchList = () => {
           />
         ))}
       </ul>
+
       <DoughnoutChart data={data} />
     </div>
   );
@@ -123,7 +268,10 @@ const WatchListActions = ({ stock, setWatchlist }) => {
 
   const handleDeletaWatchlist = async () => {
     try {
-      await axios.delete(`http://localhost:3002/watchlist/delete/${stock._id}`);
+      await axios.delete(
+        `http://localhost:3002/watchlist/delete/${stock._id}`,
+        { withCredentials: true }
+      );
       setWatchlist((prev) => prev.filter((item) => item._id !== stock._id));
     } catch (error) {
       console.error("Failed to delete watchlist item", error);
@@ -152,12 +300,22 @@ const WatchListActions = ({ stock, setWatchlist }) => {
         >
           <button className="sell">Sell</button>
         </Tooltip>
-        <Tooltip title="Analytics (A)" placement="top" arrow TransitionComponent={Grow}>
+        <Tooltip
+          title="Analytics (A)"
+          placement="top"
+          arrow
+          TransitionComponent={Grow}
+        >
           <button className="action">
             <BarChartOutlined className="icon" />
           </button>
         </Tooltip>
-        <Tooltip title="Delete" placement="top" arrow TransitionComponent={Grow}>
+        <Tooltip
+          title="Delete"
+          placement="top"
+          arrow
+          TransitionComponent={Grow}
+        >
           <button className="action" onClick={handleDeletaWatchlist}>
             <Delete className="icon" />
           </button>

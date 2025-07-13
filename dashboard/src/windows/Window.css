@@ -26,3 +26,10 @@
 .sell-window-form label {
   font-weight: 600;
 }
+.fund-window input {
+  font-size: 0.95rem;
+}
+.fund-window button {
+  font-size: 0.9rem;
+  padding: 5px 10px;
+}

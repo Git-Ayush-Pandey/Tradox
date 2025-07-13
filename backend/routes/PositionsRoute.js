@@ -1,10 +1,82 @@
 const router = require("express").Router();
 const { Position } = require("../model/PositionsModel");
-const {isLoggedIn} = require("../middleware")
+const { isLoggedIn } = require("../middleware");
 
 router.get("/", isLoggedIn, async (req, res) => {
-  let allPositions = await Position.find({});
+  const userId = req.user._id;
+  const allPositions = await Position.find({ userId });
   res.json(allPositions);
+});
+
+// ✅ POST: Add or Update a Position
+router.post("/add", isLoggedIn, async (req, res) => {
+  const userId = req.user._id;
+  const { name, qty, avg, price, net, day, isLoss } = req.body;
+
+  if (!name || qty == null || avg == null) {
+    return res.status(400).json({ error: "Required fields missing" });
+  }
+
+  try {
+    const existing = await Position.findOne({ name, userId });
+
+    if (existing) {
+      // Calculate updated average price
+      const totalQty = existing.qty + qty;
+      const totalValue = existing.avg * existing.qty + avg * qty;
+      existing.qty = totalQty;
+      existing.avg = totalValue / totalQty;
+      existing.price = price;
+      existing.net = net;
+      existing.day = day;
+      existing.isLoss = isLoss;
+
+      await existing.save();
+      return res.status(200).json({ message: "Position updated", position: existing });
+    }
+
+    const newPosition = new Position({
+      name,
+      qty,
+      avg,
+      price,
+      net,
+      day,
+      isLoss,
+      userId,
+    });
+
+    await newPosition.save();
+    res.status(201).json({ message: "Position added", position: newPosition });
+  } catch (err) {
+    console.error("Add/Update position error:", err);
+    res.status(500).send("Server error");
+  }
+});
+
+// ✅ PUT: Reduce quantity or delete on full sell
+router.put("/sell/:name", isLoggedIn, async (req, res) => {
+  const userId = req.user._id;
+  const { name } = req.params;
+  const { qtySold } = req.body;
+
+  try {
+    const position = await Position.findOne({ name, userId });
+
+    if (!position) return res.status(404).send("Position not found");
+
+    if (qtySold >= position.qty) {
+      await Position.deleteOne({ _id: position._id });
+      return res.status(200).send("Position fully sold and deleted");
+    }
+
+    position.qty -= qtySold;
+    await position.save();
+    res.status(200).json({ message: "Position partially sold", updated: position });
+  } catch (err) {
+    console.error("Sell error:", err);
+    res.status(500).send("Server error");
+  }
 });
 
 module.exports = router;
