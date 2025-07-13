@@ -68,6 +68,22 @@ const WatchList = () => {
     }, 500);
     setTypingTimeout(timeout);
   };
+  const handleAddToWatchlist = async (stock) => {
+    try {
+      const res = await axios.post(
+        "http://localhost:3002/watchlist/add",
+        stock,
+        { withCredentials: true }
+      );
+
+      setWatchlist((prev) => [...prev, res.data.item]);
+      setSearchTerm("");
+      setSearchResults([]);
+    } catch (err) {
+      console.error("Failed to add to watchlist:", err);
+      alert(err.response?.data?.message || "Failed to add to watchlist");
+    }
+  };
 
   const labels = watchlist.map((stock) => stock.name);
   const data = {
@@ -161,6 +177,14 @@ const WatchList = () => {
               {searchResults.map((item, index) => (
                 <Box
                   key={index}
+                  onClick={() =>
+                    handleAddToWatchlist({
+                      name: item["1. symbol"],
+                      price: 0, // You can fetch live price later
+                      percent: "0.00%",
+                      isDown: false,
+                    })
+                  }
                   sx={{
                     px: 2,
                     py: 1,
