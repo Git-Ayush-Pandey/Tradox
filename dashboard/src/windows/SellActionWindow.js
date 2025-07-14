@@ -6,7 +6,7 @@ import "./Window.css";
 const SellActionWindow = ({ uid }) => {
   const [stockQuantity, setStockQuantity] = useState(1);
   const [stockPrice, setStockPrice] = useState(0.0);
-  const { closeSellWindow } = useContext(GeneralContext);
+  const { closeSellWindow, user } = useContext(GeneralContext);
   const [positions, setPositions] = useState([]);
   const [holdings, setHoldings] = useState([]);
   const [availableQty, setAvailableQty] = useState(0);
@@ -15,13 +15,17 @@ const SellActionWindow = ({ uid }) => {
   const stockName = uid.name;
 
   useEffect(() => {
-    axios.get("http://localhost:3002/positions").then((res) => {
-      setPositions(res.data);
-    });
+    axios
+      .get("http://localhost:3002/positions", { withCredentials: true })
+      .then((res) => {
+        setPositions(res.data);
+      });
 
-    axios.get("http://localhost:3002/holdings").then((res) => {
-      setHoldings(res.data);
-    });
+    axios
+      .get("http://localhost:3002/holdings", { withCredentials: true })
+      .then((res) => {
+        setHoldings(res.data);
+      });
   }, []);
 
   useEffect(() => {
@@ -37,24 +41,31 @@ const SellActionWindow = ({ uid }) => {
   }, [positions, holdings, stockName]);
 
   const isMarketOpen = () => {
-  const now = new Date();
-  const day = now.getDay(); // 0 = Sun, 6 = Sat
-  const hour = now.getHours();
-  const minute = now.getMinutes();
+    const now = new Date();
+    const day = now.getDay(); // 0 = Sun, 6 = Sat
+    const hour = now.getHours();
+    const minute = now.getMinutes();
 
-  const isWeekday = day >= 1 && day <= 5;
-  const isOpen = hour > 9 || (hour === 9 && minute >= 0);
-  const isBeforeClose = hour < 15 || (hour === 15 && minute <= 30);
+    const isWeekday = day >= 1 && day <= 5;
+    const isOpen = hour > 9 || (hour === 9 && minute >= 0);
+    const isBeforeClose = hour < 15 || (hour === 15 && minute <= 30);
 
-  return isWeekday && isOpen && isBeforeClose;
-};
+    return isWeekday && isOpen && isBeforeClose;
+  };
 
   const handleSellClick = () => {
-      if (!isMarketOpen()) {
-    alert("Orders can only be placed between 9:00 AM and 3:30 PM on weekdays.");
-    closeSellWindow();
-    return;
-  }
+    if (!user) {
+      alert("You must be logged in to place a sell order.");
+      closeSellWindow();
+      return;
+    }
+    if (!isMarketOpen()) {
+      alert(
+        "Orders can only be placed between 9:00 AM and 3:30 PM on weekdays."
+      );
+      closeSellWindow();
+      return;
+    }
     axios
       .post(
         "http://localhost:3002/orders/new",
@@ -75,7 +86,7 @@ const SellActionWindow = ({ uid }) => {
         alert("Sell order failed. Please login again.");
       });
   };
- const handleCancelClick = () => {
+  const handleCancelClick = () => {
     closeSellWindow();
   };
   return (

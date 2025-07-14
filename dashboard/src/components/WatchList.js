@@ -70,7 +70,18 @@ const WatchList = () => {
     }, 500);
     setTypingTimeout(timeout);
   };
-
+  const fetchPriceForStock = async (symbol) => {
+    const res = await axios.get(
+      `http://localhost:3002/stock?function=GLOBAL_QUOTE&symbol=${symbol}`,
+      { withCredentials: true }
+    );
+    const quote = res.data["Global Quote"];
+    return {
+      price: parseFloat(quote["05. price"]),
+      percent: quote["10. change percent"],
+      isDown: parseFloat(quote["09. change"]) < 0,
+    };
+  };
   const handleAddToWatchlist = async (stock) => {
     if (currentList.length >= MAX_STOCKS_PER_LIST) {
       alert("Watchlist limit reached (25 stocks).");
@@ -78,7 +89,8 @@ const WatchList = () => {
     }
 
     try {
-      const payload = { ...stock, listName: activeList };
+      const quote = await fetchPriceForStock(stock.name);
+      const payload = { ...stock, ...quote, listName: activeList };
       const res = await axios.post(
         "http://localhost:3002/watchlist/add",
         payload,
@@ -158,63 +170,72 @@ const WatchList = () => {
   return (
     <div className="watchlist-container">
       {/* Search Box */}
-      <Box sx={{ position: "relative", width: 400, mb: 3 }}>
-        <TextField
-          fullWidth
-          variant="outlined"
-          placeholder="Search eg: infy, bse"
-          value={searchTerm}
-          onChange={handleSearchChange}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Search />
-              </InputAdornment>
-            ),
-            endAdornment: searchTerm && (
-              <InputAdornment position="end">
-                <IconButton onClick={() => setSearchTerm("")}>
-                  <Close />
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-        />
-        {searchResults.length > 0 && (
-          <Paper
-            sx={{
-              position: "absolute",
-              top: "100%",
-              width: "100%",
-              maxHeight: 300,
-              overflowY: "auto",
-              zIndex: 10,
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          mb: 3,
+        }}
+      >
+        <Box sx={{ position: "relative", width: 400, mb: 3 }}>
+          <TextField
+            fullWidth
+            variant="outlined"
+            placeholder="Search eg: infy, bse"
+            value={searchTerm}
+            onChange={handleSearchChange}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search />
+                </InputAdornment>
+              ),
+              endAdornment: searchTerm && (
+                <InputAdornment position="end">
+                  <IconButton onClick={() => setSearchTerm("")}>
+                    <Close />
+                  </IconButton>
+                </InputAdornment>
+              ),
             }}
-          >
-            {searchResults.map((item, i) => (
-              <Box
-                key={i}
-                onClick={() =>
-                  handleAddToWatchlist({
-                    name: item["1. symbol"],
-                    price: 0,
-                    percent: "0.00%",
-                    isDown: false,
-                  })
-                }
-                sx={{
-                  p: 2,
-                  "&:hover": { backgroundColor: "#eee", cursor: "pointer" },
-                }}
-              >
-                <Typography fontWeight="bold">{item["1. symbol"]}</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {item["2. name"]}
-                </Typography>
-              </Box>
-            ))}
-          </Paper>
-        )}
+          />
+          {searchResults.length > 0 && (
+            <Paper
+              sx={{
+                position: "absolute",
+                top: "100%",
+                width: "100%",
+                maxHeight: 300,
+                overflowY: "auto",
+                zIndex: 10,
+              }}
+            >
+              {searchResults.map((item, i) => (
+                <Box
+                  key={i}
+                  onClick={() =>
+                    handleAddToWatchlist({
+                      name: item["1. symbol"],
+                      price: 0,
+                      percent: "0.00%",
+                      isDown: false,
+                    })
+                  }
+                  sx={{
+                    p: 2,
+                    "&:hover": { backgroundColor: "#eee", cursor: "pointer" },
+                  }}
+                >
+                  <Typography fontWeight="bold">{item["1. symbol"]}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {item["2. name"]}
+                  </Typography>
+                </Box>
+              ))}
+            </Paper>
+          )}
+        </Box>
       </Box>
 
       {/* Header with selector and new list option */}
@@ -294,19 +315,82 @@ const WatchListItem = ({ stock, onDelete }) => {
     <li
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
+      style={{
+        listStyle: "none",
+        padding: "12px 16px",
+        borderBottom: "1px solid #eee",
+        transition: "background 0.2s",
+        backgroundColor: hover ? "#f9f9f9" : "transparent",
+      }}
     >
-      <div className="item">
-        <p className={stock.isDown ? "down" : "up"}>{stock.name}</p>
-        <div className="itemInfo">
-          <span className="percent">{stock.percent}</span>
-          {stock.isDown ? (
-            <KeyboardArrowDown className="down" />
-          ) : (
-            <KeyboardArrowUp className="up" />
+      <div
+        className="item"
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        {/* Left: Stock Name & Full Name */}
+        <div>
+          <p
+            style={{
+              margin: 0,
+              fontWeight: 600,
+              fontSize: "1rem",
+              color: stock.isDown ? "#e53935" : "#43a047",
+            }}
+          >
+            {stock.name}
+          </p>
+          {stock.fullName && (
+            <p
+              style={{
+                margin: 0,
+                fontSize: "0.85rem",
+                color: "#666",
+                marginTop: "2px",
+              }}
+            >
+              {stock.fullName}
+            </p>
           )}
-          <span className="price">{stock.price}</span>
+        </div>
+
+        {/* Right: % change, arrow, price */}
+        <div
+          className="itemInfo"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            minWidth: "140px",
+            justifyContent: "flex-end",
+          }}
+        >
+          <span
+            className="percent"
+            style={{
+              fontWeight: 500,
+              color: stock.isDown ? "#e53935" : "#43a047",
+            }}
+          >
+            {stock.percent}
+          </span>
+          {stock.isDown ? (
+            <KeyboardArrowDown className="down" style={{ color: "#e53935" }} />
+          ) : (
+            <KeyboardArrowUp className="up" style={{ color: "#43a047" }} />
+          )}
+          <span
+            className="price"
+            style={{ fontWeight: 600, fontSize: "1rem", color: "#333" }}
+          >
+            ₹{stock.price?.toFixed(2)}
+          </span>
         </div>
       </div>
+
       {hover && <WatchListActions stock={stock} onDelete={onDelete} />}
     </li>
   );
@@ -317,13 +401,7 @@ const WatchListActions = ({ stock, onDelete }) => {
 
   const handleDelete = async () => {
     try {
-      await axios.delete(
-        `http://localhost:3002/watchlist/delete/${stock._id}`,
-        {
-          withCredentials: true,
-        }
-      );
-      onDelete(); // ✅ Call the onDelete handler passed as prop
+      onDelete();
     } catch {
       alert("Failed to delete stock from watchlist");
     }
@@ -364,7 +442,10 @@ const WatchListActions = ({ stock, onDelete }) => {
           arrow
           TransitionComponent={Grow}
         >
-          <button className="action">
+          <button
+            className="action"
+            onClick={() => generalContext.openAnalyticsWindow(stock)}
+          >
             <BarChartOutlined className="icon" />
           </button>
         </Tooltip>
@@ -382,4 +463,3 @@ const WatchListActions = ({ stock, onDelete }) => {
     </span>
   );
 };
-

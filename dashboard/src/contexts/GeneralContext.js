@@ -3,6 +3,7 @@ import axios from "axios";
 
 import BuyActionWindow from "../windows/BuyActionWindow";
 import SellActionWindow from "../windows/SellActionWindow";
+import AnalyticsWindow from "../windows/AnalyticsWindow";
 
 const GeneralContext = React.createContext({
   user: null,
@@ -11,15 +12,19 @@ const GeneralContext = React.createContext({
   closeBuyWindow: () => {},
   openSellWindow: (uid) => {},
   closeSellWindow: () => {},
+  openAnalyticsWindow: (stock) => {},
+  closeAnalyticsWindow: () => {},
+  analyticsStock: null,
 });
 
 export const GeneralContextProvider = (props) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-
   const [isBuyWindowOpen, setIsBuyWindowOpen] = useState(false);
   const [selectedStockUID, setSelectedStockUID] = useState(null);
   const [isSellWindowOpen, setIsSellWindowOpen] = useState(false);
+  const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
+  const [analyticsStock, setAnalyticsStock] = useState(null);
 
   const handleOpenBuyWindow = (uid) => {
     setIsBuyWindowOpen(true);
@@ -40,6 +45,16 @@ export const GeneralContextProvider = (props) => {
   const handleCloseSellWindow = () => {
     setIsSellWindowOpen(false);
     setSelectedStockUID("");
+  };
+  const handleOpenAnalyticsWindow = (stock) => {
+    console.log("Opening analytics for:", stock); 
+    setAnalyticsStock(stock);
+    setIsAnalyticsOpen(true);
+  };
+
+  const handleCloseAnalyticsWindow = () => {
+    setAnalyticsStock(null);
+    setIsAnalyticsOpen(false);
   };
 
   // ✅ Fetch logged-in user on load
@@ -66,11 +81,20 @@ export const GeneralContextProvider = (props) => {
         closeBuyWindow: handleCloseBuyWindow,
         openSellWindow: handleOpenSellWindow,
         closeSellWindow: handleCloseSellWindow,
+        openAnalyticsWindow: handleOpenAnalyticsWindow,
+        closeAnalyticsWindow: handleCloseAnalyticsWindow,
+        analyticsStock,
       }}
     >
       {props.children}
       {isBuyWindowOpen && <BuyActionWindow uid={selectedStockUID} />}
       {isSellWindowOpen && <SellActionWindow uid={selectedStockUID} />}
+      {isAnalyticsOpen && (
+        <AnalyticsWindow
+          stock={analyticsStock}
+          onClose={handleCloseAnalyticsWindow}
+        />
+      )}
     </GeneralContext.Provider>
   );
 };
