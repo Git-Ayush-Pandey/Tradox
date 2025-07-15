@@ -1,39 +1,44 @@
 require("dotenv").config();
-const axios = require("axios");
 const express = require("express");
 const router = express.Router();
+const axios = require("axios");
 
-router.get("/", async (req, res) => {
-  const { symbol, interval, function: func, outputsize, keywords } = req.query;
-  const apiKey = process.env.API_NEW_KEY;
-  console.log("Loaded API key:", apiKey);
+const SEARCH_API_KEY = process.env.SEARCH_API_KEY;
+const LIVEPRICE_API_KEY = process.env.LIVEPRICE_API_KEY;
 
-  if (!func) {
-    return res.status(400).json({ error: "Missing required query parameter: function" });
-  }
+// ✅ 1. Stock Symbol Search
+router.get("/search", async (req, res) => {
+  const { keywords } = req.query;
 
-  let url = `https://www.alphavantage.co/query?function=${func}&apikey=${apiKey}`;
-
-  if (func === "SYMBOL_SEARCH") {
-    if (!keywords) {
-      return res.status(400).json({ error: "Missing keywords for SYMBOL_SEARCH" });
-    }
-    url += `&keywords=${keywords}`;
-  } else {
-    if (!symbol) {
-      return res.status(400).json({ error: "Missing symbol for this function" });
-    }
-    url += `&symbol=${symbol}`;
-    if (interval) url += `&interval=${interval}`;
-    if (outputsize) url += `&outputsize=${outputsize}`;
+  if (!keywords) {
+    return res.status(400).json({ error: "Missing keywords parameter" });
   }
 
   try {
+    const url = `https://finnhub.io/api/v1/search?q=${keywords}&token=${SEARCH_API_KEY}`;
+    const response = await axios.get(url);
+    res.json({ bestMatches: response.data.result });
+  } catch (err) {
+    console.error("🔴 Search Error:", err.message);
+    res.status(500).json({ error: "Failed to fetch search results" });
+  }
+});
+
+// ✅ 2. Live Price Quote
+router.get("/livePrice", async (req, res) => {
+  const { symbol } = req.query;
+
+  if (!symbol) {
+    return res.status(400).json({ error: "Missing symbol parameter" });
+  }
+
+  try {
+    const url = `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${LIVEPRICE_API_KEY}`;
     const response = await axios.get(url);
     res.json(response.data);
-  } catch (error) {
-    console.error("AlphaVantage API error:", error.message);
-    res.status(500).json({ error: "Failed to fetch stock data" });
+  } catch (err) {
+    console.error("🔴 Live Price Error:", err.message);
+    res.status(500).json({ error: "Failed to fetch live price" });
   }
 });
 

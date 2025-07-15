@@ -627,11 +627,7 @@ hr {
   color: rgb(146, 146, 146);
 }
 
-/* sudo selectors */
-.index:hover {
-  cursor: pointer;
-}
-
+/* Watchlist Container */
 .watchlist-container {
   flex-basis: 32%;
   height: 100%;
@@ -641,94 +637,126 @@ hr {
   position: relative;
 }
 
+/* Search Box Wrapper */
 .search-container {
   display: flex;
+  justify-content: center;
   align-items: center;
-  justify-content: space-evenly;
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.search-wrapper {
+  width: 100%;
+  max-width: 500px;
   position: relative;
 }
 
-.search {
-  width: 100%;
-  height: 6%;
-  border: none;
-  padding: 15px 20px;
-  font-size: 0.9rem;
-  font-weight: 400;
-  color: rgb(241, 241, 241);
-  border-bottom: 0.8px solid rgb(235, 234, 234);
-}
-
-.counts {
+/* Search Results Dropdown */
+.search-results {
   position: absolute;
-  right: 20px;
-  font-size: 0.9rem;
-  font-weight: 400;
-  color: rgb(177, 177, 177);
+  top: 100%;
+  left: 0;
+  width: 100%;
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  background-color: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  border-radius: 4px;
+  z-index: 1000;
 }
 
+/* Each Search Result Item */
+.search-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.2s ease;
+}
+
+.search-item:last-child {
+  border-bottom: none;
+}
+
+.search-item:hover {
+  background-color: #f9f9f9;
+  cursor: pointer;
+}
+
+.search-item.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+
+
+/* List Items */
 .list {
   list-style-type: none;
   padding-bottom: 12%;
+  margin: 0;
 }
 
 .list li {
   border-bottom: 0.8px solid rgb(235, 234, 234);
-  padding: 12px 10px 12px 14px;
+  padding: 12px 16px;
+  transition: background 0.2s;
   position: relative;
+}
+
+.list li:hover {
+  cursor: move;
+  background-color: #f3f3f3;
+}
+
+.list li:hover > .actions {
+  display: flex;
 }
 
 .item {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  font-weight: 300;
-  font-size: 0.8rem;
-  position: relative;
+  align-items: center;
 }
 
 .item-info {
   display: flex;
-  justify-content: space-evenly;
   align-items: center;
+  gap: 8px;
+  min-width: 140px;
+  justify-content: flex-end;
 }
 
-.item-info > * {
-  margin-right: 8px;
+.item-info span {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #333;
 }
 
-.item-info span:nth-child(1) {
-  color: rgb(141, 141, 141);
-  flex: 1;
+.down {
+  color: #e53935;
 }
 
-.item-info span:nth-child(2) {
-  color: rgb(223, 73, 73);
-  margin-right: 12px;
-  flex: 2;
+.up {
+  color: #43a047;
 }
 
-.item-info span:nth-child(3) {
-  color: rgb(223, 73, 73);
-  flex: 1;
-}
-
+/* Action Buttons */
 .actions {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
+  display: none;
   align-items: center;
   justify-content: flex-end;
-  display: none;
 }
 
 .actions span button {
   width: 40px;
   height: 30px;
   border-radius: 4px;
-  text-align: center;
   margin-right: 8px;
   cursor: pointer;
 }
@@ -754,9 +782,21 @@ hr {
   border: 0.7px solid #9b9b9b;
 }
 
+.action:hover {
+  background-color: rgb(212, 212, 212);
+}
+
 .icon {
   transform: scale(0.7);
   color: rgb(65, 65, 65);
+}
+
+.search:focus {
+  outline: none;
+}
+
+.index:hover {
+  cursor: pointer;
 }
 
 .watchlist-number {
@@ -789,12 +829,10 @@ hr {
   color: rgb(223, 73, 73);
 }
 
-.down {
-  color: rgb(223, 73, 73);
-}
-
-.up {
-  color: rgb(103, 201, 136);
+.watchlist-number ul li:hover {
+  color: rgb(245, 104, 52);
+  cursor: pointer;
+  background: rgb(243, 243, 243);
 }
 
 .settings {
@@ -802,22 +840,10 @@ hr {
   color: rgb(105, 105, 105);
 }
 
-/* sudo selectors */
-.search:focus {
-  outline: none;
+.settings:hover {
+  cursor: pointer;
 }
 
-.list li:hover {
-  cursor: move;
-  background-color: #f3f3f3;
-}
-
-.list li:hover > .actions {
-  display: flex;
-  cursor: move;
-}
-
-/* TODO */
 .list li::before {
   content: "";
   background: transparent;
@@ -826,43 +852,4 @@ hr {
   position: absolute;
   top: 0;
   left: 0;
-}
-
-.watchlist-number ul li:hover {
-  color: rgb(245, 104, 52);
-  cursor: pointer;
-  background: rgb(243, 243, 243);
-}
-
-.settings:hover {
-  cursor: pointer;
-}
-
-.action:hover {
-  background-color: rgb(212, 212, 212);
-}
-.search-wrapper {
-  display: flex;
-  align-items: center;
-  border: 1px solid #ccc;
-  padding: 6px 10px;
-  border-radius: 25px;
-  background-color: white;
-  width: 100%;
-  max-width: 500px;
-  margin-bottom: 1rem;
-  position: relative;
-}
-
-.search-icon {
-  color: #666;
-  margin-right: 8px;
-}
-
-.search-input {
-  border: none;
-  outline: none;
-  flex: 1;
-  font-size: 1rem;
-  background-color: transparent;
 }

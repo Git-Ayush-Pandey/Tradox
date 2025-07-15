@@ -6,6 +6,10 @@ const OrdersSchema = new Schema({
   qty: Number,
   price: Number,
   mode: String,
+  executed: {
+    type: Boolean,
+    default: false,
+  },
   userId: {
     type: Schema.Types.ObjectId,
     ref: "User",

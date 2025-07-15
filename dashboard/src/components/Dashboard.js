@@ -7,7 +7,7 @@ import ProtectedRoute from "../routes/ProtectedRoute";
 import Orders from "./Orders";
 import Positions from "./Positions";
 import Summary from "./Summary";
-import WatchList from "./WatchList";
+import WatchList from "./Watchlist/index";
 import { GeneralContextProvider } from "../contexts/GeneralContext";
 
 const Dashboard = () => {
