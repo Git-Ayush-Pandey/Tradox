@@ -5,7 +5,6 @@ import GeneralContext from "../../contexts/GeneralContext";
 
 const WatchListActions = ({ stock, onDelete }) => {
   const generalContext = useContext(GeneralContext);
-
   return (
     <span className="actions">
       <span>

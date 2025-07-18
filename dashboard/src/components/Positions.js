@@ -96,7 +96,7 @@ const Positions = () => {
                   </td>
 
                   <td>{stock.qty}</td>
-                  <td>{stock.avg.toFixed(2)}</td>
+                  <td>{stock.avg !== undefined ? stock.avg.toFixed(2) : "N/A"}</td>
                   <td>{stock.price.toFixed(2)}</td>
                   <td>{currentValue.toFixed(2)}</td>
                   <td className={profitClass}>

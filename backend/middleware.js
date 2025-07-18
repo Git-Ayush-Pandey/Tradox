@@ -17,10 +17,6 @@ module.exports.isLoggedIn = async (req, res, next) => {
       return res.status(401).json({ success: false, message: "User not found" });
     }
 
-    if (process.env.NODE_ENV !== "production") {
-      console.log("Authenticated user:", user);
-    }
-
     req.user = user;
     next();
   } catch (err) {

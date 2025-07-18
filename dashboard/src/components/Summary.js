@@ -52,7 +52,6 @@ const Summary = () => {
         <hr className="divider" />
       </div>
 
-      {/* Positions Summary */}
       <div className="section">
         <span>
           <p>Positions ({positions.length})</p>
@@ -78,7 +77,6 @@ const Summary = () => {
         <hr className="divider" />
       </div>
 
-      {/* Holdings Summary */}
       <div className="section">
         <span>
           <p>Holdings ({holdings.length})</p>

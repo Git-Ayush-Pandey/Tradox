@@ -21,30 +21,30 @@ export const GeneralContextProvider = (props) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isBuyWindowOpen, setIsBuyWindowOpen] = useState(false);
-  const [selectedStockUID, setSelectedStockUID] = useState(null);
+  const [selectedStock, setSelectedStock] = useState(null);
   const [isSellWindowOpen, setIsSellWindowOpen] = useState(false);
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const [analyticsStock, setAnalyticsStock] = useState(null);
 
-  const handleOpenBuyWindow = (uid) => {
-    setIsBuyWindowOpen(true);
-    setSelectedStockUID(uid);
+  const handleOpenBuyWindow = (stock) => {
+   setIsBuyWindowOpen(true);
+   setSelectedStock(stock);
   };
 
   const handleCloseBuyWindow = () => {
     setIsBuyWindowOpen(false);
-    setSelectedStockUID("");
+    setSelectedStock("");
   };
 
   const handleOpenSellWindow = (uid) => {
     console.log("Opening SellActionWindow for:", uid);
     setIsSellWindowOpen(true);
-    setSelectedStockUID(uid);
+    setSelectedStock(uid);
   };
 
   const handleCloseSellWindow = () => {
     setIsSellWindowOpen(false);
-    setSelectedStockUID("");
+    setSelectedStock("");
   };
   const handleOpenAnalyticsWindow = (stock) => {
     console.log("Opening analytics for:", stock); 
@@ -87,8 +87,8 @@ export const GeneralContextProvider = (props) => {
       }}
     >
       {props.children}
-      {isBuyWindowOpen && <BuyActionWindow uid={selectedStockUID} />}
-      {isSellWindowOpen && <SellActionWindow uid={selectedStockUID} />}
+      {isBuyWindowOpen && <BuyActionWindow uid={selectedStock} />}
+      {isSellWindowOpen && <SellActionWindow uid={selectedStock} />}
       {isAnalyticsOpen && (
         <AnalyticsWindow
           stock={analyticsStock}
@@ -97,6 +97,6 @@ export const GeneralContextProvider = (props) => {
       )}
     </GeneralContext.Provider>
   );
-};
+}
 
 export default GeneralContext;

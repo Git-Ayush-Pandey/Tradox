@@ -8,7 +8,7 @@ import {
   IconButton,
 } from "@mui/material";
 import { Search, Close } from "@mui/icons-material";
-import { searchStocks, getQuote } from "./api";
+import { searchStocks, getQuote } from "../hooks/api";
 import { useWatchlist } from "./useWatchlist";
 
 const SearchBox = () => {
@@ -36,16 +36,13 @@ const SearchBox = () => {
   const handleAddToWatchlist = async (stock) => {
     if (adding) return;
     if (currentList.length >= 25) return alert("Limit reached");
-
     setAdding(true);
     try {
       const cleanSymbol = stock.name.replace(
         /\.(NS|NE|BO|TO|L|AX|V|SA|TWO)$/i,
         ""
       );
-
       const quote = await getQuote(cleanSymbol);
-
       if (
         !quote?.data ||
         typeof quote.data.c !== "number" ||
@@ -56,9 +53,8 @@ const SearchBox = () => {
         return;
       }
 
-      // 🧾 Build payload using cleaned symbol
       const payload = {
-        name: cleanSymbol, // use cleaned symbol throughout
+        name: cleanSymbol,
         price: quote.data.c,
         percent:
           quote.data.dp !== null ? `${quote.data.dp.toFixed(2)}%` : "0.00%",
@@ -66,18 +62,15 @@ const SearchBox = () => {
         listName: activeList,
       };
 
-      console.log("📦 Sending payload:", payload);
-
       const result = await handleAddStock(payload);
-
       if (result.success) {
         setSearchTerm("");
         setSearchResults([]);
       } else {
-        alert("⚠️ Could not add stock: " + result.message);
+        alert("Could not add stock: " + result.message);
       }
     } catch (err) {
-      console.error("❌ Add Error:", err);
+      console.error("Add Error:", err);
       const msg = err.response?.data?.message || "Something went wrong.";
       alert(msg);
     } finally {

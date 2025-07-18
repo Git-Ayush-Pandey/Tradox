@@ -20,3 +20,21 @@ export const addStock = (payload) =>
 // Delete stock from a watchlist
 export const deleteStock = (id) =>
   axios.delete(`${BASE}/watchlist/delete/${id}`, { withCredentials: true });
+
+export const fetchGraphData = (symbol, interval) =>
+  axios.get(`http://localhost:3002/stock/graph`, {
+    params: { symbol, interval },
+    withCredentials: true,
+  });
+
+  export const fetchOverview = (symbol) =>
+  axios.get(`${BASE}/stock/overview`, {
+    params: { symbol },
+    withCredentials: true,
+  });
+
+export const fetchNews = (symbol, from, to) =>
+  axios.get(`${BASE}/stock/news`, {
+    params: { symbol, from, to },
+    withCredentials: true,
+  });

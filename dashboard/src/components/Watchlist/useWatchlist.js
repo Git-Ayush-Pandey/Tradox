@@ -1,6 +1,5 @@
-// useWatchlist.js
 import { useState, useEffect } from "react";
-import { fetchWatchlists, deleteStock, addStock } from "./api";
+import { fetchWatchlists, deleteStock, addStock } from "../hooks/api";
 
 export const useWatchlist = () => {
   const [watchlists, setWatchlists] = useState({});
@@ -28,7 +27,6 @@ export const useWatchlist = () => {
     setWatchlists((prev) => ({ ...prev, [newName]: [] }));
     setActiveList(newName);
   };
-
   const handleDeleteList = () => {
     const updated = { ...watchlists };
     delete updated[activeList];
@@ -47,29 +45,34 @@ export const useWatchlist = () => {
     });
   };
 
-  // ✅ NEW: Mirror the delete logic for add
-  const handleAddStock = (stock) => {
-    return addStock(stock).then((res) => {
-      if (res.data?.success) {
-        setWatchlists((prev) => {
-          const updatedList = [...(prev[activeList] || []), res.data.item];
-          return { ...prev, [activeList]: updatedList };
-        });
-        return { success: true };
-      } else {
-        return { success: false, message: res.data?.message || "Failed to add" };
-      }
-    }).catch((err) => {
-      console.error("Add Error:", err);
-      return {
-        success: false,
-        message: err.response?.data?.message || "Something went wrong.",
-      };
-    });
+  const handleAddStock = async (stock) => {
+    return await addStock(stock)
+      .then((res) => {
+        if (res.data?.success) {
+          setWatchlists((prev) => {
+            const updatedList = [...(prev[activeList] || []), res.data.item];
+            const newWatchlists = { ...prev, [activeList]: updatedList };
+            console.log(newWatchlists);
+            return newWatchlists;
+          });
+          return { success: true };
+        } else {
+          return {
+            success: false,
+            message: res.data?.message || "Failed to add",
+          };
+        }
+      })
+      .catch((err) => {
+        console.error("Add Error:", err);
+        return {
+          success: false,
+          message: err.response?.data?.message || "Something went wrong.",
+        };
+      });
   };
 
   const currentList = watchlists[activeList] || [];
-
   return {
     watchlists,
     activeList,
@@ -79,6 +82,6 @@ export const useWatchlist = () => {
     handleCreateNewWatchlist,
     handleDeleteList,
     handleDeleteStock,
-    handleAddStock,  // ⬅️ Exported to use in SearchBox
+    handleAddStock,
   };
 };

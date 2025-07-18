@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from "react";
 import axios from "axios";
-import { VerticalGraph } from "./VerticalGraph";
+import { VerticalGraph } from "./ChartJs/VerticalGraph";
 import GeneralContext from "../contexts/GeneralContext";
 
 const Holdings = () => {
@@ -115,7 +115,7 @@ const Holdings = () => {
                     </div>
                   </td>
                   <td>{stock.qty}</td>
-                  <td>{stock.avg.toFixed(2)}</td>
+                  <td>{stock.avg !== undefined ? stock.avg.toFixed(2) : "N/A"}</td>
                   <td>{stock.price.toFixed(2)}</td>
                   <td>{currentValue.toFixed(2)}</td>
                   <td className={profitClass}>

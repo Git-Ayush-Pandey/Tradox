@@ -4,6 +4,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import SearchBox from "./SearchBox";
 import { useWatchlist } from "./useWatchlist";
 import WatchlistItem from "./WatchlistItem";
+import useLivePrices from "../hooks/useLivePrices";
 
 const Watchlist = () => {
   const {
@@ -17,17 +18,26 @@ const Watchlist = () => {
 
   const [localList, setLocalList] = useState([]);
 
-  // 🔁 Always sync localList when watchlists or activeList changes
   useEffect(() => {
-    setLocalList(watchlists[activeList] || []);
+    const updatedList = watchlists[activeList] ? [...watchlists[activeList]] : [];
+    setLocalList(updatedList);
   }, [watchlists, activeList]);
+
+  useLivePrices(
+    localList.map((s) => s.name),
+    (symbol, price) => {
+      setLocalList((prevList) =>
+        prevList.map((item) =>
+          item.name === symbol ? { ...item, price } : item
+        )
+      );
+    }
+  );
 
   return (
     <div className="watchlist-container">
-      {/* Search Box */}
       <SearchBox />
 
-      {/* Header */}
       <Box
         sx={{
           display: "flex",
@@ -60,7 +70,6 @@ const Watchlist = () => {
         </Select>
       </Box>
 
-      {/* Watchlist Items */}
       <ul className="list">
         {localList.length > 0 ? (
           localList.map((stock) => (

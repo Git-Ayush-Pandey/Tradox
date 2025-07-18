@@ -1,43 +1,62 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import useLivePrices from "../components/hooks/useLivePrices";
 
 const Orders = () => {
   const [allOrders, setAllOrders] = useState([]);
   const [hoveredRow, setHoveredRow] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [livePrices, setLivePrices] = useState({});
+  const executingRef = useRef(new Set());
+
+  const symbols = [...new Set(allOrders.map((o) => o.name))];
+
+  useLivePrices(symbols, (symbol, price) => {
+    console.log(`📈 Live price update for ${symbol}: ${price}`);
+    setLivePrices((prev) => ({
+      ...prev,
+      [symbol]: price,
+    }));
+  });
 
   useEffect(() => {
-    const fetchAndMaybeDelete = async () => {
+    const fetchOrders = async () => {
       try {
         const res = await axios.get("http://localhost:3002/orders", {
           withCredentials: true,
         });
 
         const now = new Date();
-        const isAfter3_30PM =
-          now.getHours() > 15 || (now.getHours() === 15 && now.getMinutes() >= 30);
+        const hour = now.getHours();
+        const minute = now.getMinutes();
+        const isAfter1_30AM = hour > 1 || (hour === 1 && minute >= 30);
 
-        if (isAfter3_30PM) {
-          // Auto-delete all orders after 3:30 PM
+        if (isAfter1_30AM) {
           await Promise.all(
-            res.data.map((order) =>
-              axios.delete(`http://localhost:3002/orders/delete/${order._id}`, {
-                withCredentials: true,
-              })
-            )
+            res.data
+              .filter((order) => !order.executed)
+              .map((order) =>
+                axios.delete(
+                  `http://localhost:3002/orders/delete/${order._id}`,
+                  {
+                    withCredentials: true,
+                  }
+                )
+              )
           );
-          setAllOrders([]); // Clear local state
+          setAllOrders([]);
         } else {
-          setAllOrders(res.data); // Just load
+          setAllOrders(res.data);
         }
-      } catch (error) {
-        console.error("Error loading or deleting orders:", error);
+
+      } catch (err) {
+        console.error("❌ Error loading orders:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchAndMaybeDelete();
+    fetchOrders();
   }, []);
 
   const handleCancel = async (id) => {
@@ -46,16 +65,74 @@ const Orders = () => {
         withCredentials: true,
       });
       setAllOrders((prev) => prev.filter((order) => order._id !== id));
-    } catch (error) {
-      console.error("Error cancelling order:", error);
-      alert("Failed to cancel order");
+    } catch (err) {
+      console.error("❌ Error cancelling order:", err);
+      alert("Failed to cancel order.");
     }
   };
+
+  useEffect(() => {
+    const checkAndExecuteOrders = async () => {
+      console.log("🔍 Checking orders for execution...");
+      for (const order of allOrders) {
+        const livePrice = livePrices[order.name];
+        if (!livePrice) {
+          console.log(`⏳ Skipping ${order.name} — no live price yet`);
+          continue;
+        }
+
+        if (executingRef.current.has(order._id)) {
+          console.log(`⏳ Already processing → ${order.name}`);
+          continue;
+        }
+
+        console.log(
+          `🧮 Evaluating ${order.mode} order for ${order.name} → Order Price: ${order.price}, Live Price: ${livePrice}`
+        );
+
+        const shouldExecute =
+          (order.mode === "BUY" && livePrice <= order.price) ||
+          (order.mode === "SELL" && livePrice >= order.price);
+
+        if (!shouldExecute) {
+          console.log(`❌ Not eligible yet → ${order.name}`);
+          continue;
+        }
+
+        executingRef.current.add(order._id);
+        try {
+          const res = await axios.post(
+            `http://localhost:3002/orders/execute/${order._id}`,
+            {},
+            { withCredentials: true }
+          );
+
+          setAllOrders((prev) =>
+            prev.map((o) => (o._id === order._id ? res.data.order : o))
+          );
+
+          console.log(
+            `✅ Executed ${order.mode} order for ${order.name} at live price ${livePrice}`
+          );
+        } catch (err) {
+          console.error(`❌ Failed to execute order ${order._id}:`, err);
+        } finally {
+          executingRef.current.delete(order._id);
+        }
+      }
+    };
+
+    if (Object.keys(livePrices).length > 0 && allOrders.length > 0) {
+      checkAndExecuteOrders();
+    }
+  }, [livePrices, allOrders]);
 
   if (loading) return <div className="text-center mt-4">Loading orders...</div>;
 
   if (allOrders.length === 0)
-    return <div className="text-center mt-4 text-muted">No active orders found.</div>;
+    return (
+      <div className="text-center mt-4 text-muted">No active orders found.</div>
+    );
 
   return (
     <>
@@ -64,35 +141,45 @@ const Orders = () => {
         <table className="table table-striped">
           <thead className="thead-dark">
             <tr>
-              <th scope="col">Name</th>
-              <th scope="col">Qty.</th>
-              <th scope="col">Price</th>
-              <th scope="col">Mode</th>
+              <th>Name</th>
+              <th>Qty</th>
+              <th>Price</th>
+              <th>Mode</th>
+              <th>Live</th>
+              <th>Status</th>
             </tr>
           </thead>
           <tbody>
-            {allOrders.map((stock) => (
+            {allOrders.map((order) => (
               <tr
-                key={stock._id}
-                onMouseEnter={() => setHoveredRow(stock._id)}
+                key={order._id}
+                onMouseEnter={() => setHoveredRow(order._id)}
                 onMouseLeave={() => setHoveredRow(null)}
               >
                 <td>
                   <div className="d-flex align-items-center">
-                    <span>{stock.name}</span>
-                    {hoveredRow === stock._id && (
+                    <span>{order.name}</span>
+                    {hoveredRow === order._id && !order.executed && (
                       <button
                         className="btn btn-danger btn-sm ms-3"
-                        onClick={() => handleCancel(stock._id)}
+                        onClick={() => handleCancel(order._id)}
                       >
                         Cancel
                       </button>
                     )}
                   </div>
                 </td>
-                <td>{stock.qty}</td>
-                <td>{stock.price}</td>
-                <td>{stock.mode}</td>
+                <td>{order.qty}</td>
+                <td>{order.price}</td>
+                <td>{order.mode}</td>
+                <td>{livePrices[order.name]?.toFixed(2) || "-"}</td>
+                <td>
+                  {order.executed ? (
+                    <span className="badge bg-success">Executed</span>
+                  ) : (
+                    <span className="badge bg-warning text-dark">Pending</span>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>

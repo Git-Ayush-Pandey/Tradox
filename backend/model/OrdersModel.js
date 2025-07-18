@@ -6,6 +6,7 @@ const OrdersSchema = new Schema({
   qty: Number,
   price: Number,
   mode: String,
+  type: String,
   executed: {
     type: Boolean,
     default: false,

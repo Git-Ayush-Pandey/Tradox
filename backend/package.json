@@ -24,6 +24,7 @@
     "passport": "^0.7.0",
     "passport-local": "^1.0.0",
     "passport-local-mongoose": "^8.0.0",
+    "reconnecting-websocket": "^4.4.0",
     "ws": "^8.18.3"
   }
 }
