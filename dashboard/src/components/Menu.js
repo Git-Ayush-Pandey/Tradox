@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios";
+import { logout } from "./hooks/api";
 
 const Menu = () => {
   const [selectedMenu, setSelectedMenu] = useState(0);
@@ -15,9 +15,7 @@ const Menu = () => {
   };
   const handleLogoutClick = async () => {
     try {
-      await axios.get("http://localhost:3002/auth/logout", {
-        withCredentials: true,
-      });
+      logout();
       setIsProfileDropdownOpen(false);
       window.location.href = "http://localhost:3001/signup";
     } catch (error) {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { addFunds, withdrawFunds, FetchFunds } from "./hooks/api";
 import FundWindow from "../windows/FundWindow";
 
 const Funds = () => {
@@ -10,9 +10,7 @@ const Funds = () => {
 
   const fetchFunds = async () => {
     try {
-      const res = await axios.get("http://localhost:3002/funds", {
-        withCredentials: true,
-      });
+      const res = await FetchFunds();
       setFund(res.data);
     } catch (err) {
       console.error("Error fetching fund data:", err);
@@ -32,13 +30,12 @@ const Funds = () => {
     }
 
     try {
-      const url = `http://localhost:3002/funds/${modalType}`;
-      await axios.post(
-        url,
-        { amount: parseFloat(amount) },
-        { withCredentials: true }
-      );
-
+      if (modalType === "add"){
+        addFunds({amount: parseFloat(amount)})
+      }
+      else if (modalType === "withdraw"){
+        withdrawFunds({ amount: parseFloat(amount) })
+      }
       await fetchFunds();
       setModalOpen(false);
       setAmount("");
@@ -47,7 +44,6 @@ const Funds = () => {
       console.error("Fund transfer error:", err);
     }
   };
-
   return (
     <>
       <div className="funds text-center d-flex flex-column align-items-center justify-content-center py-3">

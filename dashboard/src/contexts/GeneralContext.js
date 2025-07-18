@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
-
+import { verifyToken } from "../components/hooks/api";
 import BuyActionWindow from "../windows/BuyActionWindow";
 import SellActionWindow from "../windows/SellActionWindow";
 import AnalyticsWindow from "../windows/AnalyticsWindow";
@@ -64,8 +63,7 @@ export const GeneralContextProvider = (props) => {
   };
 
   useEffect(() => {
-    axios
-      .get("http://localhost:3002/auth/verify", { withCredentials: true })
+    verifyToken()
       .then((res) => {
         if (res.data.status) {
           setUser(res.data.safeUser);

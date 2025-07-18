@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useContext } from "react";
-import axios from "axios";
+import { FetchOrders, deleteOrder, executeOrder } from "./hooks/api";
 import useLivePrices from "../components/hooks/useLivePrices";
 import GeneralContext from "../contexts/GeneralContext";
 
@@ -19,13 +19,10 @@ const Orders = () => {
       [symbol]: price,
     }));
   });
-
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const res = await axios.get("http://localhost:3002/orders", {
-          withCredentials: true,
-        });
+        const res = await FetchOrders();
         const now = new Date();
         const hour = now.getHours();
         const minute = now.getMinutes();
@@ -36,12 +33,7 @@ const Orders = () => {
             res.data
               .filter((order) => !order.executed)
               .map((order) =>
-                axios.delete(
-                  `http://localhost:3002/orders/delete/${order._id}`,
-                  {
-                    withCredentials: true,
-                  }
-                )
+                deleteOrder(order._id)
               )
           );
           setAllOrders([]);
@@ -59,9 +51,8 @@ const Orders = () => {
 
   const handleCancel = async (id) => {
     try {
-      await axios.delete(`http://localhost:3002/orders/delete/${id}`, {
-        withCredentials: true,
-      });
+      await deleteOrder(id)
+
       setAllOrders((prev) => prev.filter((order) => order._id !== id));
     } catch (err) {
       console.error("Error cancelling order:", err);
@@ -95,11 +86,7 @@ const Orders = () => {
         }
         executingRef.current.add(order._id);
         try {
-          const res = await axios.post(
-            `http://localhost:3002/orders/execute/${order._id}`,
-            {},
-            { withCredentials: true }
-          );
+          const res = executeOrder(order._id);
           setAllOrders((prev) =>
             prev.map((o) => (o._id === order._id ? res.data.order : o))
           );

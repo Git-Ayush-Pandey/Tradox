@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { verifyToken } from "../components/hooks/api";
 
 const ProtectedRoute = ({ children }) => {
   const [auth, setAuth] = useState(null); 
 
   useEffect(() => {
-    axios
-      .get("http://localhost:3002/auth/verify", { withCredentials: true })
+    verifyToken()
       .then((res) => {
         setAuth(res.data.status);
       })

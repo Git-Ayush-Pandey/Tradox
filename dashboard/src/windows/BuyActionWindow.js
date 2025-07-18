@@ -11,7 +11,7 @@ import {
   IconButton,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import axios from "axios";
+import { FetchFunds, editOrder, placeOrder } from "../components/hooks/api";
 import GeneralContext from "../contexts/GeneralContext";
 
 const BuyActionWindow = ({ uid, existingOrder = null }) => {
@@ -28,8 +28,7 @@ const BuyActionWindow = ({ uid, existingOrder = null }) => {
   }, [stockQuantity, stockPrice]);
 
   useEffect(() => {
-    axios
-      .get("http://localhost:3002/funds", { withCredentials: true })
+    FetchFunds()
       .then((res) => {
         setAvailableMargin(res.data.availableMargin || 0);
       })
@@ -59,15 +58,9 @@ const BuyActionWindow = ({ uid, existingOrder = null }) => {
 
     try {
       if (isEdit) {
-        await axios.put(
-          `http://localhost:3002/orders/edit/${existingOrder._id}`,
-          payload,
-          { withCredentials: true }
-        );
+        await editOrder( existingOrder._id, payload)
       } else {
-        await axios.post("http://localhost:3002/orders/new", payload, {
-          withCredentials: true,
-        });
+        await placeOrder(payload)
       }
 
       closeBuyWindow();

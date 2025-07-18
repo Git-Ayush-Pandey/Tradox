@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
-
+import { verifyToken, fetchHoldings, fetchPositions } from "./hooks/api";
 const Summary = () => {
   const [holdings, setHoldings] = useState([]);
   const [positions, setPositions] = useState([]);
@@ -11,15 +10,9 @@ const Summary = () => {
     const fetchEverything = async () => {
       try {
         const [userRes, holdingsRes, positionsRes] = await Promise.all([
-          axios.get("http://localhost:3002/auth/verify", {
-            withCredentials: true,
-          }),
-          axios.get("http://localhost:3002/holdings", {
-            withCredentials: true,
-          }),
-          axios.get("http://localhost:3002/positions", {
-            withCredentials: true,
-          }),
+          verifyToken(),
+          fetchHoldings(),
+          fetchPositions(),
         ]);
         if (userRes.data.status) {
           setUser(userRes.data.safeUser);

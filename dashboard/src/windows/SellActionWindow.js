@@ -1,5 +1,5 @@
 import { useState, useContext, useEffect } from "react";
-import axios from "axios";
+import { fetchHoldings, fetchPositions, editOrder, placeOrder } from "../components/hooks/api";
 import GeneralContext from "../contexts/GeneralContext";
 import "./Window.css";
 import {
@@ -26,14 +26,12 @@ const SellActionWindow = ({ uid, existingOrder = null }) => {
   const stockName = uid.name;
 
   useEffect(() => {
-    axios
-      .get("http://localhost:3002/positions", { withCredentials: true })
+    fetchPositions()
       .then((res) => {
         setPositions(res.data);
       });
 
-    axios
-      .get("http://localhost:3002/holdings", { withCredentials: true })
+   fetchHoldings
       .then((res) => {
         setHoldings(res.data);
       });
@@ -70,15 +68,9 @@ const SellActionWindow = ({ uid, existingOrder = null }) => {
     };
     try {
       if (isEdit) {
-        await axios.put(
-          `http://localhost:3002/orders/edit/${existingOrder._id}`,
-          payload,
-          { withCredentials: true }
-        );
+        await editOrder(existingOrder._id, payload)
       } else {
-        await axios.post("http://localhost:3002/orders/new", payload, {
-          withCredentials: true,
-        });
+        await placeOrder(payload);
       }
       closeSellWindow();
     } catch (err) {

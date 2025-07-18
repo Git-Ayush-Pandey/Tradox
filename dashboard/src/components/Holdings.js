@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from "react";
-import axios from "axios";
+import { fetchHoldings } from "./hooks/api";
 import { VerticalGraph } from "./ChartJs/VerticalGraph";
 import GeneralContext from "../contexts/GeneralContext";
 
@@ -10,10 +10,7 @@ const Holdings = () => {
   const generalContext = useContext(GeneralContext);
 
   useEffect(() => {
-    axios
-      .get("http://localhost:3002/holdings", {
-        withCredentials: true,
-      })
+   fetchHoldings()
       .then((res) => {
         setAllHoldings(res.data);
         setLoading(false);

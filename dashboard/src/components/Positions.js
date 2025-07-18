@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from "react";
-import axios from "axios";
+import { fetchPositions } from "./hooks/api";
 import GeneralContext from "../contexts/GeneralContext";
 
 const Positions = () => {
@@ -9,10 +9,7 @@ const Positions = () => {
   const generalContext = useContext(GeneralContext);
 
   useEffect(() => {
-    axios
-      .get("http://localhost:3002/positions", {
-        withCredentials: true,
-      })
+    fetchPositions()
       .then((res) => {
         setAllPositions(res.data);
       })
