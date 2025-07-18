@@ -1,4 +1,3 @@
-// models/FundsModel.js
 const { Schema, model } = require("mongoose");
 
 const FundsSchema = new Schema({

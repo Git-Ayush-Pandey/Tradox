@@ -21,22 +21,17 @@ router.post("/new", isLoggedIn, async (req, res) => {
   const isWeekend = day === 0 || day === 6;
   const isBefore7PM = hour < 19;
   const isAfter130AM = hour > 1 || (hour === 1 && minute > 30);
-  const isMarketClosed = isBefore7PM && hour !== 0 || isAfter130AM;
+  const isMarketClosed = (isBefore7PM && hour !== 0) || isAfter130AM;
 
   if (isWeekend || isMarketClosed) {
     return res.status(403).json({
       success: false,
-      message: "Orders can only be placed between 7:00 PM and 1:30 AM IST on weekdays.",
+      message:
+        "Orders can only be placed between 7:00 PM and 1:30 AM IST on weekdays.",
     });
   }
   const { name, qty, price, mode, type } = req.body;
   const userId = req.user._id;
-  if (!name || !qty || !price || !mode || !type) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Missing fields in order" });
-  }
-
   const totalCost = qty * price;
 
   try {
@@ -46,14 +41,12 @@ router.post("/new", isLoggedIn, async (req, res) => {
         .status(404)
         .json({ success: false, message: "Fund record not found" });
     }
-
     if (mode === "BUY") {
       if (fund.availableCash < totalCost) {
         return res
           .status(400)
           .json({ success: false, message: "Insufficient available cash" });
       }
-
       fund.availableCash -= totalCost;
       fund.usedMargin += totalCost;
       fund.exposure += totalCost;
@@ -74,6 +67,7 @@ router.post("/new", isLoggedIn, async (req, res) => {
     });
 
     await newOrder.save();
+    console.log(newOrder);
     return res.status(201).json({
       success: true,
       message: "Order placed successfully",
@@ -139,12 +133,10 @@ router.post("/execute/:id", isLoggedIn, async (req, res) => {
     if (order.mode === "BUY" && user.funds < totalCost) {
       return res.status(400).json({ error: "Insufficient funds" });
     }
-
     if (order.mode === "BUY") {
       user.funds -= totalCost;
       await user.save();
     }
-    console.log(order.type);
     if (order.mode === "BUY") {
       if (order.type === "Delivery") {
         await Holding.updateOne(
@@ -160,14 +152,96 @@ router.post("/execute/:id", isLoggedIn, async (req, res) => {
         );
       }
     }
-
     order.executed = true;
     await order.save();
-
     res.json({ success: true, order });
   } catch (err) {
     console.error("❌ Order execution failed:", err);
     res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.put("/edit/:id", isLoggedIn, async (req, res) => {
+  const { id } = req.params;
+  const { qty, price, type } = req.body;
+  const userId = req.user._id;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid order ID" });
+  }
+  try {
+    const order = await Order.findOne({ _id: id, userId });
+
+    if (!order) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found or unauthorized" });
+    }
+
+    if (order.executed) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Cannot edit an already executed order",
+        });
+    }
+
+    const fund = await Fund.findOne({ userId });
+    if (!fund) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Fund record not found" });
+    }
+    const oldTotal = order.qty * order.price;
+    if (order.mode === "BUY") {
+      fund.availableCash += oldTotal;
+      fund.usedMargin -= oldTotal;
+      fund.exposure -= oldTotal;
+    } else if (order.mode === "SELL") {
+      fund.availableCash -= oldTotal;
+      fund.availableMargin -= oldTotal;
+    }
+    const newTotal = qty * price;
+    if (order.mode === "BUY") {
+      if (fund.availableCash < newTotal) {
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message: "Insufficient funds for edited order",
+          });
+      }
+      fund.availableCash -= newTotal;
+      fund.usedMargin += newTotal;
+      fund.exposure += newTotal;
+    } else if (order.mode === "SELL") {
+      fund.availableCash += newTotal;
+      fund.availableMargin += newTotal;
+    }
+    fund.availableMargin =
+      fund.availableCash + fund.collateralLiquid + fund.collateralEquity;
+
+    await fund.save();
+
+    order.qty = qty;
+    order.price = price;
+    order.type = type;
+    await order.save();
+
+    return res.json({
+      success: true,
+      message: "Order updated successfully",
+      order,
+    });
+  } catch (err) {
+    console.error("Edit order error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while editing order",
+    });
   }
 });
 

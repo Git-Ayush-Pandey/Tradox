@@ -11,15 +11,19 @@ const Summary = () => {
     const fetchEverything = async () => {
       try {
         const [userRes, holdingsRes, positionsRes] = await Promise.all([
-          axios.get("http://localhost:3002/auth/verify", { withCredentials: true }),
-          axios.get("http://localhost:3002/holdings", { withCredentials: true }),
-          axios.get("http://localhost:3002/positions", { withCredentials: true }),
+          axios.get("http://localhost:3002/auth/verify", {
+            withCredentials: true,
+          }),
+          axios.get("http://localhost:3002/holdings", {
+            withCredentials: true,
+          }),
+          axios.get("http://localhost:3002/positions", {
+            withCredentials: true,
+          }),
         ]);
-
         if (userRes.data.status) {
           setUser(userRes.data.safeUser);
         }
-
         setHoldings(holdingsRes.data);
         setPositions(positionsRes.data);
         setLoading(false);
@@ -28,7 +32,6 @@ const Summary = () => {
         setLoading(false);
       }
     };
-
     fetchEverything();
   }, []);
 
@@ -41,7 +44,6 @@ const Summary = () => {
   };
 
   if (loading) return <div>Loading summary...</div>;
-
   const holdingsPL = calculatePL(holdings);
   const positionsPL = calculatePL(positions);
 
@@ -51,7 +53,6 @@ const Summary = () => {
         <h6>Hi, {user?.name || "User"}!</h6>
         <hr className="divider" />
       </div>
-
       <div className="section">
         <span>
           <p>Positions ({positions.length})</p>
@@ -76,7 +77,6 @@ const Summary = () => {
         </div>
         <hr className="divider" />
       </div>
-
       <div className="section">
         <span>
           <p>Holdings ({holdings.length})</p>

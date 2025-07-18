@@ -48,7 +48,7 @@ const SearchBox = () => {
         typeof quote.data.c !== "number" ||
         quote.data.c <= 0
       ) {
-        alert("⚠️ Live price not available for this stock");
+        alert("Live price not available for this stock");
         setAdding(false);
         return;
       }

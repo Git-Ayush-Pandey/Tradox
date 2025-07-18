@@ -24,7 +24,7 @@ const useLivePrices = (symbols, onUpdate) => {
         console.log(`📨 Subscribed to ${symbol}`);
       });
     };
-    ws.current.onmessage = async(event) => {
+    ws.current.onmessage = async (event) => {
       try {
         const text = await event.data.text();
         const data = JSON.parse(text);
@@ -35,11 +35,11 @@ const useLivePrices = (symbols, onUpdate) => {
           });
         }
       } catch (err) {
-        console.error("❌ WebSocket parse error:", err);
+        console.error("WebSocket parse error:", err);
       }
     };
     ws.current.onerror = (err) => {
-      console.error("❌ WebSocket error:", err);
+      console.error("WebSocket error:", err);
     };
 
     ws.current.onclose = () => {

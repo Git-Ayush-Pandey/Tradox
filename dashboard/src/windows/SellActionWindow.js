@@ -2,16 +2,27 @@ import { useState, useContext, useEffect } from "react";
 import axios from "axios";
 import GeneralContext from "../contexts/GeneralContext";
 import "./Window.css";
-
-const SellActionWindow = ({ uid }) => {
-  const [stockQuantity, setStockQuantity] = useState(1);
-  const [stockPrice, setStockPrice] = useState(0.0);
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  TextField,
+  Typography,
+  Box,
+  IconButton,
+} from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+const SellActionWindow = ({ uid, existingOrder = null }) => {
+  const isEdit = !!existingOrder;
+  const [stockQuantity, setStockQuantity] = useState(existingOrder?.qty || 1);
+  const [stockPrice, setStockPrice] = useState(existingOrder?.price || 0);
+  const [orderType, setOrderType] = useState(existingOrder?.type || "Delivery");
   const { closeSellWindow, user } = useContext(GeneralContext);
   const [positions, setPositions] = useState([]);
   const [holdings, setHoldings] = useState([]);
   const [availableQty, setAvailableQty] = useState(0);
-
-  // Destructure stock name and id from uid
   const stockName = uid.name;
 
   useEffect(() => {
@@ -37,125 +48,125 @@ const SellActionWindow = ({ uid }) => {
       .filter((item) => item.name === stockName)
       .reduce((acc, item) => acc + item.qty, 0);
 
-    setAvailableQty(posQty + holdQty);
-  }, [positions, holdings, stockName]);
+    if (orderType === "Delivery") {
+      setAvailableQty(holdQty);
+    } else {
+      setAvailableQty(posQty);
+    }
+  }, [positions, holdings, stockName, orderType]);
 
-  const isMarketOpen = () => {
-    const now = new Date();
-    const day = now.getDay(); // 0 = Sun, 6 = Sat
-    const hour = now.getHours();
-    const minute = now.getMinutes();
-
-    const isWeekday = day >= 1 && day <= 5;
-    const isOpen = hour > 9 || (hour === 9 && minute >= 0);
-    const isBeforeClose = hour < 15 || (hour === 15 && minute <= 30);
-
-    return isWeekday && isOpen && isBeforeClose;
-  };
-
-  const handleSellClick = () => {
+  const handleSellClick = async () => {
     if (!user) {
       alert("You must be logged in to place a sell order.");
       closeSellWindow();
       return;
     }
-    if (!isMarketOpen()) {
-      alert(
-        "Orders can only be placed between 9:00 AM and 3:30 PM on weekdays."
-      );
+    const payload = {
+      name: stockName,
+      qty: Number(stockQuantity),
+      price: Number(stockPrice),
+      mode: "SELL",
+      type: orderType,
+    };
+    try {
+      if (isEdit) {
+        await axios.put(
+          `http://localhost:3002/orders/edit/${existingOrder._id}`,
+          payload,
+          { withCredentials: true }
+        );
+      } else {
+        await axios.post("http://localhost:3002/orders/new", payload, {
+          withCredentials: true,
+        });
+      }
       closeSellWindow();
-      return;
+    } catch (err) {
+      if (err.response?.data?.message) {
+        alert(err.response.data.message);
+      } else {
+        alert("An error occurred while placing the order.");
+      }
+      console.error("Sell order error:", err);
     }
-    axios
-      .post(
-        "http://localhost:3002/orders/new",
-        {
-          name: stockName,
-          qty: Number(stockQuantity),
-          price: Number(stockPrice),
-          mode: "SELL",
-        },
-        { withCredentials: true } // ✅ Include credentials to send JWT cookie
-      )
-      .then(() => {
-        console.log("Sell order submitted successfully");
-        closeSellWindow();
-      })
-      .catch((err) => {
-        console.error("Error submitting sell order:", err);
-        alert("Sell order failed. Please login again.");
-      });
-  };
-  const handleCancelClick = () => {
-    closeSellWindow();
   };
   return (
-    <div
-      className="container mb-5 sell-window-container"
-      id="sell-window"
-      draggable="true"
-    >
-      <div className="row justify-content-center">
-        <div className="col-md-8 col-lg-6">
-          <form className="border p-4 rounded shadow-sm bg-light">
-            <h2 className="fw-semibold text-dark">Place Sell Order</h2>
+    <Dialog open onClose={closeSellWindow} maxWidth="xs" fullWidth>
+      <DialogTitle>
+        Place Sell Order for {stockName}
+        <IconButton
+          onClick={closeSellWindow}
+          sx={{ position: "absolute", right: 8, top: 8 }}
+        >
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
 
-            <div className="form-group mb-3">
-              <label htmlFor="qty" className="fw-semibold">
-                Quantity{" "}
-                <span className="text-muted">(Available: {availableQty})</span>
-              </label>
-              <input
-                type="number"
-                className="form-control"
-                id="qty"
-                name="qty"
-                min="1"
-                max={availableQty}
-                value={stockQuantity}
-                onChange={(e) => setStockQuantity(Number(e.target.value))}
-                disabled={availableQty === 0}
-                required
-              />
-            </div>
+      <Box display="flex" justifyContent="space-between" mt={2} mx={2}>
+        <Button
+          variant={orderType === "Delivery" ? "contained" : "outlined"}
+          color="secondary"
+          onClick={() => setOrderType("Delivery")}
+          fullWidth
+          sx={{ mr: 1 }}
+        >
+          Delivery
+        </Button>
+        <Button
+          variant={orderType === "Intraday" ? "contained" : "outlined"}
+          color="secondary"
+          onClick={() => setOrderType("Intraday")}
+          fullWidth
+          sx={{ ml: 1 }}
+        >
+          Intraday
+        </Button>
+      </Box>
 
-            <div className="form-group mb-3">
-              <label htmlFor="price" className="fw-semibold">
-                Price (₹)
-              </label>
-              <input
-                type="number"
-                className="form-control"
-                id="price"
-                name="price"
-                step="0.05"
-                value={stockPrice}
-                onChange={(e) => setStockPrice(Number(e.target.value))}
-                required
-              />
-            </div>
+      <DialogContent dividers>
+        <TextField
+          fullWidth
+          label={`Quantity (Available: ${availableQty})`}
+          type="number"
+          margin="normal"
+          inputProps={{ min: 1, max: availableQty }}
+          value={stockQuantity}
+          onChange={(e) => setStockQuantity(Number(e.target.value))}
+          disabled={availableQty === 0}
+        />
+        <TextField
+          fullWidth
+          label="Price (₹)"
+          type="number"
+          margin="normal"
+          inputProps={{ step: 0.05 }}
+          value={stockPrice}
+          onChange={(e) => setStockPrice(Number(e.target.value))}
+        />
+        <Box mt={2}>
+          <Typography variant="body2">
+            Estimated value:{" "}
+            <strong>₹{(stockPrice * stockQuantity).toFixed(2)}</strong>
+          </Typography>
+        </Box>
+      </DialogContent>
 
-            <div className="d-flex gap-2">
-              <button
-                type="button"
-                className="btn btn-danger w-50"
-                onClick={handleSellClick}
-                disabled={availableQty === 0}
-              >
-                Sell
-              </button>
-              <button
-                type="button"
-                className="btn btn-secondary w-50"
-                onClick={handleCancelClick}
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+      <DialogActions>
+        <Button
+          variant="contained"
+          color="error"
+          onClick={handleSellClick}
+          fullWidth
+          disabled={availableQty === 0}
+        >
+          {isEdit ? "Update Order" : "Sell"}
+        </Button>
+
+        <Button variant="outlined" onClick={closeSellWindow} fullWidth>
+          Cancel
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 };
 

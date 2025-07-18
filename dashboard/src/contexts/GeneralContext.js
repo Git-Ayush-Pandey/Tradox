@@ -19,35 +19,41 @@ const GeneralContext = React.createContext({
 
 export const GeneralContextProvider = (props) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [isBuyWindowOpen, setIsBuyWindowOpen] = useState(false);
   const [selectedStock, setSelectedStock] = useState(null);
   const [isSellWindowOpen, setIsSellWindowOpen] = useState(false);
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const [analyticsStock, setAnalyticsStock] = useState(null);
+  const [editOrder, setEditOrder] = useState(null);
 
-  const handleOpenBuyWindow = (stock) => {
-   setIsBuyWindowOpen(true);
-   setSelectedStock(stock);
+  const handleOpenBuyWindow = (stock, order = null) => {
+    console.log("Opening BuyActionWindow for:", stock);
+    setIsBuyWindowOpen(true);
+    setSelectedStock(stock);
+    setEditOrder(order);
   };
 
   const handleCloseBuyWindow = () => {
     setIsBuyWindowOpen(false);
-    setSelectedStock("");
+    setSelectedStock(null);
+    setEditOrder(null);
   };
 
-  const handleOpenSellWindow = (uid) => {
-    console.log("Opening SellActionWindow for:", uid);
+  const handleOpenSellWindow = (stock, order = null) => {
+    console.log("Opening SellActionWindow for:", stock);
     setIsSellWindowOpen(true);
-    setSelectedStock(uid);
+    setSelectedStock(stock);
+    setEditOrder(order);
   };
 
   const handleCloseSellWindow = () => {
     setIsSellWindowOpen(false);
-    setSelectedStock("");
+    setSelectedStock(null);
+    setEditOrder(null);
   };
   const handleOpenAnalyticsWindow = (stock) => {
-    console.log("Opening analytics for:", stock); 
+    console.log("Opening analytics for:", stock);
     setAnalyticsStock(stock);
     setIsAnalyticsOpen(true);
   };
@@ -57,13 +63,12 @@ export const GeneralContextProvider = (props) => {
     setIsAnalyticsOpen(false);
   };
 
-  // ✅ Fetch logged-in user on load
   useEffect(() => {
     axios
       .get("http://localhost:3002/auth/verify", { withCredentials: true })
       .then((res) => {
         if (res.data.status) {
-          setUser(res.data.safeUser); // { id, name, email, phone }
+          setUser(res.data.safeUser);
         } else {
           setUser(null);
         }
@@ -87,8 +92,12 @@ export const GeneralContextProvider = (props) => {
       }}
     >
       {props.children}
-      {isBuyWindowOpen && <BuyActionWindow uid={selectedStock} />}
-      {isSellWindowOpen && <SellActionWindow uid={selectedStock} />}
+      {isBuyWindowOpen && (
+        <BuyActionWindow uid={selectedStock} existingOrder={editOrder} />
+      )}
+      {isSellWindowOpen && (
+        <SellActionWindow uid={selectedStock} existingOrder={editOrder} />
+      )}
       {isAnalyticsOpen && (
         <AnalyticsWindow
           stock={analyticsStock}
@@ -97,6 +106,6 @@ export const GeneralContextProvider = (props) => {
       )}
     </GeneralContext.Provider>
   );
-}
+};
 
 export default GeneralContext;

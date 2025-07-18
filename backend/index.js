@@ -7,11 +7,11 @@ const cookieParser = require("cookie-parser");
 const passport = require("passport");
 const localStr = require("passport-local").Strategy;
 const http = require("http");
-const WebSocket = require("ws"); // ✅ corrected casing
+const WebSocket = require("ws"); 
 
 const app = express();
-const server = http.createServer(app); // ✅ required for WS + HTTP
-const wss = new WebSocket.Server({ server }); // ✅ WebSocket server
+const server = http.createServer(app); 
+const wss = new WebSocket.Server({ server }); 
 
 const PORT = process.env.PORT || 3002;
 const MONGO_URL = process.env.MONGO_URL;
@@ -22,7 +22,6 @@ if (!MONGO_URL || !JWT_SECRET) {
   process.exit(1);
 }
 
-// ✅ Model and Routes
 const User = require("./model/UserModel");
 const orderRoute = require("./routes/OrdersRoute");
 const authRoute = require("./routes/AuthRoutes");
@@ -32,7 +31,6 @@ const watchlistRoute = require("./routes/WatchlistRoute");
 const apiRouter = require("./routes/apiRouter");
 const fundRoute = require("./routes/fundsRoute");
 
-// ✅ CORS
 const allowedOrigins = ["http://localhost:3000", "http://localhost:3001"];
 app.use(
   cors({
@@ -47,7 +45,6 @@ app.use(
   })
 );
 
-// ✅ Middleware
 app.use(express.json());
 app.use(cookieParser());
 app.use(passport.initialize());
@@ -55,7 +52,6 @@ passport.use(new localStr({ usernameField: "email" }, User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
-// ✅ REST Routes
 app.use("/auth", authRoute);
 app.use("/positions", positionsRoute);
 app.use("/holdings", holdingsRoute);
@@ -64,7 +60,6 @@ app.use("/orders", orderRoute);
 app.use("/stock", apiRouter);
 app.use("/funds", fundRoute);
 
-// ✅ MongoDB
 const connectToMongoDB = async () => {
   try {
     await mongoose.connect(MONGO_URL);
@@ -76,7 +71,6 @@ const connectToMongoDB = async () => {
 };
 connectToMongoDB();
 
-// ✅ WebSocket Logic
 const finnhubSocket = new WebSocket(`wss://ws.finnhub.io?token=${process.env.LIVEPRICE_API_KEY}`);
 
 finnhubSocket.on("open", () => {
@@ -91,7 +85,6 @@ finnhubSocket.on("message", (data) => {
     }
   });
 });
-
 
 wss.on("connection", (ws) => {
   console.log("🟢 Client connected to WebSocket");
@@ -118,7 +111,6 @@ wss.on("connection", (ws) => {
 
 });
 
-// ✅ Start HTTP + WebSocket Server
 server.listen(PORT, () => {
   console.log(`🚀 App + WebSocket running at http://localhost:${PORT}`);
 });

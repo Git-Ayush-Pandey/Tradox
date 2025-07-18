@@ -25,7 +25,8 @@ router.get("/search", async (req, res) => {
 
 router.get("/livePrice", async (req, res) => {
   const { symbol } = req.query;
-  if (!symbol) return res.status(400).json({ error: "Missing symbol parameter" });
+  if (!symbol)
+    return res.status(400).json({ error: "Missing symbol parameter" });
   try {
     const url = `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${LIVEPRICE_API_KEY}`;
     const response = await axios.get(url);
@@ -41,7 +42,6 @@ router.get("/graph", async (req, res) => {
   if (!symbol || !interval) {
     return res.status(400).json({ error: "Missing symbol or interval" });
   }
-
   const url = `https://www.alphavantage.co/query`;
   const params = {
     apikey: ALPHA_VANTAGE_KEY,
@@ -74,9 +74,10 @@ router.get("/graph", async (req, res) => {
 router.get("/news", async (req, res) => {
   const { symbol, from, to } = req.query;
   if (!symbol || !from || !to) {
-    return res.status(400).json({ error: "Missing symbol, from, or to parameter" });
+    return res
+      .status(400)
+      .json({ error: "Missing symbol, from, or to parameter" });
   }
-
   const url = `https://finnhub.io/api/v1/company-news?symbol=${symbol}&from=${from}&to=${to}&token=${LIVEPRICE_API_KEY}`;
 
   try {
@@ -88,13 +89,11 @@ router.get("/news", async (req, res) => {
   }
 });
 
-// 📍 Company Overview route
 router.get("/overview", async (req, res) => {
   const { symbol } = req.query;
   if (!symbol) {
     return res.status(400).json({ error: "Missing symbol parameter" });
   }
-
   const url = `https://finnhub.io/api/v1/stock/metric?symbol=${symbol}&metric=all&token=${LIVEPRICE_API_KEY}`;
 
   try {

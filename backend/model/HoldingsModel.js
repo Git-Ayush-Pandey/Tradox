@@ -1,5 +1,4 @@
-const {model} = require("mongoose")
-const {Schema} = require("mongoose")
+const { model, Schema } = require("mongoose");
 
 const HoldingsSchema = new Schema({
   name: String,
@@ -14,6 +13,5 @@ const HoldingsSchema = new Schema({
     required: true,
   },
 });
-const Holding = new model("Holding", HoldingsSchema)
-
-module.exports = {Holding};
+const Holding = new model("Holding", HoldingsSchema);
+module.exports = { Holding };

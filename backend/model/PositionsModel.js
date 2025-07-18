@@ -16,5 +16,4 @@ const PositionsSchema = new Schema({
 });
 
 const Position = new model("Position", PositionsSchema);
-
 module.exports = { Position };

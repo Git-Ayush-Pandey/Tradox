@@ -1,5 +1,4 @@
-const { model } = require("mongoose");
-const { Schema } = require("mongoose");
+const { model, Schema } = require("mongoose");
 
 const WatchListModel = new Schema({
   name: String,
@@ -17,5 +16,4 @@ const WatchListModel = new Schema({
   },
 });
 const Watchlist = new model("Watchlist", WatchListModel);
-
 module.exports = { Watchlist };

@@ -14,7 +14,6 @@ const Dashboard = () => {
   return (
     <GeneralContextProvider>
       {" "}
-      {/* ✅ Wrap everything */}
       <div className="dashboard-container">
         <ProtectedRoute>
           <WatchList />
@@ -46,7 +45,6 @@ const Dashboard = () => {
                 </ProtectedRoute>
               }
             />{" "}
-            {/* ✅ Needs context */}
             <Route
               path="/positions"
               element={

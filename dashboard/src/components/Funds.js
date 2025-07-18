@@ -5,7 +5,7 @@ import FundWindow from "../windows/FundWindow";
 const Funds = () => {
   const [fund, setFund] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalType, setModalType] = useState(null); // "add" or "withdraw"
+  const [modalType, setModalType] = useState(null);
   const [amount, setAmount] = useState("");
 
   const fetchFunds = async () => {
@@ -32,7 +32,6 @@ const Funds = () => {
     }
 
     try {
-      // Use correct backend route: /funds/add or /funds/withdraw
       const url = `http://localhost:3002/funds/${modalType}`;
       await axios.post(
         url,
@@ -40,7 +39,7 @@ const Funds = () => {
         { withCredentials: true }
       );
 
-      await fetchFunds(); // Refresh fund info
+      await fetchFunds();
       setModalOpen(false);
       setAmount("");
     } catch (err) {

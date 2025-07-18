@@ -14,12 +14,13 @@ import CloseIcon from "@mui/icons-material/Close";
 import axios from "axios";
 import GeneralContext from "../contexts/GeneralContext";
 
-const BuyActionWindow = ({ uid }) => {
-  const [stockQuantity, setStockQuantity] = useState(1);
-  const [stockPrice, setStockPrice] = useState(0.0);
+const BuyActionWindow = ({ uid, existingOrder = null }) => {
+  const isEdit = !!existingOrder;
+  const [stockQuantity, setStockQuantity] = useState(existingOrder?.qty || 1);
+  const [stockPrice, setStockPrice] = useState(existingOrder?.price || 0);
+  const [orderType, setOrderType] = useState(existingOrder?.type || "Delivery");
   const [marginRequired, setMarginRequired] = useState(0.0);
   const [availableMargin, setAvailableMargin] = useState(null);
-  const [orderType, setOrderType] = useState("Delivery");
   const { closeBuyWindow } = useContext(GeneralContext);
 
   useEffect(() => {
@@ -47,31 +48,40 @@ const BuyActionWindow = ({ uid }) => {
       );
       return;
     }
+    const payload = {
+      name: uid.name,
+      id: uid.id,
+      qty: Number(stockQuantity),
+      price: Number(stockPrice),
+      mode: "BUY",
+      type: orderType,
+    };
 
     try {
-      await axios.post(
-        "http://localhost:3002/orders/new",
-        {
-          name: uid.name,
-          id: uid.id,
-          qty: Number(stockQuantity),
-          price: Number(stockPrice),
-          mode: "BUY",
-          type: orderType,
-        },
-        { withCredentials: true }
-      );
+      if (isEdit) {
+        await axios.put(
+          `http://localhost:3002/orders/edit/${existingOrder._id}`,
+          payload,
+          { withCredentials: true }
+        );
+      } else {
+        await axios.post("http://localhost:3002/orders/new", payload, {
+          withCredentials: true,
+        });
+      }
+
       closeBuyWindow();
     } catch (err) {
-      alert("Buy order failed. Please login again.");
-      console.error("Buy order error:", err);
+      const msg = err?.response?.data?.message || "An error occurred.";
+      alert(msg);
+      console.error("Order error:", err);
     }
   };
 
   return (
     <Dialog open onClose={closeBuyWindow} maxWidth="xs" fullWidth>
       <DialogTitle>
-        Place Buy Order
+        Place Buy Order for {uid.name}
         <IconButton
           onClick={closeBuyWindow}
           sx={{ position: "absolute", right: 8, top: 8 }}
@@ -139,7 +149,7 @@ const BuyActionWindow = ({ uid }) => {
           onClick={handleBuyClick}
           fullWidth
         >
-          Buy
+          {isEdit ? "Update Order" : "Buy"}
         </Button>
         <Button variant="outlined" onClick={closeBuyWindow} fullWidth>
           Cancel

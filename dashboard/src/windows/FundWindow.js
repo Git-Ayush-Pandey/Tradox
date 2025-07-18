@@ -7,7 +7,7 @@ const FundWindow = ({ type, amount, setAmount, onCancel, onConfirm }) => {
     <div
       style={{
         position: "absolute",
-        top: "50px", // directly under the buttons
+        top: "50px",
         left: "50%",
         transform: "translateX(-50%)",
         width: "300px",

@@ -34,10 +34,14 @@ const Positions = () => {
   const totalPLPercent =
     totalCost === 0 ? 0 : (totalProfitLoss / totalCost) * 100;
 
-  if (loading) return <div className="text-center mt-4">Loading positions...</div>;
-
+  if (loading)
+    return <div className="text-center mt-4">Loading positions...</div>;
   if (allPositions.length === 0)
-    return <div className="text-center mt-4 text-muted">No open positions found.</div>;
+    return (
+      <div className="text-center mt-4 text-muted">
+        No open positions found.
+      </div>
+    );
 
   return (
     <>
@@ -96,7 +100,9 @@ const Positions = () => {
                   </td>
 
                   <td>{stock.qty}</td>
-                  <td>{stock.avg !== undefined ? stock.avg.toFixed(2) : "N/A"}</td>
+                  <td>
+                    {stock.avg !== undefined ? stock.avg.toFixed(2) : "N/A"}
+                  </td>
                   <td>{stock.price.toFixed(2)}</td>
                   <td>{currentValue.toFixed(2)}</td>
                   <td className={profitClass}>

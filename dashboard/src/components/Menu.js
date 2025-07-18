@@ -10,30 +10,26 @@ const Menu = () => {
   const handleMenuClick = (index) => {
     setSelectedMenu(index);
   };
-
   const handleProfileClick = () => {
     setIsProfileDropdownOpen((prev) => !prev);
   };
-
   const handleLogoutClick = async () => {
     try {
       await axios.get("http://localhost:3002/auth/logout", {
         withCredentials: true,
       });
       setIsProfileDropdownOpen(false);
-      window.location.href = "http://localhost:3001/signup"; 
+      window.location.href = "http://localhost:3001/signup";
     } catch (error) {
       console.error("Logout failed", error);
     }
   };
-
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsProfileDropdownOpen(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
@@ -42,7 +38,6 @@ const Menu = () => {
 
   const menuClass = "menu";
   const activeMenuClass = "menu selected";
-
   return (
     <div className="menu-container">
       <img src="logo.png" alt="img" style={{ width: "50px" }} />

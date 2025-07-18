@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useContext } from "react";
 import axios from "axios";
 import useLivePrices from "../components/hooks/useLivePrices";
+import GeneralContext from "../contexts/GeneralContext";
 
 const Orders = () => {
   const [allOrders, setAllOrders] = useState([]);
@@ -8,11 +9,11 @@ const Orders = () => {
   const [loading, setLoading] = useState(true);
   const [livePrices, setLivePrices] = useState({});
   const executingRef = useRef(new Set());
-
   const symbols = [...new Set(allOrders.map((o) => o.name))];
+  const { openBuyWindow, openSellWindow } = useContext(GeneralContext);
 
   useLivePrices(symbols, (symbol, price) => {
-    console.log(`📈 Live price update for ${symbol}: ${price}`);
+    console.log(`Live price update for ${symbol}: ${price}`);
     setLivePrices((prev) => ({
       ...prev,
       [symbol]: price,
@@ -25,7 +26,6 @@ const Orders = () => {
         const res = await axios.get("http://localhost:3002/orders", {
           withCredentials: true,
         });
-
         const now = new Date();
         const hour = now.getHours();
         const minute = now.getMinutes();
@@ -48,14 +48,12 @@ const Orders = () => {
         } else {
           setAllOrders(res.data);
         }
-
       } catch (err) {
-        console.error("❌ Error loading orders:", err);
+        console.error("Error loading orders:", err);
       } finally {
         setLoading(false);
       }
     };
-
     fetchOrders();
   }, []);
 
@@ -66,7 +64,7 @@ const Orders = () => {
       });
       setAllOrders((prev) => prev.filter((order) => order._id !== id));
     } catch (err) {
-      console.error("❌ Error cancelling order:", err);
+      console.error("Error cancelling order:", err);
       alert("Failed to cancel order.");
     }
   };
@@ -80,25 +78,21 @@ const Orders = () => {
           console.log(`⏳ Skipping ${order.name} — no live price yet`);
           continue;
         }
-
         if (executingRef.current.has(order._id)) {
           console.log(`⏳ Already processing → ${order.name}`);
           continue;
         }
-
         console.log(
           `🧮 Evaluating ${order.mode} order for ${order.name} → Order Price: ${order.price}, Live Price: ${livePrice}`
         );
-
         const shouldExecute =
           (order.mode === "BUY" && livePrice <= order.price) ||
           (order.mode === "SELL" && livePrice >= order.price);
 
         if (!shouldExecute) {
-          console.log(`❌ Not eligible yet → ${order.name}`);
+          console.log(`Not eligible yet → ${order.name}`);
           continue;
         }
-
         executingRef.current.add(order._id);
         try {
           const res = await axios.post(
@@ -106,29 +100,25 @@ const Orders = () => {
             {},
             { withCredentials: true }
           );
-
           setAllOrders((prev) =>
             prev.map((o) => (o._id === order._id ? res.data.order : o))
           );
-
           console.log(
             `✅ Executed ${order.mode} order for ${order.name} at live price ${livePrice}`
           );
         } catch (err) {
-          console.error(`❌ Failed to execute order ${order._id}:`, err);
+          console.error(`Failed to execute order ${order._id}:`, err);
         } finally {
           executingRef.current.delete(order._id);
         }
       }
     };
-
     if (Object.keys(livePrices).length > 0 && allOrders.length > 0) {
       checkAndExecuteOrders();
     }
   }, [livePrices, allOrders]);
 
   if (loading) return <div className="text-center mt-4">Loading orders...</div>;
-
   if (allOrders.length === 0)
     return (
       <div className="text-center mt-4 text-muted">No active orders found.</div>
@@ -160,12 +150,40 @@ const Orders = () => {
                   <div className="d-flex align-items-center">
                     <span>{order.name}</span>
                     {hoveredRow === order._id && !order.executed && (
-                      <button
-                        className="btn btn-danger btn-sm ms-3"
-                        onClick={() => handleCancel(order._id)}
-                      >
-                        Cancel
-                      </button>
+                      <>
+                        {order.mode === "BUY" ? (
+                          <button
+                            className="btn btn-secondary btn-sm ms-2"
+                            onClick={() =>
+                              openBuyWindow(
+                                { name: order.name, id: order.id },
+                                order
+                              )
+                            }
+                          >
+                            Edit
+                          </button>
+                        ) : (
+                          <button
+                            className="btn btn-secondary btn-sm ms-2"
+                            onClick={() =>
+                              openSellWindow(
+                                { name: order.name, id: order.id },
+                                order
+                              )
+                            }
+                          >
+                            Edit
+                          </button>
+                        )}
+
+                        <button
+                          className="btn btn-danger btn-sm ms-2"
+                          onClick={() => handleCancel(order._id)}
+                        >
+                          Cancel
+                        </button>
+                      </>
                     )}
                   </div>
                 </td>

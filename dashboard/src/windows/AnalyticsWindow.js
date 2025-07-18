@@ -131,7 +131,7 @@ const AnalyticsWindow = ({ stock, onClose }) => {
         setOverview(overviewRes.data);
         setNews(newsRes.data);
       } catch (err) {
-        console.error("❌ Failed to load overview/news:", err);
+        console.error("Failed to load overview/news:", err);
         setOverview(null);
         setNews([]);
       }

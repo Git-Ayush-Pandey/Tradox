@@ -111,7 +111,6 @@ router.get("/verify", async (req, res) => {
   }
 });
 
-// GET /auth/me → return current user info
 router.get("/me", isLoggedIn, (req, res) => {
   const user = req.user;
   res.status(200).json({

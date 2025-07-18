@@ -1,15 +1,13 @@
 const router = require("express").Router();
-const {Fund} = require("../model/FundsModel");
+const { Fund } = require("../model/FundsModel");
 const { isLoggedIn } = require("../middleware");
 
-// GET current fund
 router.get("/", isLoggedIn, async (req, res) => {
   const fund = await Fund.findOne({ userId: req.user._id });
   if (!fund) return res.status(404).json({ message: "Fund data not found" });
   res.json(fund);
 });
 
-// POST: Add funds
 router.post("/add", isLoggedIn, async (req, res) => {
   const amount = parseFloat(req.body.amount);
   if (amount <= 0) return res.status(400).json({ message: "Invalid amount" });
@@ -25,7 +23,6 @@ router.post("/add", isLoggedIn, async (req, res) => {
   res.json({ success: true, message: "Funds added", fund });
 });
 
-// POST: Withdraw funds
 router.post("/withdraw", isLoggedIn, async (req, res) => {
   const amount = parseFloat(req.body.amount);
   if (amount <= 0) return res.status(400).json({ message: "Invalid amount" });
@@ -36,7 +33,6 @@ router.post("/withdraw", isLoggedIn, async (req, res) => {
   if (fund.availableCash < amount) {
     return res.status(400).json({ message: "Insufficient funds" });
   }
-
   fund.availableMargin -= amount;
   fund.availableCash -= amount;
   fund.payin -= amount;
