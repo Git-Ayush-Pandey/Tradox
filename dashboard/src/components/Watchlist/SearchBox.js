@@ -9,15 +9,13 @@ import {
 } from "@mui/material";
 import { Search, Close } from "@mui/icons-material";
 import { searchStocks, getQuote } from "../hooks/api";
-import { useWatchlist } from "./useWatchlist";
 
-const SearchBox = () => {
+const SearchBox = ({ currentList, activeList, handleAddStock }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [timeoutId, setTimeoutId] = useState(null);
   const [adding, setAdding] = useState(false);
 
-  const { currentList, activeList, handleAddStock } = useWatchlist();
 
   const handleSearchChange = (e) => {
     const term = e.target.value;
@@ -29,7 +27,7 @@ const SearchBox = () => {
       searchStocks(term)
         .then((res) => setSearchResults(res.data.bestMatches || []))
         .catch(() => setSearchResults([]));
-    }, 500);
+    }, 1000);
     setTimeoutId(tId);
   };
 
@@ -43,6 +41,7 @@ const SearchBox = () => {
         ""
       );
       const quote = await getQuote(cleanSymbol);
+      console.log(quote)
       if (
         !quote?.data ||
         typeof quote.data.c !== "number" ||
@@ -79,8 +78,8 @@ const SearchBox = () => {
   };
 
   return (
-    <Box className="search-container">
-      <Box className="search-wrapper">
+    <Box className="search-container p-4 pt-1 pb-1">
+      <Box className="search-wrapper ">
         <TextField
           fullWidth
           placeholder="Search eg: infy, bse"

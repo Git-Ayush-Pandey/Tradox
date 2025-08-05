@@ -1,13 +1,28 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 function Navbar() {
+  const location = useLocation();
+  const isActive = (path) => location.pathname === path;
+
+  const getLinkStyle = (path) => ({
+    color: isActive(path) ? "orange" : "#000",
+    fontWeight: isActive(path) ? "600" : "normal",
+  });
+
   return (
     <nav
-      class="navbar  navbar-expand-lg  border-bottom "
-      style={{ backgroundColor: "#FFF" }}
+      className="navbar navbar-expand-lg border-bottom"
+      style={{
+        backgroundColor: "#FFF",
+        position: "fixed",
+        top: 0,
+        width: "100%",
+        zIndex: 1000,
+        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+      }}
     >
-      <div class="container p-2">
-        <Link class="navbar-brand" to="/">
+      <div className="container p-2">
+        <Link className="navbar-brand" to="/">
           <img
             src="media/images/logo.svg"
             alt="Logo"
@@ -15,7 +30,7 @@ function Navbar() {
           />
         </Link>
         <button
-          class="navbar-toggler"
+          className="navbar-toggler"
           type="button"
           data-bs-toggle="collapse"
           data-bs-target="#navbarSupportedContent"
@@ -23,33 +38,53 @@ function Navbar() {
           aria-expanded="false"
           aria-label="Toggle navigation"
         >
-          <span class="navbar-toggler-icon"></span>
+          <span className="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-          <form class="d-flex" role="search">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-              <li class="nav-item">
-                <Link class="nav-link active" aria-current="page" to="/signup">
+        <div className="collapse navbar-collapse" id="navbarSupportedContent">
+          <form className="d-flex" role="search">
+            <ul className="navbar-nav me-auto mb-2 mb-lg-0">
+              <li className="nav-item">
+                <Link
+                  className="nav-link"
+                  style={getLinkStyle("/signup")}
+                  to="/signup"
+                >
                   Signup
                 </Link>
               </li>
-              <li class="nav-item">
-                <Link class="nav-link active" to="/about">
+              <li className="nav-item">
+                <Link
+                  className="nav-link"
+                  style={getLinkStyle("/about")}
+                  to="/about"
+                >
                   About
                 </Link>
               </li>
-              <li class="nav-item">
-                <Link class="nav-link active" aria-current="page" to="/product">
+              <li className="nav-item">
+                <Link
+                  className="nav-link"
+                  style={getLinkStyle("/product")}
+                  to="/product"
+                >
                   Product
                 </Link>
               </li>
-              <li class="nav-item">
-                <Link class="nav-link active" to="/pricing">
+              <li className="nav-item">
+                <Link
+                  className="nav-link"
+                  style={getLinkStyle("/pricing")}
+                  to="/pricing"
+                >
                   Pricing
                 </Link>
               </li>
-              <li class="nav-item">
-                <Link class="nav-link active" to="/support">
+              <li className="nav-item">
+                <Link
+                  className="nav-link"
+                  style={getLinkStyle("/support")}
+                  to="/support"
+                >
                   Support
                 </Link>
               </li>

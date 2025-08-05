@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { addFunds, withdrawFunds, FetchFunds } from "./hooks/api";
-import FundWindow from "../windows/FundWindow";
+import FundWindow from "../components/windows/FundWindow";
 
 const Funds = () => {
   const [fund, setFund] = useState(null);
@@ -30,11 +30,10 @@ const Funds = () => {
     }
 
     try {
-      if (modalType === "add"){
-        addFunds({amount: parseFloat(amount)})
-      }
-      else if (modalType === "withdraw"){
-        withdrawFunds({ amount: parseFloat(amount) })
+      if (modalType === "add") {
+        addFunds({ amount: parseFloat(amount) });
+      } else if (modalType === "withdraw") {
+        withdrawFunds({ amount: parseFloat(amount) });
       }
       await fetchFunds();
       setModalOpen(false);
@@ -69,84 +68,157 @@ const Funds = () => {
           >
             Withdraw
           </button>
-               {modalOpen && (
-          <FundWindow
-            type={modalType}
-            amount={amount}
-            setAmount={setAmount}
-            onCancel={() => setModalOpen(false)}
-            onConfirm={handleSubmit}
-          />
-        )}
+          {modalOpen && (
+            <FundWindow
+              type={modalType}
+              amount={amount}
+              setAmount={setAmount}
+              onCancel={() => setModalOpen(false)}
+              onConfirm={handleSubmit}
+            />
+          )}
         </div>
-
       </div>
 
-      <div className="row">
-        <div className="col">
-          <span>
-            <p>Equity</p>
-          </span>
-          <div className="table">
-            <div className="data">
-              <p>Available margin</p>
-              <p className="imp colored">{fund.availableMargin.toFixed(2)}</p>
-            </div>
-            <div className="data">
-              <p>Used margin</p>
-              <p className="imp">{fund.usedMargin.toFixed(2)}</p>
-            </div>
-            <div className="data">
-              <p>Available cash</p>
-              <p className="imp">{fund.availableCash.toFixed(2)}</p>
-            </div>
-            <hr />
-            <div className="data">
-              <p>Opening Balance</p>
-              <p>{fund.openingBalance.toFixed(2)}</p>
-            </div>
-            <div className="data">
-              <p>Payin</p>
-              <p>{fund.payin.toFixed(2)}</p>
-            </div>
-            <div className="data">
-              <p>SPAN</p>
-              <p>{fund.span.toFixed(2)}</p>
-            </div>
-            <div className="data">
-              <p>Delivery margin</p>
-              <p>{fund.deliveryMargin.toFixed(2)}</p>
-            </div>
-            <div className="data">
-              <p>Exposure</p>
-              <p>{fund.exposure.toFixed(2)}</p>
-            </div>
-            <div className="data">
-              <p>Options premium</p>
-              <p>{fund.optionsPremium.toFixed(2)}</p>
-            </div>
-            <hr />
-            <div className="data">
-              <p>Collateral (Liquid funds)</p>
-              <p>{fund.collateralLiquid.toFixed(2)}</p>
-            </div>
-            <div className="data">
-              <p>Collateral (Equity)</p>
-              <p>{fund.collateralEquity.toFixed(2)}</p>
-            </div>
-            <div className="data">
-              <p>Total Collateral</p>
-              <p>
-                {(fund.collateralLiquid + fund.collateralEquity).toFixed(2)}
-              </p>
+      <div className="row g-4 align-items-start">
+        {/* Equity Section */}
+        <div className="col-md-6">
+          <div className="card shadow-sm rounded-3">
+            <div className="card-body">
+              <h5 className="card-title d-flex justify-content-between align-items-center mb-4">
+                <span>Equity</span>
+              </h5>
+              <table className="table table-bordered table-sm mb-0">
+                <tbody>
+                  <tr>
+                    <td>Available margin</td>
+                    <td>
+                      <strong>{(fund?.availableMargin ?? 0).toFixed(2)}</strong>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Used margin</td>
+                    <td>
+                      <strong>{(fund?.usedMargin ?? 0).toFixed(2)}</strong>
+                    </td>
+                  </tr>
+                  <tr className="table-active">
+                    <td>Available cash</td>
+                    <td>
+                      <strong>{(fund?.availableCash ?? 0).toFixed(2)}</strong>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Opening balance</td>
+                    <td>{(fund?.openingBalance ?? 0).toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td>Payin</td>
+                    <td>{(fund?.payin ?? 0).toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td>SPAN</td>
+                    <td>{(fund?.span ?? 0).toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td>Delivery margin</td>
+                    <td>{(fund?.deliveryMargin ?? 0).toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td>Exposure</td>
+                    <td>{(fund?.exposure ?? 0).toFixed(2)}</td>
+                  </tr>
+                  <tr className="table-active">
+                    <td>Options premium</td>
+                    <td>{(fund?.optionsPremium ?? 0).toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td>Collateral (Liquid funds)</td>
+                    <td>{(fund?.collateralLiquid ?? 0).toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td>Collateral (Equity)</td>
+                    <td>{(fund?.collateralEquity ?? 0).toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong>Total collateral</strong>
+                    </td>
+                    <td>
+                      <strong>
+                        {(
+                          (fund?.collateralLiquid ?? 0) +
+                          (fund?.collateralEquity ?? 0)
+                        ).toFixed(2)}
+                      </strong>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
 
-        <div className="col">
-          <div className="commodity">
-            <p>You don't have a commodity account</p>
-            <button className="btn btn-outline-info">Open Account</button>
+        {/* Commodity Section */}
+        <div className="col-6">
+          <div className="card shadow-sm rounded-3">
+            <div className="card-body">
+              <h5 className="card-title d-flex justify-content-between align-items-center mb-4">
+                <span>Commodity</span>
+              </h5>
+              <table className="table table-bordered table-sm mb-0">
+                <tbody>
+                  <tr>
+                    <td>Available margin</td>
+                    <td>
+                      <strong>
+                        {(fund?.commodityAvailableMargin ?? 0).toFixed(2)}
+                      </strong>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Used margin</td>
+                    <td>
+                      <strong>
+                        {(fund?.commodityUsedMargin ?? 0).toFixed(2)}
+                      </strong>
+                    </td>
+                  </tr>
+                  <tr className="table-active">
+                    <td>Available cash</td>
+                    <td>
+                      <strong>
+                        {(fund?.commodityAvailableCash ?? 0).toFixed(2)}
+                      </strong>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Opening balance</td>
+                    <td>{(fund?.commodityOpeningBalance ?? 0).toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td>Payin</td>
+                    <td>{(fund?.commodityPayin ?? 0).toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td>SPAN</td>
+                    <td>{(fund?.commoditySpan ?? 0).toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td>Delivery margin</td>
+                    <td>{(fund?.commodityDeliveryMargin ?? 0).toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td>Exposure</td>
+                    <td>{(fund?.commodityExposure ?? 0).toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td>Options premium</td>
+                    <td>{(fund?.commodityOptionsPremium ?? 0).toFixed(2)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>

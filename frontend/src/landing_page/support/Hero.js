@@ -14,7 +14,7 @@ function Hero() {
           <br />
           <div className="d-flex flex-wrap">
             <p>
-              <a href="">Track account opening</a>
+              <a href="link">Track account opening</a>
             </p>
             <p>
               <a href="link">Track segment activation</a>

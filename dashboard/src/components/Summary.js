@@ -1,59 +1,56 @@
-import { useEffect, useState } from "react";
-import { verifyToken, fetchHoldings, fetchPositions } from "./hooks/api";
-const Summary = () => {
-  const [holdings, setHoldings] = useState([]);
-  const [positions, setPositions] = useState([]);
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+import { useContext } from "react";
+import GeneralContext from "../contexts/GeneralContext";
 
-  useEffect(() => {
-    const fetchEverything = async () => {
-      try {
-        const [userRes, holdingsRes, positionsRes] = await Promise.all([
-          verifyToken(),
-          fetchHoldings(),
-          fetchPositions(),
-        ]);
-        if (userRes.data.status) {
-          setUser(userRes.data.safeUser);
-        }
-        setHoldings(holdingsRes.data);
-        setPositions(positionsRes.data);
-        setLoading(false);
-      } catch (err) {
-        console.error("Error fetching summary:", err);
-        setLoading(false);
-      }
-    };
-    fetchEverything();
-  }, []);
+const Summary = () => {
+  const {
+    user,
+    holdings,
+    allPositions: positions,
+    loading,
+  } = useContext(GeneralContext);
+
+  const formatINR = (val) =>
+    `${val.toFixed(2).toLocaleString("en-IN")} ₹`;
 
   const calculatePL = (list) => {
-    const investment = list.reduce((acc, s) => acc + s.avg * s.qty, 0);
-    const currentValue = list.reduce((acc, s) => acc + s.price * s.qty, 0);
+    const investment = list.reduce(
+      (acc, s) => acc + (s.avg ?? 0) * (s.qty ?? 0),
+      0
+    );
+    const currentValue = list.reduce(
+      (acc, s) => acc + (s.price ?? 0) * (s.qty ?? 0),
+      0
+    );
     const pnl = currentValue - investment;
     const percent = investment > 0 ? (pnl / investment) * 100 : 0;
     return { investment, currentValue, pnl, percent };
   };
 
-  if (loading) return <div>Loading summary...</div>;
+  const getPLClass = (pnl) => (pnl < 0 ? "loss" : "profit");
+
+  if (loading)
+    return <div className="text-center mt-4">Loading summary...</div>;
+  if (!user)
+    return <div className="text-center mt-4">User not authenticated</div>;
+
   const holdingsPL = calculatePL(holdings);
   const positionsPL = calculatePL(positions);
 
   return (
     <>
       <div className="username">
-        <h6>Hi, {user?.name || "User"}!</h6>
+        <h6>Hi, {user.name}!</h6>
         <hr className="divider" />
       </div>
+
       <div className="section">
         <span>
           <p>Positions ({positions.length})</p>
         </span>
         <div className="data">
           <div className="first">
-            <h3 className={positionsPL.pnl >= 0 ? "profit" : "loss"}>
-              {positionsPL.pnl.toFixed(2)}{" "}
+            <h3 className={getPLClass(positionsPL.pnl)}>
+              {formatINR(positionsPL.pnl)}{" "}
               <small>({positionsPL.percent.toFixed(2)}%)</small>
             </h3>
             <p>P&L</p>
@@ -61,23 +58,24 @@ const Summary = () => {
           <hr />
           <div className="second">
             <p>
-              Current Value <span>{positionsPL.currentValue.toFixed(2)}</span>
+              Current Value <span>{formatINR(positionsPL.currentValue)}</span>
             </p>
             <p>
-              Cost <span>{positionsPL.investment.toFixed(2)}</span>
+              Cost <span>{formatINR(positionsPL.investment)}</span>
             </p>
           </div>
         </div>
         <hr className="divider" />
       </div>
+
       <div className="section">
         <span>
           <p>Holdings ({holdings.length})</p>
         </span>
         <div className="data">
           <div className="first">
-            <h3 className={holdingsPL.pnl >= 0 ? "profit" : "loss"}>
-              {holdingsPL.pnl.toFixed(2)}{" "}
+            <h3 className={getPLClass(holdingsPL.pnl)}>
+              {formatINR(holdingsPL.pnl)}{" "}
               <small>({holdingsPL.percent.toFixed(2)}%)</small>
             </h3>
             <p>P&L</p>
@@ -85,10 +83,10 @@ const Summary = () => {
           <hr />
           <div className="second">
             <p>
-              Current Value <span>{holdingsPL.currentValue.toFixed(2)}</span>
+              Current Value <span>{formatINR(holdingsPL.currentValue)}</span>
             </p>
             <p>
-              Investment <span>{holdingsPL.investment.toFixed(2)}</span>
+              Investment <span>{formatINR(holdingsPL.investment)}</span>
             </p>
           </div>
         </div>

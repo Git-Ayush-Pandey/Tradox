@@ -28,8 +28,8 @@ import {
   fetchGraphData,
   fetchOverview,
   fetchNews,
-} from "../components/hooks/api";
-import GeneralContext from "../contexts/GeneralContext";
+} from "../../hooks/api";
+import GeneralContext from "../../contexts/GeneralContext";
 
 const AnalyticsWindow = ({ stock, onClose }) => {
   const [chartData, setChartData] = useState([]);

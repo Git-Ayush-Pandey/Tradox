@@ -13,7 +13,8 @@ function Team() {
           <img
             src="/media/images/ayush-pandey.png"
             style={{ borderRadius: "100%", width: "60%" }}
-          />
+             alt="img"
+             />
           <h4 className="mt-5">Ayush Pandey</h4>
           <h6>Developer of this Website.</h6>
         </div>

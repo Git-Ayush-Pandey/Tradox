@@ -11,8 +11,8 @@ import {
   IconButton,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { FetchFunds, editOrder, placeOrder } from "../components/hooks/api";
-import GeneralContext from "../contexts/GeneralContext";
+import { FetchFunds, editOrder, placeOrder } from "../../hooks/api";
+import GeneralContext from "../../contexts/GeneralContext";
 
 const BuyActionWindow = ({ uid, existingOrder = null }) => {
   const isEdit = !!existingOrder;

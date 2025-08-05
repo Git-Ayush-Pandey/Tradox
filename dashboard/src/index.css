@@ -639,6 +639,7 @@ hr {
 
 /* Search Box Wrapper */
 .search-container {
+  flex-basis: 32%;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -853,3 +854,22 @@ hr {
   top: 0;
   left: 0;
 }
+.profit {
+  color: #0f9d58; /* A calm green */
+  font-weight: 600;
+  font-size: 1.6rem;
+}
+
+.loss {
+  color: #d93025; /* Google-style red */
+  font-weight: 600;
+  font-size: 1.6rem;
+}
+
+h3 small {
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-left: 6px;
+  color: #666;
+}
+

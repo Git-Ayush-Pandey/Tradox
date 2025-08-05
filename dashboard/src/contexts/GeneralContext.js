@@ -1,17 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { verifyToken } from "../components/hooks/api";
-import BuyActionWindow from "../windows/BuyActionWindow";
-import SellActionWindow from "../windows/SellActionWindow";
-import AnalyticsWindow from "../windows/AnalyticsWindow";
+import BuyActionWindow from "../components/windows/BuyActionWindow";
+import SellActionWindow from "../components/windows/SellActionWindow";
+import AnalyticsWindow from "../components/windows/AnalyticsWindow";
 
 const GeneralContext = React.createContext({
   user: null,
+  holdings: [],
+  setHoldings: () => {},
+  positions: [],
+  setPositions: () => {},
   loading: true,
-  openBuyWindow: (uid) => {},
+  openBuyWindow: () => {},
   closeBuyWindow: () => {},
-  openSellWindow: (uid) => {},
+  openSellWindow: () => {},
   closeSellWindow: () => {},
-  openAnalyticsWindow: (stock) => {},
+  openAnalyticsWindow: () => {},
   closeAnalyticsWindow: () => {},
   analyticsStock: null,
 });
@@ -20,11 +24,13 @@ export const GeneralContextProvider = (props) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isBuyWindowOpen, setIsBuyWindowOpen] = useState(false);
-  const [selectedStock, setSelectedStock] = useState(null);
   const [isSellWindowOpen, setIsSellWindowOpen] = useState(false);
+  const [selectedStock, setSelectedStock] = useState(null);
+  const [editOrder, setEditOrder] = useState(null);
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const [analyticsStock, setAnalyticsStock] = useState(null);
-  const [editOrder, setEditOrder] = useState(null);
+  const [holdings, setHoldings] = useState([]);
+  const [allPositions, setAllPositions] = useState([]);
 
   const handleOpenBuyWindow = (stock, order = null) => {
     console.log("Opening BuyActionWindow for:", stock);
@@ -51,6 +57,7 @@ export const GeneralContextProvider = (props) => {
     setSelectedStock(null);
     setEditOrder(null);
   };
+
   const handleOpenAnalyticsWindow = (stock) => {
     console.log("Opening analytics for:", stock);
     setAnalyticsStock(stock);
@@ -65,11 +72,8 @@ export const GeneralContextProvider = (props) => {
   useEffect(() => {
     verifyToken()
       .then((res) => {
-        if (res.data.status) {
-          setUser(res.data.safeUser);
-        } else {
-          setUser(null);
-        }
+        if (res.data.status) setUser(res.data.safeUser);
+        else setUser(null);
       })
       .catch(() => setUser(null))
       .finally(() => setLoading(false));
@@ -80,6 +84,10 @@ export const GeneralContextProvider = (props) => {
       value={{
         user,
         loading,
+        holdings,
+        setHoldings,
+        allPositions,
+        setAllPositions,
         openBuyWindow: handleOpenBuyWindow,
         closeBuyWindow: handleCloseBuyWindow,
         openSellWindow: handleOpenSellWindow,

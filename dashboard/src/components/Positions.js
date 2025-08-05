@@ -1,23 +1,109 @@
 import { useState, useEffect, useContext } from "react";
-import { fetchPositions } from "./hooks/api";
+import { fetchPositions, getQuote } from "./hooks/api";
 import GeneralContext from "../contexts/GeneralContext";
+import { isMarketOpen } from "./hooks/isMarketOpen";
+import { useLivePriceContext } from "../contexts/LivePriceContext";
+
+// Format number to ₹ currency
+const formatCurrency = (val) =>
+  Number(val).toLocaleString("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 2,
+  });
+
+// Enrich each position with price, change %, etc.
+const enrichPosition = (item, price, basePrice) => {
+  const prevPrice = item.price ?? price;
+  const currentValue = price * item.qty;
+  const investment = item.avg * item.qty;
+  const change = price - basePrice;
+  const percent = basePrice ? (change / basePrice) * 100 : 0;
+
+  return {
+    ...item,
+    price,
+    basePrice,
+    prevPrice,
+    net: (price - item.avg).toFixed(2),
+    day: (price - prevPrice).toFixed(2),
+    change: change.toFixed(2),
+    percent: percent.toFixed(2),
+    isLoss: currentValue < investment,
+  };
+};
 
 const Positions = () => {
-  const [allPositions, setAllPositions] = useState([]);
+  const { allPositions, setAllPositions, openSellWindow } = useContext(GeneralContext);
   const [hoveredRow, setHoveredRow] = useState(null);
   const [loading, setLoading] = useState(true);
-  const generalContext = useContext(GeneralContext);
+  const { livePrices, updateSymbols } = useLivePriceContext();
 
+  const symbols = allPositions.map((s) => s.name);
+
+  // Initial load + enrich with API prices
   useEffect(() => {
-    fetchPositions()
-      .then((res) => {
-        setAllPositions(res.data);
+    const loadPositions = async () => {
+      try {
+        const res = await fetchPositions();
+        const raw = res.data;
+
+        const quotes = await Promise.all(
+          raw.map(async (item) => {
+            try {
+              await new Promise((r) => setTimeout(r, 100));
+              const quote = await getQuote(item.name);
+              return {
+                symbol: item.name,
+                price: quote.data?.c ?? item.avg,
+                basePrice: quote.data?.pc ?? item.avg,
+              };
+            } catch {
+              return {
+                symbol: item.name,
+                price: item.avg,
+                basePrice: item.avg,
+              };
+            }
+          })
+        );
+
+        const enriched = raw.map((item) => {
+          const match = quotes.find((q) => q.symbol === item.name);
+          return enrichPosition(item, match?.price, match?.basePrice);
+        });
+
+        setAllPositions(enriched);
+        updateSymbols(symbols);
+      } catch (err) {
+        console.error("Error loading positions:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPositions();
+  }, [setAllPositions, symbols, updateSymbols]);
+
+  // Apply live prices if available
+  useEffect(() => {
+    if (!isMarketOpen() || allPositions.length === 0 || !livePrices) return;
+
+    setAllPositions((prev) =>
+      prev.map((item) => {
+        const live = livePrices[item.name];
+        if (!live) return item;
+        return enrichPosition(item, live, item.basePrice);
       })
-      .catch((err) => {
-        console.log("Error fetching positions:", err);
-      })
-      .finally(() => setLoading(false));
-  }, []);
+    );
+  }, [livePrices, allPositions.length, setAllPositions]);
+
+  // Re-subscribe to symbols
+  useEffect(() => {
+    if (isMarketOpen() && symbols.length > 0) {
+      updateSymbols(symbols);
+    }
+  }, [symbols, updateSymbols]);
 
   const totalPositionValue = allPositions.reduce(
     (acc, stock) => acc + stock.price * stock.qty,
@@ -33,6 +119,7 @@ const Positions = () => {
 
   if (loading)
     return <div className="text-center mt-4">Loading positions...</div>;
+
   if (allPositions.length === 0)
     return (
       <div className="text-center mt-4 text-muted">
@@ -56,22 +143,14 @@ const Positions = () => {
               <th>P&L</th>
               <th>Net chg.</th>
               <th>Day chg.</th>
+              <th>% Change</th>
             </tr>
           </thead>
 
           <tbody>
             {allPositions.map((stock, index) => {
               const currentValue = stock.price * stock.qty;
-              const isProfit = currentValue - stock.avg * stock.qty >= 0;
-              const profitClass = isProfit ? "profit" : "loss";
-              const dayClass = stock.isLoss ? "loss" : "profit";
-
-              const handleSellClick = () => {
-                generalContext.openSellWindow({
-                  id: stock._id,
-                  name: stock.name,
-                });
-              };
+              const profitClass = stock.isLoss ? "loss" : "profit";
 
               return (
                 <tr
@@ -87,7 +166,10 @@ const Positions = () => {
                           className="btn btn-sm btn-outline-danger"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleSellClick();
+                            openSellWindow({
+                              id: stock._id,
+                              name: stock.name,
+                            });
                           }}
                         >
                           Sell
@@ -97,16 +179,17 @@ const Positions = () => {
                   </td>
 
                   <td>{stock.qty}</td>
-                  <td>
-                    {stock.avg !== undefined ? stock.avg.toFixed(2) : "N/A"}
-                  </td>
+                  <td>{stock.avg.toFixed(2)}</td>
                   <td>{stock.price.toFixed(2)}</td>
                   <td>{currentValue.toFixed(2)}</td>
                   <td className={profitClass}>
                     {(currentValue - stock.avg * stock.qty).toFixed(2)}
                   </td>
                   <td className={profitClass}>{stock.net}</td>
-                  <td className={dayClass}>{stock.day}</td>
+                  <td className={profitClass}>{stock.day}</td>
+                  <td className={parseFloat(stock.percent) < 0 ? "text-danger" : "text-success"}>
+                    {stock.percent}%
+                  </td>
                 </tr>
               );
             })}
@@ -116,17 +199,11 @@ const Positions = () => {
 
       <div className="row text-center my-3">
         <div className="col">
-          <h5>
-            {totalCost.toFixed(2).toLocaleString()}{" "}
-            <span className="text-muted">₹</span>
-          </h5>
+          <h5>{formatCurrency(totalCost)}</h5>
           <p>Total cost</p>
         </div>
         <div className="col">
-          <h5>
-            {totalPositionValue.toFixed(2).toLocaleString()}{" "}
-            <span className="text-muted">₹</span>
-          </h5>
+          <h5>{formatCurrency(totalPositionValue)}</h5>
           <p>Current value</p>
         </div>
         <div className="col">

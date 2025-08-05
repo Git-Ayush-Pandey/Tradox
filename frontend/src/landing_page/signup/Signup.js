@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import axios from "axios";
+import OTPVerifyWindow from "./OTPVerifyWindow"; // adjust path if needed
+
 function Signup() {
   const [inputValue, setInputValue] = useState({
     name: "",
@@ -9,6 +11,8 @@ function Signup() {
     phone: "",
     password: "",
   });
+  const [showOTP, setShowOTP] = useState({ type: "", value: "" });
+  const [verified, setVerified] = useState({ email: false, phone: false });
   const { name, email, phone, password } = inputValue;
   const handleOnChange = (e) => {
     const { name, value } = e.target;
@@ -25,6 +29,15 @@ function Signup() {
     toast.success(msg, {
       position: "bottom-right",
     });
+  const handleOpenOTP = (type) => {
+    const value = inputValue[type];
+    if (!value) return toast.error(`Please enter ${type} first`);
+    setShowOTP({ type, value });
+  };
+
+  const handleVerified = () => {
+    setVerified((prev) => ({ ...prev, [showOTP.type]: true }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -73,112 +86,127 @@ function Signup() {
         </div>
         <div className="col-6" style={{ alignContent: "center" }}>
           <h2>Signup Account</h2>
-          <form
-            onSubmit={handleSubmit}
-            className="border p-4 rounded shadow-sm bg-light"
-          >
-            <div class="form-row align-items-center">
-              <div className="row">
-                <div class="col-sm-3 my-1" style={{ width: "50%" }}>
-                  <label class="sr-only" for="inlineFormInputGroupUsername">
-                    name
-                  </label>
-                  <div class="input-group">
-                    <div class="input-group-prepend">
-                      <div class="input-group-text">@</div>
-                    </div>
-                    <input
-                      type="text"
-                      class="form-control"
-                      id="inlineFormInputGroupUsername"
-                      placeholder="name"
-                      name="name"
-                      onChange={handleOnChange}
-                      value={name}
-                      required
-                    />
-                  </div>
-                </div>
-                <div class="col-sm-3 my-1" style={{ width: "50%" }}>
-                  <label class="sr-only" for="inlineFormInputName">
-                    email
-                  </label>
-                  <input
-                    type="text"
-                    class="form-control"
-                    id="email"
-                    placeholder="example@gmail.com"
-                    name="email"
-                    value={email}
-                    onChange={handleOnChange}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="row m-0 mt-3 align-items-center mb-3">
-                <div className="col-auto p-0  d-flex align-items-center">
-                  <img
-                    src="media/images/Flag_of_India.svg"
-                    alt="Indian_Flag_Logo"
-                    style={{ height: "20px" }}
-                  />
-                  <span className="fw-bold">+91</span>
-                </div>
-                <div className="p-0 col">
-                  <input
-                    type="number"
-                    className="form-control"
-                    id="user_mobile"
-                    name="phone"
-                    placeholder="Enter your mobile number"
-                    min="1000000000"
-                    max="9999999999"
-                    value={phone}
-                    onChange={handleOnChange}
-                    required
-                    autofocus
-                  />
-                </div>
-              </div>
-              <div class="form-group" style={{ width: "70%" }}>
+          <form onSubmit={handleSubmit} className="p-4 rounded shadow bg-white">
+            <div className="row mb-3">
+              <div className="col-md-6 mb-3">
+                <label htmlFor="name" className="form-label fw-semibold">
+                  Full Name
+                </label>
                 <input
-                  type="password"
-                  class="form-control"
-                  id="password"
-                  placeholder="Password"
-                  name="password"
-                  value={password}
+                  type="text"
+                  id="name"
+                  className="form-control"
+                  name="name"
+                  value={name}
                   onChange={handleOnChange}
+                  placeholder="Enter your full name"
                   required
                 />
               </div>
-
-              <div class="col-auto my-1">
-                <div class="form-check">
+              <div className="col-md-6 mb-3">
+                <label htmlFor="email" className="form-label fw-semibold">
+                  Email
+                </label>
+                <div className="input-group">
                   <input
-                    class="form-check-input"
-                    type="checkbox"
-                    id="autoSizingCheck2"
+                    type="email"
+                    id="email"
+                    className="form-control"
+                    name="email"
+                    value={email}
+                    onChange={handleOnChange}
+                    placeholder="example@gmail.com"
+                    required
                   />
-                  <label class="form-check-label" for="autoSizingCheck2">
-                    Remember me
-                  </label>
+                  {verified.email ? (
+                    <span className="input-group-text text-success">✅</span>
+                  ) : (
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary"
+                      onClick={() => handleOpenOTP("email")}
+                    >
+                      Verify
+                    </button>
+                  )}
                 </div>
               </div>
-              <div class="col-auto my-1">
-                <button type="submit" class="btn btn-primary mb-2">
-                  Submit
-                </button>
+            </div>
+
+            <div className="row mb-3">
+              <div className="col-md-6 mb-3">
+                <label htmlFor="phone" className="form-label fw-semibold">
+                  Mobile Number
+                </label>
+                <div className="input-group">
+                  <span className="input-group-text">+91</span>
+                  <input
+                    type="number"
+                    id="phone"
+                    className="form-control"
+                    name="phone"
+                    value={phone}
+                    onChange={handleOnChange}
+                    placeholder="Enter phone number"
+                    required
+                  />
+                  {verified.phone ? (
+                    <span className="input-group-text text-success">✅</span>
+                  ) : (
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary"
+                      onClick={() => handleOpenOTP("phone")}
+                    >
+                      Verify
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div className="col-md-6 mb-3">
+                <label htmlFor="password" className="form-label fw-semibold">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  id="password"
+                  className="form-control"
+                  name="password"
+                  value={password}
+                  onChange={handleOnChange}
+                  placeholder="Choose a strong password"
+                  required
+                />
               </div>
             </div>
-            <span className="text-muted m-0">
+
+            <div className="form-check mb-3">
+              <input
+                className="form-check-input"
+                type="checkbox"
+                id="rememberCheck"
+              />
+              <label className="form-check-label" htmlFor="rememberCheck">
+                Remember me
+              </label>
+            </div>
+
+            <div className="mb-3">
+              <button
+                type="submit"
+                className="btn btn-primary w-100"
+                disabled={!verified.email || !verified.phone}
+              >
+                Create Account
+              </button>
+            </div>
+
+            <p className="text-muted text-center">
               Already have an account?{" "}
-              <Link to={"/login"} className="blue-link">
-                Login
-              </Link>{" "}
-              here.
-            </span>
+              <Link to={"/login"} className="text-primary text-decoration-none">
+                Login here
+              </Link>
+            </p>
           </form>
 
           <p className="text-muted text-12 m-0">
@@ -194,6 +222,13 @@ function Signup() {
           </p>
         </div>
       </div>
+      <OTPVerifyWindow
+        open={!!showOTP.type}
+        type={showOTP.type}
+        value={showOTP.value}
+        onClose={() => setShowOTP({ type: "", value: "" })}
+        onVerified={handleVerified}
+      />
     </div>
   );
 }

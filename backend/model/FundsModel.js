@@ -6,6 +6,8 @@ const FundsSchema = new Schema({
     ref: "User",
     required: true,
   },
+
+  // Equity Fields
   availableMargin: Number,
   usedMargin: Number,
   availableCash: Number,
@@ -17,6 +19,17 @@ const FundsSchema = new Schema({
   optionsPremium: Number,
   collateralLiquid: Number,
   collateralEquity: Number,
+
+  // Commodity Fields
+  commodityAvailableMargin: Number,
+  commodityUsedMargin: Number,
+  commodityAvailableCash: Number,
+  commodityOpeningBalance: Number,
+  commodityPayin: Number,
+  commoditySpan: Number,
+  commodityDeliveryMargin: Number,
+  commodityExposure: Number,
+  commodityOptionsPremium: Number
 });
 
 const Fund = model("Fund", FundsSchema);

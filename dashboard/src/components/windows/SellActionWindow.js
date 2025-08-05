@@ -1,6 +1,6 @@
 import { useState, useContext, useEffect } from "react";
-import { fetchHoldings, fetchPositions, editOrder, placeOrder } from "../components/hooks/api";
-import GeneralContext from "../contexts/GeneralContext";
+import { fetchHoldings, fetchPositions, editOrder, placeOrder } from "../../hooks/api";
+import GeneralContext from "../../contexts/GeneralContext";
 import "./Window.css";
 import {
   Dialog,
@@ -31,7 +31,7 @@ const SellActionWindow = ({ uid, existingOrder = null }) => {
         setPositions(res.data);
       });
 
-   fetchHoldings
+   fetchHoldings()
       .then((res) => {
         setHoldings(res.data);
       });

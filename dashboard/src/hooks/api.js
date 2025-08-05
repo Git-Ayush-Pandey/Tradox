@@ -39,6 +39,14 @@ export const addStock = (payload) =>
 
 export const deleteStock = (id) =>
   axios.delete(`${BASE}/watchlist/delete/${id}`, { withCredentials: true });
+// Add these new exports to your existing api.js
+export const createWatchlist = (listName) =>
+  axios.post(`${BASE}/watchlist/create`, { listName }, { withCredentials: true });
+
+export const deleteWatchlist = (listName) =>
+  axios.delete(`${BASE}/watchlist/delete-list/${encodeURIComponent(listName)}`, { 
+    withCredentials: true 
+  });
 
 // HOLDINGS ROUTES
 
@@ -92,7 +100,7 @@ export const searchStocks = (keyword) =>
   });
 
 export const getQuote = (symbol) =>
-  axios.get(`${BASE}/stock/livePrice`, {
+  axios.get(`${BASE}/stock/price`, {
     params: { symbol },
     withCredentials: true,
   });
