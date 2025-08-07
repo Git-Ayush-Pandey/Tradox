@@ -1,20 +1,18 @@
-// const socket = new WebSocket('wss://ws.finnhub.io?token=d1qt5g1r01qo4qd9aiegd1qt5g1r01qo4qd9aif0');
+const socket = new WebSocket('wss://ws.finnhub.io?token=d1ouo1pr01qi9vk1jp0gd1ouo1pr01qi9vk1jp10');
 
-// // Connection opened -> Subscribe
-// socket.addEventListener('open', function (event) {
-//     socket.send(JSON.stringify({'type':'subscribe', 'symbol': 'AAPL'}))
-// });
+// Connection opened -> Subscribe
+socket.addEventListener('open', function (event) {
+    socket.send(JSON.stringify({'type':'subscribe', 'symbol': 'AAPL'}))
+    socket.send(JSON.stringify({'type':'subscribe', 'symbol': 'BINANCE:BTCUSDT'}))
+    socket.send(JSON.stringify({'type':'subscribe', 'symbol': 'IC MARKETS:1'}))
+});
 
-// // Listen for messages
-// socket.addEventListener('message', function (event) {
-//     console.log('Message from server ', event.data);
-// });
+// Listen for messages
+socket.addEventListener('message', function (event) {
+    console.log('Message from server ', event.data);
+});
 
-// // Unsubscribe
-//  var unsubscribe = function(symbol) {
-//     socket.send(JSON.stringify({'type':'unsubscribe','symbol': symbol}))
-
-const istNow = new Date(
-  new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
-);
-console.log("🕐 IST Time:", istNow.toString());  // Add this line
+// Unsubscribe
+ var unsubscribe = function(symbol) {
+    socket.send(JSON.stringify({'type':'unsubscribe','symbol': symbol}))
+}

@@ -3,10 +3,10 @@ import Team from "./Team";
 
 function AboutPage() {
   return (
-    <>
+    <div style={{ paddingTop: "50px" }}>
       <Hero />
       <Team />
-    </>
+    </div>
   );
 }
 

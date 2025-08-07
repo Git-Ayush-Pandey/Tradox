@@ -9,7 +9,7 @@ export const isMarketOpen = () => {
   const day = istTime.getDay(); // 0 = Sunday, 6 = Saturday
   const hours = istTime.getHours();
 
-  const isWeekday = day >= 0 && day <= 0; // Mon to Fri
+  const isWeekday = day >= 0 && day <= 4; // Sunday to Thursday
 
   // Market open between 19:00 (7 PM) to 01:00 (next day)
   const isEvening = hours >= 19 && hours <= 23;

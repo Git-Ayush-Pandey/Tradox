@@ -7,7 +7,7 @@ import Stats from "./Stats";
 
 function HomePage() {
   return (
-    <div className="main-container">
+    <div className="main-container" >
       <Hero />
       <Awards />
       <Stats />

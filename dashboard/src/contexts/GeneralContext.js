@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { verifyToken } from "../components/hooks/api";
+import { verifyToken } from "../hooks/api";
 import BuyActionWindow from "../components/windows/BuyActionWindow";
 import SellActionWindow from "../components/windows/SellActionWindow";
 import AnalyticsWindow from "../components/windows/AnalyticsWindow";
+import Alert from "../components/windows/alert";
 
 const GeneralContext = React.createContext({
   user: null,
@@ -31,12 +32,17 @@ export const GeneralContextProvider = (props) => {
   const [analyticsStock, setAnalyticsStock] = useState(null);
   const [holdings, setHoldings] = useState([]);
   const [allPositions, setAllPositions] = useState([]);
+  const [alert, setAlert] = useState(null);
 
   const handleOpenBuyWindow = (stock, order = null) => {
     console.log("Opening BuyActionWindow for:", stock);
     setIsBuyWindowOpen(true);
     setSelectedStock(stock);
     setEditOrder(order);
+  };
+  const showAlert = (type, message, duration = 3000) => {
+    setAlert({ type, message });
+    setTimeout(() => setAlert(null), duration);
   };
 
   const handleCloseBuyWindow = () => {
@@ -95,6 +101,8 @@ export const GeneralContextProvider = (props) => {
         openAnalyticsWindow: handleOpenAnalyticsWindow,
         closeAnalyticsWindow: handleCloseAnalyticsWindow,
         analyticsStock,
+        alert,
+        showAlert,
       }}
     >
       {props.children}
@@ -109,6 +117,11 @@ export const GeneralContextProvider = (props) => {
           stock={analyticsStock}
           onClose={handleCloseAnalyticsWindow}
         />
+      )}
+      {alert && (
+        <div style={{ position: "fixed", top: 20, right: 20, zIndex: 9999 }}>
+          <Alert type={alert.type} message={alert.message} />
+        </div>
       )}
     </GeneralContext.Provider>
   );

@@ -21,7 +21,7 @@ import {
   Folder as FolderIcon,
 } from "@mui/icons-material";
 
-import WatchlistWindow from "../windows/WatchlistWindow"; // ✅ NEW COMPONENT
+import WatchlistWindow from "../windows/WatchlistWindow";
 
 const WatchlistManager = ({
   watchlists,
@@ -35,7 +35,7 @@ const WatchlistManager = ({
   onClearError,
 }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogType, setDialogType] = useState(""); // "create", "rename", "delete"
+  const [dialogType, setDialogType] = useState("");
   const [anchorEl, setAnchorEl] = useState(null);
   const [menuWatchlistName, setMenuWatchlistName] = useState("");
 
@@ -66,14 +66,12 @@ const WatchlistManager = ({
 
   return (
     <Box sx={{ mb: 3 }}>
-      {/* Error Display */}
       {error && (
         <Alert severity="error" onClose={onClearError} sx={{ mb: 2 }}>
           {error}
         </Alert>
       )}
 
-      {/* Header */}
       <Box
         sx={{
           display: "flex",
@@ -81,7 +79,6 @@ const WatchlistManager = ({
           alignItems: "center",
           gap: 2,
           mb: 2,
-          pt: 2,
           flexWrap: "wrap",
         }}
       >
@@ -117,7 +114,6 @@ const WatchlistManager = ({
                     e.stopPropagation();
                     handleMenuOpen(e, name);
                   }}
-                  sx={{ ml: 1 }}
                 >
                   <MoreVertIcon fontSize="small" />
                 </IconButton>
@@ -150,12 +146,7 @@ const WatchlistManager = ({
         </Typography>
       </Box>
 
-      {/* Menu */}
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-      >
+      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
         <MenuItem onClick={() => handleOpenDialog("rename", menuWatchlistName)}>
           <ListItemIcon>
             <EditIcon fontSize="small" />
@@ -179,7 +170,6 @@ const WatchlistManager = ({
         </MenuItem>
       </Menu>
 
-      {/* ✅ Unified Window */}
       <WatchlistWindow
         open={dialogOpen}
         type={dialogType}
@@ -189,7 +179,7 @@ const WatchlistManager = ({
         onClose={handleCloseDialog}
         onCreate={onCreateWatchlist}
         onRename={async (oldName, newName) => {
-          const result = await onRenameWatchlist(oldName, newName); // ✅ explicitly pass both
+          const result = await onRenameWatchlist(oldName, newName);
           if (result?.success) handleCloseDialog();
         }}
         onDelete={onDeleteWatchlist}

@@ -5,7 +5,7 @@ import Universe from "./Universe";
 
 function PricingPage() {
   return (
-    <>
+    <div style={{ paddingTop: "50px" }}>
       <Hero />
       <LeftSection
         imageURL="media/images/kite.png"
@@ -54,7 +54,7 @@ function PricingPage() {
         blog.
       </p>
       <Universe />
-    </>
+    </div>
   );
 }
 

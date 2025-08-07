@@ -19,7 +19,7 @@ const SellActionWindow = ({ uid, existingOrder = null }) => {
   const [stockQuantity, setStockQuantity] = useState(existingOrder?.qty || 1);
   const [stockPrice, setStockPrice] = useState(existingOrder?.price || 0);
   const [orderType, setOrderType] = useState(existingOrder?.type || "Delivery");
-  const { closeSellWindow, user } = useContext(GeneralContext);
+  const { closeSellWindow, user, showAlert } = useContext(GeneralContext);
   const [positions, setPositions] = useState([]);
   const [holdings, setHoldings] = useState([]);
   const [availableQty, setAvailableQty] = useState(0);
@@ -55,7 +55,7 @@ const SellActionWindow = ({ uid, existingOrder = null }) => {
 
   const handleSellClick = async () => {
     if (!user) {
-      alert("You must be logged in to place a sell order.");
+      showAlert("warning", "You must be logged in to place a sell order."); // ✅
       closeSellWindow();
       return;
     }
@@ -69,16 +69,16 @@ const SellActionWindow = ({ uid, existingOrder = null }) => {
     try {
       if (isEdit) {
         await editOrder(existingOrder._id, payload)
+ showAlert("success", "Order updated successfully."); // ✅
       } else {
         await placeOrder(payload);
+        showAlert("success", "Sell order placed."); // ✅
       }
       closeSellWindow();
     } catch (err) {
-      if (err.response?.data?.message) {
-        alert(err.response.data.message);
-      } else {
-        alert("An error occurred while placing the order.");
-      }
+      const message =
+        err.response?.data?.message || "An error occurred while placing the order.";
+      showAlert("error", message); // ✅
       console.error("Sell order error:", err);
     }
   };

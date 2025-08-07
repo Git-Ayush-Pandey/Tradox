@@ -1,12 +1,14 @@
-import { useEffect, useState } from "react";
-import { addFunds, withdrawFunds, FetchFunds } from "./hooks/api";
+import { useContext, useEffect, useState } from "react";
+import { addFunds, withdrawFunds, FetchFunds } from "../hooks/api";
 import FundWindow from "../components/windows/FundWindow";
+import GeneralContext from "../contexts/GeneralContext";
 
 const Funds = () => {
   const [fund, setFund] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState(null);
   const [amount, setAmount] = useState("");
+  const { showAlert } = useContext(GeneralContext);
 
   const fetchFunds = async () => {
     try {
@@ -14,32 +16,36 @@ const Funds = () => {
       setFund(res.data);
     } catch (err) {
       console.error("Error fetching fund data:", err);
+      showAlert("error", "Failed to fetch fund data.");
     }
   };
 
   useEffect(() => {
     fetchFunds();
+    // eslint-disable-next-line 
   }, []);
 
   if (!fund) return <p>Loading fund data...</p>;
 
   const handleSubmit = async () => {
     if (!amount || isNaN(amount) || Number(amount) <= 0) {
-      alert("Enter a valid amount");
+      showAlert("warning", "Enter a valid amount.");
       return;
     }
 
     try {
       if (modalType === "add") {
-        addFunds({ amount: parseFloat(amount) });
+         await addFunds({ amount: parseFloat(amount) });
+        showAlert("success", "Funds added successfully.");
       } else if (modalType === "withdraw") {
-        withdrawFunds({ amount: parseFloat(amount) });
+         await withdrawFunds({ amount: parseFloat(amount) });
+        showAlert("success", "Withdrawal successful.");
       }
       await fetchFunds();
       setModalOpen(false);
       setAmount("");
     } catch (err) {
-      alert("Transaction failed");
+      showAlert("error", "Transaction failed.");
       console.error("Fund transfer error:", err);
     }
   };

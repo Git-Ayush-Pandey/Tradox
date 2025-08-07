@@ -11,9 +11,9 @@ const WebSocket = require("ws");
 
 const app = express();
 const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
+const wss = new WebSocket.Server({ server, path: "/ws" });
 
-const PORT = process.env.PORT || 3002;
+const PORT = process.env.PORT || 4000;
 const MONGO_URL = process.env.MONGO_URL;
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -93,61 +93,65 @@ finnhubSocket.on("message", (data) => {
 });
 
 // 🆕 Symbol subscription map: { symbol: Set of client sockets }
+// ... all your requires & app setup remains the same
+
+// Symbol subscription map: { symbol: Set<WebSocket> }
 const symbolSubscriptions = {};
 
 wss.on("connection", (ws) => {
   console.log("🟢 Client connected to WebSocket");
 
-  // Keep track of what symbols this client is subscribed to
   ws.subscribedSymbols = new Set();
 
   ws.on("message", (msg) => {
+    let parsed;
     try {
-      const { type, symbol } = JSON.parse(msg);
-      if (!symbol || finnhubSocket.readyState !== WebSocket.OPEN) return;
-
-      // Subscribe logic
-      if (type === "subscribe") {
-        if (!ws.subscribedSymbols.has(symbol)) {
-          ws.subscribedSymbols.add(symbol);
-
-          if (!symbolSubscriptions[symbol]) {
-            symbolSubscriptions[symbol] = new Set();
-          }
-
-          const isFirstSubscriber = symbolSubscriptions[symbol].size === 0;
-          symbolSubscriptions[symbol].add(ws);
-
-          if (isFirstSubscriber) {
-            console.log(`📡 Subscribing to ${symbol} on Finnhub`);
-            finnhubSocket.send(JSON.stringify({ type: "subscribe", symbol }));
-          }
-        }
-      }
-
-      // Unsubscribe logic
-      else if (type === "unsubscribe") {
-        if (ws.subscribedSymbols.has(symbol)) {
-          ws.subscribedSymbols.delete(symbol);
-          symbolSubscriptions[symbol]?.delete(ws);
-
-          const isLastSubscriber = symbolSubscriptions[symbol]?.size === 0;
-          if (isLastSubscriber) {
-            console.log(`❎ Unsubscribing from ${symbol} on Finnhub`);
-            finnhubSocket.send(JSON.stringify({ type: "unsubscribe", symbol }));
-            delete symbolSubscriptions[symbol];
-          }
-        }
-      }
+      parsed = JSON.parse(msg);
     } catch (err) {
-      console.error("⚠️ WebSocket message error:", err.message);
+      console.error("⚠️ Invalid JSON from client:", err.message);
+      return;
+    }
+
+    const { type, symbol } = parsed;
+    if (!type || !symbol || typeof symbol !== "string") return;
+
+    const upperSymbol = symbol.toUpperCase();
+
+    if (type === "subscribe") {
+      if (ws.subscribedSymbols.has(upperSymbol)) return; // ✅ already subscribed
+
+      ws.subscribedSymbols.add(upperSymbol);
+
+      if (!symbolSubscriptions[upperSymbol]) {
+        symbolSubscriptions[upperSymbol] = new Set();
+      }
+
+      const isFirst = symbolSubscriptions[upperSymbol].size === 0;
+      symbolSubscriptions[upperSymbol].add(ws);
+
+      if (isFirst && finnhubSocket.readyState === WebSocket.OPEN) {
+        console.log(`📡 Subscribing to ${upperSymbol} on Finnhub`);
+        finnhubSocket.send(JSON.stringify({ type: "subscribe", symbol: upperSymbol }));
+      }
+    }
+
+    else if (type === "unsubscribe") {
+      if (!ws.subscribedSymbols.has(upperSymbol)) return;
+
+      ws.subscribedSymbols.delete(upperSymbol);
+      symbolSubscriptions[upperSymbol]?.delete(ws);
+
+      if (symbolSubscriptions[upperSymbol]?.size === 0) {
+        console.log(`❎ Unsubscribing from ${upperSymbol} on Finnhub`);
+        finnhubSocket.send(JSON.stringify({ type: "unsubscribe", symbol: upperSymbol }));
+        delete symbolSubscriptions[upperSymbol];
+      }
     }
   });
 
   ws.on("close", () => {
     console.log("🔌 Client disconnected");
 
-    // Cleanup: remove this client from all symbol subscriptions
     for (const symbol of ws.subscribedSymbols) {
       symbolSubscriptions[symbol]?.delete(ws);
 
@@ -159,6 +163,7 @@ wss.on("connection", (ws) => {
     }
   });
 });
+
 
 server.listen(PORT, () => {
   console.log(`🚀 App + WebSocket running at http://localhost:${PORT}`);

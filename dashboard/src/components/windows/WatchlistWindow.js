@@ -8,8 +8,8 @@ import {
   Typography,
   CircularProgress,
 } from "@mui/material";
-import { useState, useEffect } from "react";
-
+import { useState, useEffect, useContext } from "react";
+import GeneralContext from "../../contexts/GeneralContext";
 const WatchlistWindow = ({
   open,
   type, // "create" | "rename" | "delete"
@@ -22,6 +22,7 @@ const WatchlistWindow = ({
   onDelete,
 }) => {
   const [input, setInput] = useState("");
+  const { showAlert } = useContext(GeneralContext);
 
   useEffect(() => {
     if (type === "rename") {
@@ -36,17 +37,33 @@ const WatchlistWindow = ({
 
     if (type === "create" && trimmed) {
       const result = await onCreate(trimmed);
-      if (result?.success) onClose();
+
+      if (result?.success) {
+        showAlert("success", `Watchlist "${trimmed}" created.`);
+        onClose();
+      } else {
+        showAlert("error", result?.message || "Failed to create watchlist.");
+      }
     }
 
     if (type === "rename" && trimmed && trimmed !== oldName) {
       const result = await onRename(oldName, trimmed);
-      if (result?.success) onClose();
+      if (result?.success) {
+        showAlert("success", `Renamed to "${trimmed}".`);
+        onClose();
+      } else {
+        showAlert("error", result?.message || "Failed to rename watchlist.");
+      }
     }
 
     if (type === "delete") {
       const result = await onDelete(oldName);
-      if (result?.success) onClose();
+      if (result?.success) {
+        showAlert("success", `Deleted "${oldName}".`);
+        onClose();
+      } else {
+        showAlert("error", result?.message || "Failed to delete watchlist.");
+      }
     }
   };
 
@@ -76,7 +93,9 @@ const WatchlistWindow = ({
             label="Watchlist Name"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && !isDisabled && handleSubmit()}
+            onKeyDown={(e) =>
+              e.key === "Enter" && !isDisabled && handleSubmit()
+            }
           />
         )}
       </DialogContent>

@@ -60,7 +60,6 @@ code {
 }
 
 .row {
-  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-evenly;
@@ -855,13 +854,13 @@ hr {
   left: 0;
 }
 .profit {
-  color: #0f9d58; /* A calm green */
+  color: #0f9d58 !important;
   font-weight: 600;
   font-size: 1.6rem;
 }
 
 .loss {
-  color: #d93025; /* Google-style red */
+  color: #d93025 !important; /* Google-style red */
   font-weight: 600;
   font-size: 1.6rem;
 }
@@ -873,3 +872,84 @@ h3 small {
   color: #666;
 }
 
+.market-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.live-dot {
+  font-size: 10px;
+  color: #4caf50;
+  margin-left: 4px;
+}
+.watchlist-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid #eee;
+  transition: background-color 0.2s ease;
+}
+
+.watchlist-item:hover {
+  background-color: #f5f5f5;
+}
+
+.stock-info {
+  flex: 1;
+}
+
+.stock-name {
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.stock-details {
+  font-size: 12px;
+  color: #666;
+}
+
+.stock-details .price {
+  margin-right: 8px;
+}
+
+.percent.up {
+  color: #4caf50;
+}
+
+.percent.down {
+  color: #f44336;
+}
+
+.actions-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.action-btn {
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.buy-btn {
+  background-color: #4caf50;
+  color: white;
+}
+
+.sell-btn {
+  background-color: #f44336;
+  color: white;
+}
+
+.analytics-btn,
+.delete-btn {
+  padding: 4px;
+}

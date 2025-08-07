@@ -1,23 +1,26 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useContext } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { logout } from "./hooks/api";
+import { logout } from "../hooks/api";
+import GeneralContext from "../contexts/GeneralContext";
 
 const Menu = () => {
   const location = useLocation();
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
-
+  const { showAlert } = useContext(GeneralContext);
   const handleProfileClick = () => {
     setIsProfileDropdownOpen((prev) => !prev);
   };
 
   const handleLogoutClick = async () => {
     try {
-      logout();
+      await logout();
+       showAlert("success", "Logged out successfully.");
       setIsProfileDropdownOpen(false);
       window.location.href = "http://localhost:3001/signup";
     } catch (error) {
       console.error("Logout failed", error);
+      showAlert("error", "Logout failed.");
     }
   };
 

@@ -21,7 +21,7 @@ const BuyActionWindow = ({ uid, existingOrder = null }) => {
   const [orderType, setOrderType] = useState(existingOrder?.type || "Delivery");
   const [marginRequired, setMarginRequired] = useState(0.0);
   const [availableMargin, setAvailableMargin] = useState(null);
-  const { closeBuyWindow } = useContext(GeneralContext);
+  const { closeBuyWindow, showAlert } = useContext(GeneralContext);
 
   useEffect(() => {
     setMarginRequired(stockQuantity * stockPrice);
@@ -40,11 +40,12 @@ const BuyActionWindow = ({ uid, existingOrder = null }) => {
 
   const handleBuyClick = async () => {
     if (marginRequired > availableMargin) {
-      alert(
-        `Insufficient margin. Required: ₹${marginRequired.toFixed(
-          2
-        )}, Available: ₹${availableMargin.toFixed(2)}`
-      );
+      showAlert?.(
+      "error",
+      `Insufficient margin. Required: ₹${marginRequired.toFixed(
+        2
+      )}, Available: ₹${availableMargin.toFixed(2)}`
+    );
       return;
     }
     const payload = {
@@ -59,14 +60,16 @@ const BuyActionWindow = ({ uid, existingOrder = null }) => {
     try {
       if (isEdit) {
         await editOrder( existingOrder._id, payload)
+        showAlert?.("success", "Order updated successfully.");
       } else {
         await placeOrder(payload)
+        showAlert?.("success", "Order placed successfully.");
       }
 
       closeBuyWindow();
     } catch (err) {
       const msg = err?.response?.data?.message || "An error occurred.";
-      alert(msg);
+      showAlert?.("error", msg);
       console.error("Order error:", err);
     }
   };

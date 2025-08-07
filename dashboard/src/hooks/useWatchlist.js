@@ -171,55 +171,54 @@ export const useWatchlist = () => {
 
   // Rename watchlist functionality
   const handleRenameWatchlist = async (oldName, newName) => {
-  if (!newName || newName.trim().length === 0) {
-    return { success: false, message: "Watchlist name cannot be empty" };
-  }
-
-  if (newName.trim() === oldName) {
-    return { success: false, message: "New name must be different" };
-  }
-
-  if (watchlists[newName.trim()]) {
-    return { success: false, message: "Watchlist with this name already exists" };
-  }
-
-  setLoading(true);
-  setError(null);
-
-  try {
-    const trimmed = newName.trim();
-
-    // ✅ Create new watchlist
-    const createResult = await handleCreateNewWatchlist(trimmed);
-    if (!createResult.success) {
-      return createResult;
+    if (!newName || newName.trim().length === 0) {
+      return { success: false, message: "Watchlist name cannot be empty" };
     }
 
-    // ✅ Move all stocks
-    const stocksToMove = watchlists[oldName] || [];
-    for (const stock of stocksToMove) {
-      const stockPayload = { ...stock, listName: trimmed };
-      delete stockPayload._id;
-      await addStock(stockPayload);
+    if (newName.trim() === oldName) {
+      return { success: false, message: "New name must be different" };
     }
 
-    // ✅ Delete old watchlist
-    await handleDeleteList(oldName);
+    if (watchlists[newName.trim()]) {
+      return { success: false, message: "Watchlist with this name already exists" };
+    }
 
-    // ✅ Set new watchlist as active
-    setActiveList(trimmed);
+    setLoading(true);
+    setError(null);
 
-    return { success: true };
-  } catch (error) {
-    const errorMessage = "Failed to rename watchlist";
-    setError(errorMessage);
-    console.error("Error renaming watchlist:", error);
-    return { success: false, message: errorMessage };
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      // Create new watchlist
+      const createResult = await handleCreateNewWatchlist(newName.trim());
+      
+      if (!createResult.success) {
+        return createResult;
+      }
 
+      // Move all stocks to new watchlist
+      const stocksToMove = watchlists[oldName] || [];
+      for (const stock of stocksToMove) {
+        const stockPayload = {
+          ...stock,
+          listName: newName.trim()
+        };
+        delete stockPayload._id; // Remove ID so it creates new entries
+        
+        await addStock(stockPayload);
+      }
+
+      // Delete old watchlist
+      await handleDeleteList(oldName);
+
+      return { success: true };
+    } catch (error) {
+      const errorMessage = "Failed to rename watchlist";
+      setError(errorMessage);
+      console.error("Error renaming watchlist:", error);
+      return { success: false, message: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const currentList = watchlists[activeList] || [];
 

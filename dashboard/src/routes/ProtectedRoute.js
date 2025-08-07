@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { verifyToken } from "../components/hooks/api";
+import { verifyToken } from "../hooks/api";
 
 const ProtectedRoute = ({ children }) => {
   const [auth, setAuth] = useState(null); 

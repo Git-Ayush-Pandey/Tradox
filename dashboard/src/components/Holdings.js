@@ -1,8 +1,7 @@
-import { useState, useEffect, useContext } from "react";
-import { fetchHoldings, getQuote } from "./hooks/api";
-import { VerticalGraph } from "./ChartJs/VerticalGraph";
+import { useState, useEffect, useContext, useMemo } from "react";
+import { fetchHoldings, getQuote } from "../hooks/api";
 import GeneralContext from "../contexts/GeneralContext";
-import { isMarketOpen } from "./hooks/isMarketOpen";
+import { isMarketOpen } from "../hooks/isMarketOpen";
 import { useLivePriceContext } from "../contexts/LivePriceContext";
 
 // Format number to ₹ currency
@@ -17,32 +16,40 @@ const enrichHolding = (item, price, basePrice) => {
   const currentValue = price * item.qty;
   const investment = item.avg * item.qty;
   const change = price - basePrice;
-  const percent = basePrice ? ((change / basePrice) * 100).toFixed(2) : "0.00";
+  const percent = basePrice ? (change / basePrice) * 100 : 0;
   return {
     ...item,
     price,
     basePrice,
-    change: change.toFixed(2),
+    day: price - item.avg,
+    change,
     percent,
     isLoss: currentValue < investment,
   };
 };
 
 const Holdings = () => {
-  const { holdings: allHoldings, setHoldings: setAllHoldings } = useContext(GeneralContext);
+  const {
+    holdings: allHoldings,
+    setHoldings: setAllHoldings,
+    showAlert,
+  } = useContext(GeneralContext);
   const [hoveredRow, setHoveredRow] = useState(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(null);
   const generalContext = useContext(GeneralContext);
   const { livePrices, updateSymbols } = useLivePriceContext();
+  const marketOpen = useMemo(() => isMarketOpen(), []);
 
-  // Fetch holdings and quote prices on mount
   useEffect(() => {
     const fetchWithQuotes = async () => {
       try {
         setLoading(true);
         const res = await fetchHoldings();
         const rawHoldings = res.data;
+        if (rawHoldings.length === 0) {
+          showAlert("warning", "You don't have any holdings yet.");
+        }
 
         const priceResults = await Promise.all(
           rawHoldings.map(async (item) => {
@@ -66,42 +73,46 @@ const Holdings = () => {
 
         const enriched = rawHoldings.map((item) => {
           const pricing = priceResults.find((p) => p.symbol === item.name);
-          return enrichHolding(item, pricing?.price ?? item.avg, pricing?.basePrice ?? item.avg);
+          return enrichHolding(
+            item,
+            pricing?.price ?? item.avg,
+            pricing?.basePrice ?? item.avg
+          );
         });
 
         setAllHoldings(enriched);
         updateSymbols(rawHoldings.map((i) => i.name));
       } catch (err) {
         console.error("Error fetching holdings:", err);
+        showAlert("error", "Failed to fetch holdings.");
       } finally {
         setLoading(false);
       }
     };
 
     fetchWithQuotes();
-  }, [setAllHoldings, updateSymbols]);
+    // eslint-disable-next-line
+  }, [setAllHoldings]);
 
-  // Apply live prices on top during market hours
   useEffect(() => {
-    if (!isMarketOpen() || !livePrices || allHoldings.length === 0) return;
+    if (!marketOpen) return;
 
-    const updated = allHoldings.map((item) => {
-      const live = livePrices[item.name];
-      if (!live) return item;
-      return enrichHolding(item, live, item.basePrice);
-    });
-
-    setAllHoldings(updated);
+    setAllHoldings((prev) =>
+      prev.map((item) => {
+        const live = livePrices[item.name];
+        if (!live) return item;
+        return enrichHolding(item, live, item.basePrice);
+      })
+    );
     setLastUpdate(new Date());
-  }, [livePrices, allHoldings, setAllHoldings]);
+    // eslint-disable-next-line
+  }, [livePrices, marketOpen]);
 
-  // Periodic refresh (optional, if market is closed)
   useEffect(() => {
-    if (isMarketOpen()) return;
-
+    if (marketOpen) return;
     const interval = setInterval(() => setLastUpdate(new Date()), 60000);
     return () => clearInterval(interval);
-  }, []);
+  }, [marketOpen]);
 
   const totalInvestment = allHoldings.reduce(
     (acc, stock) => acc + stock.avg * stock.qty,
@@ -115,40 +126,26 @@ const Holdings = () => {
   const totalPLPercent =
     totalInvestment === 0 ? 0 : (totalProfitLoss / totalInvestment) * 100;
 
-  const labels = allHoldings.map((stock) => stock.name);
-  const data = {
-    labels,
-    datasets: [
-      {
-        label: "Stock Price",
-        data: allHoldings.map((stock) => stock.price),
-        backgroundColor: allHoldings.map(
-          () =>
-            `rgba(${Math.floor(Math.random() * 255)},${Math.floor(
-              Math.random() * 255
-            )},${Math.floor(Math.random() * 255)},0.5)`
-        ),
-      },
-    ],
-  };
-
+  useEffect(() => {
+    if (!loading && allHoldings.length > 0 && totalProfitLoss < -1000) {
+      showAlert(
+        "error",
+        "Your holdings are in a significant loss. Please evaluate your positions."
+      );
+    }
+  }, [loading, allHoldings.length, totalProfitLoss, showAlert]);
   if (loading) return <div>Loading...</div>;
 
   return (
     <div className="orders">
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        marginBottom: '15px',
-        fontSize: '12px',
-        color: '#666'
-      }}>
+      <div className="market-status">
         <span>
-          {isMarketOpen() ? (
-            <span style={{ color: '#4caf50' }}>🟢 Market Open - Live Prices</span>
+          {marketOpen ? (
+            <span style={{ color: "#4caf50" }}>
+              🟢 Market Open - Live Prices
+            </span>
           ) : (
-            <span style={{ color: '#666' }}>⚫ Market Closed - Latest Prices</span>
+            <span>⚫ Market Closed - Latest Prices</span>
           )}
         </span>
         <span>
@@ -168,7 +165,6 @@ const Holdings = () => {
               <th>LTP</th>
               <th>Cur. val</th>
               <th>P&L</th>
-              <th>Net chg.</th>
               <th>Day chg.</th>
             </tr>
           </thead>
@@ -182,37 +178,40 @@ const Holdings = () => {
                   onMouseLeave={() => setHoveredRow(null)}
                 >
                   <td className="align-left">
-                    {stock.name}
-                    {hoveredRow === index && (
-                      <span className="actions">
+                    <div
+                      className="d-flex align-items-center justify-content-between"
+                      style={{ minWidth: "120px" }}
+                    >
+                      <span>{stock.name}</span>
+                      <div className="d-flex ms-2">
                         <button
-                          className="btn sell"
-                          onClick={() =>
-                            generalContext.openSellWindow(stock)
-                          }
+                          className={`btn btn-danger btn-sm me-2 ${
+                            hoveredRow === index ? "" : "invisible"
+                          }`}
+                          onClick={() => generalContext.openSellWindow(stock)}
                         >
                           SELL
                         </button>
-                      </span>
-                    )}
+                      </div>
+                    </div>
                   </td>
+
                   <td>{stock.qty}</td>
                   <td>{stock.avg.toFixed(2)}</td>
                   <td>
                     {stock.price.toFixed(2)}
-                    {isMarketOpen() && (
-                      <span style={{ fontSize: '10px', color: '#4caf50', marginLeft: '4px' }}>●</span>
-                    )}
+                    {marketOpen && <span className="live-dot">●</span>}
                   </td>
                   <td>{currentValue.toFixed(2)}</td>
                   <td className={stock.isLoss ? "loss" : "profit"}>
                     {(currentValue - stock.avg * stock.qty).toFixed(2)}
                   </td>
-                  <td className={parseFloat(stock.change) < 0 ? "loss" : "profit"}>
-                    {stock.change}
-                  </td>
-                  <td className={parseFloat(stock.percent) < 0 ? "loss" : "profit"}>
-                    {stock.percent}
+
+                  <td className={stock.change < 0 ? "loss" : "profit"}>
+                    {stock.change >= 0 ? "+" : ""}
+                    {(currentValue - stock.avg * stock.qty).toFixed(2)} (
+                    {stock.percent >= 0 ? "+" : ""}
+                    {stock.percent.toFixed(2)}%)
                   </td>
                 </tr>
               );
@@ -235,15 +234,15 @@ const Holdings = () => {
           </h5>
         </div>
         <div className="col">
-          <h5 className={totalProfitLoss >= 0 ? "profit" : "loss"}>
+          <h5
+            className={totalCurrentValue < totalInvestment ? "loss" : "profit"}
+          >
             {formatCurrency(totalProfitLoss)} ({totalPLPercent.toFixed(2)}%)
             <br />
             <span>P&L</span>
           </h5>
         </div>
       </div>
-
-      <VerticalGraph data={data} />
     </div>
   );
 };

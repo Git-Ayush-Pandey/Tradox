@@ -12,19 +12,21 @@ import Footer from "./landing_page/Footer";
 import NotFount from "./landing_page/NotFound";
 import UnderConstruction from "./landing_page/UnderConstruction";
 import Login from "./landing_page/signup/login";
+import { ToastContainer } from "react-toastify";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <BrowserRouter>
     <Navbar/>
+     <ToastContainer/>
     <Routes>
       <Route path="/" element={<HomePage />} />
-      <Route path="/signup" element={<Signup />} />
       <Route path="/about" element={<AboutPage />} />
       <Route path="/product" element={<ProductsPage />} />
       <Route path="/pricing" element={<PricingPage />} />
       <Route path="/support" element={<SupportPage />} />
       <Route path="/link" element={<UnderConstruction />} />
+      <Route path="/signup" element={<Signup />} />
       <Route path="/login" element={<Login />} />
       <Route path="*" element={<NotFount />} />
     </Routes>

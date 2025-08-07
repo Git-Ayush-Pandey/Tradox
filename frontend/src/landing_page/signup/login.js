@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import axios from "axios";
+import "react-toastify/dist/ReactToastify.css";
+
 const Login = () => {
   const [inputValue, setInputValue] = useState({
     email: "",
@@ -18,24 +20,22 @@ const Login = () => {
 
   const handleError = (err) =>
     toast.error(err, {
-      position: "bottom-left",
+      position: "top-right",
     });
   const handleSuccess = (msg) =>
     toast.success(msg, {
-      position: "bottom-left",
+      position: "top-right",
     });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const { data } = await axios.post(
-        "http://localhost:3002/auth/login",
-        {
-          ...inputValue,
-        },
+        "http://localhost:4000/auth/login",
+        inputValue,
         { withCredentials: true }
       );
-      console.log(data);
+
       const { success, message } = data;
       if (success) {
         handleSuccess(message);
@@ -43,19 +43,22 @@ const Login = () => {
           window.location.href = "http://localhost:3000/";
         }, 1000);
       } else {
-        handleError(message);
+        handleError(message); // show invalid email/password
       }
     } catch (error) {
-      console.log(error);
+      const errorMsg = error.response?.data?.message || "Something went wrong";
+      handleError(errorMsg); // 🧨 show toast for server/network errors too
+      console.error("Login error:", error);
     }
+
     setInputValue({
-      ...inputValue,
       email: "",
       password: "",
     });
   };
+
   return (
-    <div className="container mt-5">
+    <div className="container mt-5" style={{ paddingTop: "50px" }}>
       <div className="row justify-content-center">
         <div className="col-md-6">
           <h2 className="mb-4 text-center">Login</h2>

@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import GeneralContext from "../contexts/GeneralContext";
 
 const Summary = () => {
@@ -7,10 +7,11 @@ const Summary = () => {
     holdings,
     allPositions: positions,
     loading,
+    showAlert,
   } = useContext(GeneralContext);
 
   const formatINR = (val) =>
-    `${val.toFixed(2).toLocaleString("en-IN")} ₹`;
+    `${val.toLocaleString("en-IN", { minimumFractionDigits: 2 })} ₹`;
 
   const calculatePL = (list) => {
     const investment = list.reduce(
@@ -28,13 +29,38 @@ const Summary = () => {
 
   const getPLClass = (pnl) => (pnl < 0 ? "loss" : "profit");
 
-  if (loading)
-    return <div className="text-center mt-4">Loading summary...</div>;
-  if (!user)
-    return <div className="text-center mt-4">User not authenticated</div>;
-
   const holdingsPL = calculatePL(holdings);
   const positionsPL = calculatePL(positions);
+
+  useEffect(() => {
+    if (!loading && user) {
+      if (holdings.length === 0 && positions.length === 0) {
+        showAlert("warning", "You don't have any holdings or positions yet.");
+      } else {
+        const totalLoss = holdingsPL.pnl + positionsPL.pnl;
+        if (totalLoss < -1000) {
+          showAlert(
+            "error",
+            "You are in a significant loss. Consider reviewing your trades."
+          );
+        }
+      }
+    }
+  }, [
+    loading,
+    user,
+    holdings.length,
+    positions.length,
+    holdingsPL.pnl,
+    positionsPL.pnl,
+    showAlert,
+  ]);
+
+  if (loading)
+    return <div className="text-center mt-4">Loading summary...</div>;
+
+  if (!user)
+    return <div className="text-center mt-4">User not authenticated</div>;
 
   return (
     <>

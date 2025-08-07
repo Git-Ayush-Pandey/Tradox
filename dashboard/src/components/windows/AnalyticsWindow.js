@@ -40,6 +40,7 @@ const AnalyticsWindow = ({ stock, onClose }) => {
   const [news, setNews] = useState([]);
   const [tabValue, setTabValue] = useState("overview");
   const generalContext = useContext(GeneralContext);
+  const { showAlert } = useContext(GeneralContext);
 
   const handleIntervalChange = (_, newInterval) => {
     if (newInterval) setInterval(newInterval);
@@ -79,12 +80,14 @@ const AnalyticsWindow = ({ stock, onClose }) => {
       } catch (err) {
         console.error("Failed to fetch analytics", err);
         setChartData([]);
+         showAlert?.("error", "Failed to fetch price graph.");
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
+    // eslint-disable-next-line
   }, [stock, interval]);
 
   useEffect(() => {
@@ -134,10 +137,12 @@ const AnalyticsWindow = ({ stock, onClose }) => {
         console.error("Failed to load overview/news:", err);
         setOverview(null);
         setNews([]);
+        showAlert?.("error", "Failed to load stock overview or news.");
       }
     };
 
     loadOverviewAndNews();
+    // eslint-disable-next-line
   }, [stock]);
 
   const overviewData = overview

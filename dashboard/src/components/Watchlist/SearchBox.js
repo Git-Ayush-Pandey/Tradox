@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import {
   Box,
   Paper,
@@ -8,47 +8,49 @@ import {
   IconButton,
 } from "@mui/material";
 import { Search, Close } from "@mui/icons-material";
-import { searchStocks, getQuote } from "../hooks/api";
+import { searchStocks, getQuote } from "../../hooks/api";
+import GeneralContext from "../../contexts/GeneralContext";
 
 const SearchBox = ({ currentList, activeList, handleAddStock }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
-  const [timeoutId, setTimeoutId] = useState(null);
   const [adding, setAdding] = useState(false);
-
+  const { showAlert } = useContext(GeneralContext);
+  let timeoutId;
 
   const handleSearchChange = (e) => {
     const term = e.target.value;
     setSearchTerm(term);
-    if (timeoutId) clearTimeout(timeoutId);
+
+    clearTimeout(timeoutId);
     if (term.length < 2) return setSearchResults([]);
 
-    const tId = setTimeout(() => {
+    timeoutId = setTimeout(() => {
       searchStocks(term)
         .then((res) => setSearchResults(res.data.bestMatches || []))
         .catch(() => setSearchResults([]));
     }, 1000);
-    setTimeoutId(tId);
   };
 
   const handleAddToWatchlist = async (stock) => {
-    if (adding) return;
-    if (currentList.length >= 25) return alert("Limit reached");
+    if (adding || currentList.length >= 25) {
+      if (currentList.length >= 25) {
+        showAlert?.("warning", "Limit reached. You can only add 25 stocks.");
+      }
+      return;
+    }
+
     setAdding(true);
+
     try {
       const cleanSymbol = stock.name.replace(
         /\.(NS|NE|BO|TO|L|AX|V|SA|TWO)$/i,
         ""
       );
       const quote = await getQuote(cleanSymbol);
-      console.log(quote)
-      if (
-        !quote?.data ||
-        typeof quote.data.c !== "number" ||
-        quote.data.c <= 0
-      ) {
-        alert("Live price not available for this stock");
-        setAdding(false);
+
+      if (!quote?.data?.c || typeof quote.data.c !== "number") {
+        showAlert?.("error", "Live price not available for this stock.");
         return;
       }
 
@@ -62,16 +64,18 @@ const SearchBox = ({ currentList, activeList, handleAddStock }) => {
       };
 
       const result = await handleAddStock(payload);
+
       if (result.success) {
+        showAlert?.("success", `${cleanSymbol} added to watchlist.`);
         setSearchTerm("");
         setSearchResults([]);
       } else {
-        alert("Could not add stock: " + result.message);
+        showAlert?.("error", `Could not add stock: ${result.message}`);
       }
     } catch (err) {
       console.error("Add Error:", err);
       const msg = err.response?.data?.message || "Something went wrong.";
-      alert(msg);
+      showAlert?.("error", msg);
     } finally {
       setAdding(false);
     }
@@ -79,7 +83,7 @@ const SearchBox = ({ currentList, activeList, handleAddStock }) => {
 
   return (
     <Box className="search-container p-4 pt-1 pb-1">
-      <Box className="search-wrapper ">
+      <Box className="search-wrapper">
         <TextField
           fullWidth
           placeholder="Search eg: infy, bse"
@@ -112,7 +116,6 @@ const SearchBox = ({ currentList, activeList, handleAddStock }) => {
               <Box
                 key={i}
                 onClick={() =>
-                  !adding &&
                   handleAddToWatchlist({
                     name: item.symbol,
                     price: 0,

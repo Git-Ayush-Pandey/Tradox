@@ -1,16 +1,15 @@
 import { useState, useEffect, useRef, useContext, useMemo } from "react";
-import { FetchOrders, deleteOrder, executeOrder, getQuote } from "./hooks/api";
+import { FetchOrders, deleteOrder, executeOrder, getQuote } from "../hooks/api";
 import GeneralContext from "../contexts/GeneralContext";
-import { isMarketOpen } from "./hooks/isMarketOpen";
+import { isMarketOpen } from "../hooks/isMarketOpen";
 import { useLivePriceContext } from "../contexts/LivePriceContext";
 
-// Enrich order with price + basePrice and status
-const enrichOrder = (order, price, basePrice) => {
-  const change = price - basePrice;
+const enrichOrder = (order, livePrice, basePrice) => {
+  const change = livePrice - basePrice;
   const percent = basePrice ? (change / basePrice) * 100 : 0;
   return {
     ...order,
-    price,
+    livePrice,
     basePrice,
     change: change.toFixed(2),
     percent: percent.toFixed(2),
@@ -23,25 +22,26 @@ const Orders = () => {
   const [hoveredRow, setHoveredRow] = useState(null);
   const [loading, setLoading] = useState(true);
   const executingRef = useRef(new Set());
-  const { openBuyWindow, openSellWindow } = useContext(GeneralContext);
 
+  const { openBuyWindow, openSellWindow, showAlert } = useContext(GeneralContext);
   const { livePrices, updateSymbols } = useLivePriceContext();
 
   const symbols = useMemo(
     () => [...new Set(allOrders.map((o) => o.name))],
     [allOrders]
   );
+  const marketOpen = useMemo(() => isMarketOpen(), []);
 
-  // Initial load — fetch orders and enrich with API prices
   useEffect(() => {
     const loadOrders = async () => {
       try {
         const res = await FetchOrders();
 
-        if (!isMarketOpen()) {
+        if (!marketOpen) {
           const toDelete = res.data.filter((o) => !o.executed);
           await Promise.all(toDelete.map((o) => deleteOrder(o._id)));
           setAllOrders([]);
+          showAlert("warning", "Market closed. Pending orders auto-cancelled.");
           return;
         }
 
@@ -65,50 +65,56 @@ const Orders = () => {
             }
           })
         );
-
         const enriched = rawOrders.map((order) => {
           const found = priceResults.find((p) => p.symbol === order.name);
-          return enrichOrder(order, found?.price ?? order.price, found?.basePrice ?? order.price);
+          return enrichOrder(
+            order,
+            found?.price ?? order.price,
+            found?.basePrice ?? order.price
+          );
         });
 
         setAllOrders(enriched);
-        updateSymbols(symbols);
+        const upperSymbols = enriched.map((o) => o.name.toUpperCase());
+        updateSymbols(upperSymbols);
       } catch (err) {
         console.error("Failed to fetch orders:", err);
+        showAlert("error", "Failed to fetch orders.");
       } finally {
         setLoading(false);
       }
     };
 
     loadOrders();
-  }, [symbols, updateSymbols]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [updateSymbols, marketOpen]);
 
-  // Apply live prices if market is open
   useEffect(() => {
-    if (!isMarketOpen() || allOrders.length === 0 || !livePrices) return;
+    if (!marketOpen) return;
 
     setAllOrders((prev) =>
       prev.map((order) => {
-        const live = livePrices[order.name];
+        const live = livePrices[order.name.toUpperCase()];
         if (!live) return order;
         return enrichOrder(order, live, order.basePrice);
       })
     );
-  }, [livePrices, allOrders.length]);
+  }, [livePrices, allOrders.length, marketOpen]);
 
-  // Re-subscribe on symbols change
   useEffect(() => {
-    if (isMarketOpen() && symbols.length > 0) {
+    if (marketOpen && symbols.length > 0) {
       updateSymbols(symbols);
     }
-  }, [symbols, updateSymbols]);
+  }, [symbols, updateSymbols, marketOpen]);
 
-  // Order execution logic (live prices)
   useEffect(() => {
-    if (!isMarketOpen()) return;
+    if (!marketOpen) return;
 
     const executeMatchingOrders = async () => {
       for (const order of allOrders) {
+        if (order.executed) {
+          continue;
+        }
         if (executingRef.current.has(order._id)) continue;
 
         const price = livePrices[order.name];
@@ -126,36 +132,32 @@ const Orders = () => {
           setAllOrders((prev) =>
             prev.map((o) => (o._id === order._id ? res.data.order : o))
           );
+          showAlert("success", `Order for ${order.name} executed.`);
         } catch (err) {
           console.error(`Failed to execute order ${order._id}`, err);
         } finally {
           executingRef.current.delete(order._id);
+          showAlert("error", `Failed to execute ${order.name}.`);
         }
       }
     };
 
     executeMatchingOrders();
-  }, [livePrices, allOrders]);
+     // eslint-disable-next-line
+  }, [livePrices, allOrders, marketOpen]);
 
   const handleCancel = async (id) => {
     try {
       await deleteOrder(id);
       setAllOrders((prev) => prev.filter((o) => o._id !== id));
+      showAlert("success", "Order cancelled.");
     } catch (err) {
       console.error("Failed to cancel order", err);
+      showAlert("error", "Failed to cancel order.");
     }
   };
 
-  const getPriceClass = (order) => {
-    const p = order.price;
-    if (p == null) return "";
-    if (order.mode === "BUY" && p <= order.price) return "text-success";
-    if (order.mode === "SELL" && p >= order.price) return "text-danger";
-    return "";
-  };
-
-  if (loading)
-    return <div className="text-center mt-4">Loading orders...</div>;
+  if (loading) return <div className="text-center mt-4">Loading orders...</div>;
 
   if (allOrders.length === 0)
     return (
@@ -165,69 +167,92 @@ const Orders = () => {
   return (
     <>
       <h3 className="title">Orders ({allOrders.length})</h3>
-      <div className="order-table table-responsive">
-        <table className="table table-striped">
-          <thead className="thead-dark">
+      <div className="order-table">
+        <table>
+          <thead>
             <tr>
               <th>Name</th>
               <th>Qty</th>
               <th>Order Price</th>
               <th>Mode</th>
               <th>Current Price</th>
-              <th>% Change</th>
               <th>Status</th>
             </tr>
           </thead>
           <tbody>
-            {allOrders.map((order) => (
-              <tr
-                key={order._id}
-                onMouseEnter={() => setHoveredRow(order._id)}
-                onMouseLeave={() => setHoveredRow(null)}
-              >
-                <td>
-                  <div className="d-flex align-items-center">
-                    <span>{order.name}</span>
-                    {hoveredRow === order._id && !order.executed && (
-                      <>
+            {allOrders.map((order) => {
+              const rowPriceClass =
+                order.mode === "BUY" &&
+                livePrices[order.name.toUpperCase()] <= order.price
+                  ? "profit"
+                  : order.mode === "SELL" &&
+                    livePrices[order.name.toUpperCase()] >= order.price
+                  ? "loss"
+                  : "";
+
+              return (
+                <tr
+                  key={order._id}
+                  onMouseEnter={() => setHoveredRow(order._id)}
+                  onMouseLeave={() => setHoveredRow(null)}
+                >
+                  <td className="align-left" style={{ width: "200px" }}>
+                    <div className="d-flex align-items-center justify-content-between">
+                      <span
+                        className="text-truncate"
+                        style={{ maxWidth: "60px" }}
+                      >
+                        {order.name}
+                      </span>
+                      <div
+                        className="d-flex gap-2"
+                        style={{
+                          visibility:
+                            hoveredRow === order._id && !order.executed
+                              ? "visible"
+                              : "hidden",
+                        }}
+                      >
                         <button
-                          className="btn btn-secondary btn-sm ms-2"
+                          className="btn btn-primary btn-sm"
                           onClick={() =>
                             order.mode === "BUY"
-                              ? openBuyWindow({ name: order.name, id: order.id }, order)
-                              : openSellWindow({ name: order.name, id: order.id }, order)
+                              ? openBuyWindow(
+                                  { name: order.name, id: order.id },
+                                  order
+                                )
+                              : openSellWindow(
+                                  { name: order.name, id: order.id },
+                                  order
+                                )
                           }
                         >
                           Edit
                         </button>
                         <button
-                          className="btn btn-danger btn-sm ms-2"
+                          className="btn btn-danger btn-sm"
                           onClick={() => handleCancel(order._id)}
                         >
                           Cancel
                         </button>
-                      </>
+                      </div>
+                    </div>
+                  </td>
+
+                  <td>{order.qty}</td>
+                  <td>{order.price.toFixed(2)}</td>
+                  <td>{order.mode}</td>
+                  <td className={rowPriceClass}>{order.livePrice.toFixed(2)}</td>
+                  <td>
+                    {order.executed ? (
+                      <span className="profit" style={{fontSize:"20px"}}>Executed</span>
+                    ) : (
+                      <span style={{color:"orange", fontSize:"20px"}}>Pending</span>
                     )}
-                  </div>
-                </td>
-                <td>{order.qty}</td>
-                <td>{order.price.toFixed(2)}</td>
-                <td>{order.mode}</td>
-                <td className={getPriceClass(order)}>
-                  {order.price?.toFixed(2) ?? "-"}
-                </td>
-                <td className={order.isDown ? "text-danger" : "text-success"}>
-                  {order.percent}%
-                </td>
-                <td>
-                  {order.executed ? (
-                    <span className="badge bg-success">Executed</span>
-                  ) : (
-                    <span className="badge bg-warning text-dark">Pending</span>
-                  )}
-                </td>
-              </tr>
-            ))}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

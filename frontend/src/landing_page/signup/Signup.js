@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import axios from "axios";
 import OTPVerifyWindow from "./OTPVerifyWindow"; // adjust path if needed
-
+import "react-toastify/dist/ReactToastify.css";
 function Signup() {
   const [inputValue, setInputValue] = useState({
     name: "",
@@ -23,11 +23,11 @@ function Signup() {
   };
   const handleError = (err) =>
     toast.error(err, {
-      position: "bottom-left",
+      position: "top-right",
     });
   const handleSuccess = (msg) =>
     toast.success(msg, {
-      position: "bottom-right",
+      position: "top-right",
     });
   const handleOpenOTP = (type) => {
     const value = inputValue[type];
@@ -43,7 +43,7 @@ function Signup() {
     e.preventDefault();
     try {
       const { data } = await axios.post(
-        "http://localhost:3002/auth/signup",
+        "http://localhost:4000/auth/signup",
         {
           ...inputValue,
         },
@@ -59,7 +59,8 @@ function Signup() {
         handleError(message);
       }
     } catch (error) {
-      console.log(error);
+      const msg = error.response.data.error;
+      handleError(msg);
     }
     setInputValue({
       ...inputValue,
@@ -70,7 +71,7 @@ function Signup() {
     });
   };
   return (
-    <div className="container  mb-5">
+    <div className="container  mb-5" style={{ paddingTop: "50px" }} >
       <div className="text-center mt-5  p-3">
         <h1 style={{ color: "#404040" }}>
           Open a free demat and trading account online

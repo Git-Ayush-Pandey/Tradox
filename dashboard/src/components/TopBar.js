@@ -1,6 +1,10 @@
+import { useContext } from "react";
 import Menu from "./Menu";
+import GeneralContext from "../contexts/GeneralContext";
 
 const TopBar = () => {
+  const { showAlert } = useContext(GeneralContext);
+
   const indices = {
     SANDP: {
       name: "S&P 500",
@@ -64,13 +68,13 @@ const TopBar = () => {
       <div className="indices-group" style={{ display: "flex", alignItems: "center" }}>
         <IndexBlock
           index={indices.SANDP}
-          onClick={() => alert("Open S&P 500 analytics")}
+          onClick={() => showAlert("info", "Open S&P 500 analytics")}
         />
       </div>
       <div className="indices-group" style={{ display: "flex", alignItems: "center" }}>
         <IndexBlock
           index={indices.DJIA}
-          onClick={() => alert("Open DJIA analytics")}
+          onClick={() => showAlert("info", "Open DJIA analytics")}
         />
       </div>
       <Menu />

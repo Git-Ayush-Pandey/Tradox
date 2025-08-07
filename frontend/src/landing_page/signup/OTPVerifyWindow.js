@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Modal, Box, Button, TextField, Typography } from "@mui/material";
 import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 
 const OTPVerifyWindow = ({ open, onClose, type, value, onVerified }) => {
@@ -21,7 +22,7 @@ const OTPVerifyWindow = ({ open, onClose, type, value, onVerified }) => {
 
     setSending(true);
     try {
-      const res = await axios.post("http://localhost:3002/otp/send-otp", {
+      const res = await axios.post("http://localhost:4000/otp/send-otp", {
         type,
         value,
       });
@@ -51,7 +52,7 @@ const OTPVerifyWindow = ({ open, onClose, type, value, onVerified }) => {
 
     setVerifying(true);
     try {
-      const res = await axios.post("http://localhost:3002/otp/verify-otp", {
+      const res = await axios.post("http://localhost:4000/otp/verify-otp", {
         type,
         value,
         otp,

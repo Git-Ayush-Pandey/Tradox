@@ -27,7 +27,7 @@ const WatchListActions = ({ stock, onDelete }) => {
           </button>
         </Grow>
       </Tooltip>
-      
+
       <Tooltip title="Sell" placement="top">
         <Grow in={true} timeout={400}>
           <button 
@@ -47,7 +47,7 @@ const WatchListActions = ({ stock, onDelete }) => {
           </button>
         </Grow>
       </Tooltip>
-      
+
       <Tooltip title="Analytics" placement="top">
         <Grow in={true} timeout={500}>
           <IconButton 
@@ -59,12 +59,19 @@ const WatchListActions = ({ stock, onDelete }) => {
           </IconButton>
         </Grow>
       </Tooltip>
-      
+
       <Tooltip title="Delete" placement="top">
         <Grow in={true} timeout={600}>
           <IconButton 
             size="small"
-            onClick={() => onDelete()}
+            onClick={async () => {
+              const result = await onDelete?.();
+              if (result?.success) {
+                generalContext.showAlert?.("success", "Removed from watchlist.");
+              } else if (result?.message) {
+                generalContext.showAlert?.("error", result.message);
+              }
+            }}
             style={{ padding: '4px' }}
           >
             <Delete fontSize="small" />

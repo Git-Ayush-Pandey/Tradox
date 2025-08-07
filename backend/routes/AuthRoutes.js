@@ -67,10 +67,9 @@ router.post("/signup", async (req, res) => {
       user: safeUser,
     });
   } catch (err) {
-    console.error("Signup error:", err);
     res.status(500).json({
       success: false,
-      error: err.message || "Something went wrong",
+      error: err.message ,
     });
   }
 });

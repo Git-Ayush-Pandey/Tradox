@@ -1,5 +1,5 @@
 import axios from "axios";
-const BASE = "http://localhost:3002";
+const BASE = "http://localhost:4000";
 
 // AUTHENTICATION ROUTES
 
