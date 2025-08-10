@@ -23,16 +23,28 @@ const SearchBox = ({ currentList, activeList, handleAddStock }) => {
     setSearchTerm(term);
 
     clearTimeout(timeoutId);
-    if (term.length < 2) return setSearchResults([]);
+
+    if (term.length < 2) {
+      setSearchResults([]);
+      return;
+    }
 
     timeoutId = setTimeout(() => {
       searchStocks(term)
-        .then((res) => setSearchResults(res.data.bestMatches || []))
+        .then((res) => {
+          const matches = res.data?.bestMatches || [];
+          const cleaned = matches.map((item) => ({
+            name: item.symbol || item.displaySymbol || "",
+            symbol: item.description || "",
+          }));
+          setSearchResults(cleaned);
+        })
         .catch(() => setSearchResults([]));
     }, 1000);
   };
 
   const handleAddToWatchlist = async (stock) => {
+    console.log(stock)
     if (adding || currentList.length >= 25) {
       if (currentList.length >= 25) {
         showAlert?.("warning", "Limit reached. You can only add 25 stocks.");
@@ -48,7 +60,6 @@ const SearchBox = ({ currentList, activeList, handleAddStock }) => {
         ""
       );
       const quote = await getQuote(cleanSymbol);
-
       if (!quote?.data?.c || typeof quote.data.c !== "number") {
         showAlert?.("error", "Live price not available for this stock.");
         return;
@@ -56,6 +67,7 @@ const SearchBox = ({ currentList, activeList, handleAddStock }) => {
 
       const payload = {
         name: cleanSymbol,
+        symbol: stock.symbol,
         price: quote.data.c,
         percent:
           quote.data.dp !== null ? `${quote.data.dp.toFixed(2)}%` : "0.00%",
@@ -117,7 +129,8 @@ const SearchBox = ({ currentList, activeList, handleAddStock }) => {
                 key={i}
                 onClick={() =>
                   handleAddToWatchlist({
-                    name: item.symbol,
+                    name: item.name,
+                    symbol: item.symbol,
                     price: 0,
                     percent: "0.00%",
                     isDown: false,
@@ -125,9 +138,9 @@ const SearchBox = ({ currentList, activeList, handleAddStock }) => {
                 }
                 className={`search-item ${adding ? "disabled" : ""}`}
               >
-                <Typography fontWeight="bold">{item.symbol}</Typography>
+                <Typography fontWeight="bold">{item.name}</Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {item.description}
+                  {item.symbol}
                 </Typography>
               </Box>
             ))}

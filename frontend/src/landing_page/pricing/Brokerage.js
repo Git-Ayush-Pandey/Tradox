@@ -121,14 +121,14 @@ function Brokerage() {
                   </tr>
                   <tr>
                     <td>SEBI charges</td>
-                    <td colspan="4">₹10 / crore</td>
+                    <td colspan="4">$10 / crore</td>
                   </tr>
                   <tr class="table-secondary">
                     <td>Stamp charges</td>
-                    <td>0.015% or ₹1500 / crore on buy side</td>
-                    <td>0.003% or ₹300 / crore on buy side</td>
-                    <td>0.002% or ₹200 / crore on buy side</td>
-                    <td>0.003% or ₹300 / crore on buy side</td>
+                    <td>0.015% or $1500 / crore on buy side</td>
+                    <td>0.003% or $300 / crore on buy side</td>
+                    <td>0.002% or $200 / crore on buy side</td>
+                    <td>0.003% or $300 / crore on buy side</td>
                   </tr>
                 </tbody>
               </table>
@@ -186,12 +186,12 @@ function Brokerage() {
                   </tr>
                   <tr>
                     <td>SEBI charges</td>
-                    <td colspan="2">₹10 / crore</td>
+                    <td colspan="2">$10 / crore</td>
                   </tr>
                   <tr class="table-secondary">
                     <td>Stamp charges</td>
-                    <td>0.002% or ₹200 / crore on buy side</td>
-                    <td>0.003% or ₹300 / crore on buy side</td>
+                    <td>0.002% or $00 / crore on buy side</td>
+                    <td>0.003% or $00 / crore on buy side</td>
                   </tr>
                 </tbody>
               </table>
@@ -216,8 +216,8 @@ function Brokerage() {
                 <tbody>
                   <tr>
                     <td>Brokerage</td>
-                    <td>0.03% or ₹20/executed order whichever is lower</td>
-                    <td>₹20/executed order</td>
+                    <td>0.03% or $20/executed order whichever is lower</td>
+                    <td>$20/executed order</td>
                   </tr>
                   <tr className="table-secondary">
                     <td>STT/CTT</td>
@@ -248,13 +248,13 @@ function Brokerage() {
                   </tr>
                   <tr>
                     <td>SEBI charges</td>
-                    <td>₹10 / crore</td>
-                    <td>₹10 / crore</td>
+                    <td>$10 / crore</td>
+                    <td>$10 / crore</td>
                   </tr>
                   <tr className="table-secondary">
                     <td>Stamp charges</td>
-                    <td>0.0001% or ₹10 / crore on buy side</td>
-                    <td>0.0001% or ₹10 / crore on buy side</td>
+                    <td>0.0001% or $10 / crore on buy side</td>
+                    <td>0.0001% or $10 / crore on buy side</td>
                   </tr>
                 </tbody>
               </table>
@@ -279,8 +279,8 @@ function Brokerage() {
                 <tbody>
                   <tr>
                     <td>Brokerage</td>
-                    <td>0.03% or ₹20/executed order whichever is lower</td>
-                    <td>₹20/executed order</td>
+                    <td>0.03% or $20/executed order whichever is lower</td>
+                    <td>$20/executed order</td>
                   </tr>
                   <tr className="table-secondary">
                     <td>STT/CTT</td>
@@ -312,16 +312,16 @@ function Brokerage() {
                   <tr>
                     <td>SEBI charges</td>
                     <td>
-                      <strong>Agri:</strong> ₹1 / crore
+                      <strong>Agri:</strong> $1 / crore
                       <br />
-                      <strong>Non-agri:</strong> ₹10 / crore
+                      <strong>Non-agri:</strong> $10 / crore
                     </td>
-                    <td>₹10 / crore</td>
+                    <td>$10 / crore</td>
                   </tr>
                   <tr className="table-secondary">
                     <td>Stamp charges</td>
-                    <td>0.002% or ₹200 / crore on buy side</td>
-                    <td>0.003% or ₹300 / crore on buy side</td>
+                    <td>0.002% or $200 / crore on buy side</td>
+                    <td>0.003% or $300 / crore on buy side</td>
                   </tr>
                 </tbody>
               </table>

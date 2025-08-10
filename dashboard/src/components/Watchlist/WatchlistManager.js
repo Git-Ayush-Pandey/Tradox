@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import  { useState } from "react";
 import {
   Box,
   Typography,
@@ -181,6 +181,7 @@ const WatchlistManager = ({
         onRename={async (oldName, newName) => {
           const result = await onRenameWatchlist(oldName, newName);
           if (result?.success) handleCloseDialog();
+          return result
         }}
         onDelete={onDeleteWatchlist}
       />

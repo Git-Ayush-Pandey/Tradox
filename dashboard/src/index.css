@@ -566,7 +566,6 @@ hr {
 }
 
 .topbar-container {
-  width: 100%;
   height: 10vh;
   display: flex;
   align-items: center;

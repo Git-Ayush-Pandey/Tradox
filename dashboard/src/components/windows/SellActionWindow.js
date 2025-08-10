@@ -128,7 +128,7 @@ const SellActionWindow = ({ uid, existingOrder = null }) => {
         />
         <TextField
           fullWidth
-          label="Price (₹)"
+          label="Price ($)"
           type="number"
           margin="normal"
           inputProps={{ step: 0.05 }}
@@ -138,7 +138,7 @@ const SellActionWindow = ({ uid, existingOrder = null }) => {
         <Box mt={2}>
           <Typography variant="body2">
             Estimated value:{" "}
-            <strong>₹{(stockPrice * stockQuantity).toFixed(2)}</strong>
+            <strong>${(stockPrice * stockQuantity).toFixed(2)}</strong>
           </Typography>
         </Box>
       </DialogContent>

@@ -3,7 +3,7 @@ import { fetchHoldings, getQuote } from "../hooks/api";
 import GeneralContext from "../contexts/GeneralContext";
 import { isMarketOpen } from "../hooks/isMarketOpen";
 import { useLivePriceContext } from "../contexts/LivePriceContext";
-
+import InvestmentBarChart from "./ChartJs/InvestmentBarChart";
 // Format number to ₹ currency
 const formatCurrency = (val) =>
   Number(val).toLocaleString("en-IN", {
@@ -15,15 +15,36 @@ const formatCurrency = (val) =>
 const enrichHolding = (item, price, basePrice) => {
   const currentValue = price * item.qty;
   const investment = item.avg * item.qty;
-  const change = price - basePrice;
-  const percent = basePrice ? (change / basePrice) * 100 : 0;
+
+  const today = new Date().toISOString().split("T")[0];
+  let boughtToday = false;
+
+  if (item.createdAt) {
+    const date = new Date(item.createdAt);
+    if (!isNaN(date)) {
+      const buyDate = date.toISOString().split("T")[0];
+      boughtToday = buyDate === today;
+    }
+  }
+
+  const dayChange = (price - (boughtToday ? item.avg : basePrice)) * item.qty;
+  const dayChangePercent =
+    ((price - (boughtToday ? item.avg : basePrice)) /
+      (boughtToday ? item.avg : basePrice)) *
+    100;
+
+  const totalChange = price - item.avg;
+  const totalChangePercent = (totalChange / item.avg) * 100;
+
   return {
     ...item,
     price,
     basePrice,
-    day: price - item.avg,
-    change,
-    percent,
+    boughtToday,
+    dayChange,
+    dayChangePercent,
+    totalChange,
+    totalChangePercent,
     isLoss: currentValue < investment,
   };
 };
@@ -47,9 +68,6 @@ const Holdings = () => {
         setLoading(true);
         const res = await fetchHoldings();
         const rawHoldings = res.data;
-        if (rawHoldings.length === 0) {
-          showAlert("warning", "You don't have any holdings yet.");
-        }
 
         const priceResults = await Promise.all(
           rawHoldings.map(async (item) => {
@@ -101,7 +119,9 @@ const Holdings = () => {
       prev.map((item) => {
         const live = livePrices[item.name];
         if (!live) return item;
-        return enrichHolding(item, live, item.basePrice);
+
+        // Preserve basePrice from earlier enrich
+        return enrichHolding(item, live, item.basePrice ?? item.avg);
       })
     );
     setLastUpdate(new Date());
@@ -126,16 +146,15 @@ const Holdings = () => {
   const totalPLPercent =
     totalInvestment === 0 ? 0 : (totalProfitLoss / totalInvestment) * 100;
 
-  useEffect(() => {
-    if (!loading && allHoldings.length > 0 && totalProfitLoss < -1000) {
-      showAlert(
-        "error",
-        "Your holdings are in a significant loss. Please evaluate your positions."
-      );
-    }
-  }, [loading, allHoldings.length, totalProfitLoss, showAlert]);
   if (loading) return <div>Loading...</div>;
 
+    if (allHoldings.length === 0)
+    return (
+      <div className="no-orders">
+        <div className="icon mt-4">📉</div>
+        <p className="mt-5">No open holdings found.</p>
+      </div>
+    );
   return (
     <div className="orders">
       <div className="market-status">
@@ -149,7 +168,11 @@ const Holdings = () => {
           )}
         </span>
         <span>
-          {lastUpdate && `Last Updated: ${lastUpdate.toLocaleTimeString()}`}
+          {lastUpdate &&
+            `Last Updated: ${lastUpdate.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}`}
         </span>
       </div>
 
@@ -207,11 +230,11 @@ const Holdings = () => {
                     {(currentValue - stock.avg * stock.qty).toFixed(2)}
                   </td>
 
-                  <td className={stock.change < 0 ? "loss" : "profit"}>
-                    {stock.change >= 0 ? "+" : ""}
-                    {(currentValue - stock.avg * stock.qty).toFixed(2)} (
-                    {stock.percent >= 0 ? "+" : ""}
-                    {stock.percent.toFixed(2)}%)
+                  <td className={stock.dayChange < 0 ? "loss" : "profit"}>
+                    {stock.dayChange >= 0 ? "+" : ""}
+                    {stock.dayChange.toFixed(2)} (
+                    {stock.dayChangePercent >= 0 ? "+" : ""}
+                    {stock.dayChangePercent.toFixed(2)}%)
                   </td>
                 </tr>
               );
@@ -220,7 +243,7 @@ const Holdings = () => {
         </table>
       </div>
 
-      <div className="row">
+      <div className="row mt-5">
         <div className="col">
           <h5>
             {formatCurrency(totalInvestment)} <br />
@@ -243,6 +266,7 @@ const Holdings = () => {
           </h5>
         </div>
       </div>
+      <InvestmentBarChart data={allHoldings} title="Holdings Investment" />
     </div>
   );
 };

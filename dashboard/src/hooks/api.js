@@ -48,6 +48,9 @@ export const deleteWatchlist = (listName) =>
     withCredentials: true 
   });
 
+  export const renameWatchlist = (oldName, newName) =>
+  axios.put(`${BASE}/watchlist/rename`, { oldName, newName }, { withCredentials: true });
+
 // HOLDINGS ROUTES
 
 export const fetchHoldings = () =>
@@ -91,6 +94,9 @@ export const executeOrder = (id) =>
 export const editOrder = (id, payload) =>
   axios.put(`${BASE}/orders/edit/${id}`, payload, { withCredentials: true });
 
+export const cancelOrder = (id) =>
+  axios.post(`${BASE}/orders/cancel/${id}`,{}, { withCredentials: true });
+
 // STOCK DATA (FINNHUB / ALPHA VANTAGE)
 
 export const searchStocks = (keyword) =>
@@ -102,12 +108,6 @@ export const searchStocks = (keyword) =>
 export const getQuote = (symbol) =>
   axios.get(`${BASE}/stock/price`, {
     params: { symbol },
-    withCredentials: true,
-  });
-
-export const fetchGraphData = (symbol, interval) =>
-  axios.get(`${BASE}/stock/graph`, {
-    params: { symbol, interval },
     withCredentials: true,
   });
 

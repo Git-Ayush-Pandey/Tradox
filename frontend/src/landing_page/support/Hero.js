@@ -1,7 +1,19 @@
+import { useState } from "react";
+
 function Hero() {
+
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      console.log("Searching for:", searchQuery);
+    }
+    setSearchQuery("")
+  };
+
   return (
     <section className="container-fluid" id="supportHero">
-      <div className="p-5 " id="supportWrapper">
+      <div className="p-5" id="supportWrapper">
         <h4>Support Portal</h4>
         <a href="link">Track Tickets</a>
       </div>
@@ -10,9 +22,33 @@ function Hero() {
           <h1 className="fs-3">
             Search for an answer or browse help topics to create a ticket
           </h1>
-          <input placeholder="Eg. how do I activate F&O" className="mb-4" />
-          <br />
-          <div className="d-flex flex-wrap">
+
+          <div style={{ position: "relative", width: "100%" }} className="mb-4">
+            <input
+              type="text"
+              placeholder="Eg. track account opening"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="form-control"
+              style={{ paddingRight: "40px" }} 
+            />
+            <span
+              onClick={handleSearch}
+              style={{
+                position: "absolute",
+                right: "10px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                cursor: "pointer",
+                color: "#007bff",
+                fontSize: "18px"
+              }}
+            >
+              🔍
+            </span>
+          </div>
+
+          <div className="d-flex flex-wrap gap-3">
             <p>
               <a href="link">Track account opening</a>
             </p>

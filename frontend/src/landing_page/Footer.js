@@ -6,12 +6,12 @@ function Footer() {
           <div className="col-3 mr-5">
             <img
               className="mb-3"
-              src="media/images/logo.svg"
+              src="media/images/logo.png"
               alt="Company logo"
               style={{ width: "50%" }}
             />
             <p style={{ lineHeight: "20px", fontSize: "13px" }}>
-              &copy; 2010 - 2024, Not Zerodha Broking Ltd.
+              &copy; 2010 - 2024, Not Tradox Broking Ltd.
               <br />
               All rights reserved.
             </p>
@@ -92,9 +92,9 @@ function Footer() {
                 <br />
                 <a href="link">Careers</a>
                 <br />
-                <a href="link">Zerodha Cares (CSR)</a>
+                <a href="link">Tradox Cares (CSR)</a>
                 <br />
-                <a href="link">Zerodha.tech</a>
+                <a href="link">Tradox.tech</a>
                 <br />
                 <a href="link">Open source</a>
                 <br />
@@ -132,21 +132,21 @@ function Footer() {
           }}
         >
           <p>
-            Zerodha Broking Ltd.: Member of NSE, BSE​ &​ MCX – SEBI Registration
-            no.: INZ000031633 CDSL/NSDL: Depository services through Zerodha
+            Tradox Broking Ltd.: Member of NSE, BSE​ &​ MCX – SEBI Registration
+            no.: INZ000031633 CDSL/NSDL: Depository services through Tradox
             Broking Ltd. – SEBI Registration no.: IN-DP-431-2019 Commodity
-            Trading through Zerodha Commodities Pvt. Ltd. MCX: 46025; NSE-50001
-            – SEBI Registration no.: INZ000038238 Registered Address: Zerodha
+            Trading through Tradox Commodities Pvt. Ltd. MCX: 46025; NSE-50001
+            – SEBI Registration no.: INZ000038238 Registered Address: Tradox
             Broking Ltd., #153/154, 4th Cross, Dollars Colony, Opp. Clarence
             Public School, J.P Nagar 4th Phase, Bengaluru - 560078, Karnataka,
             India. For any complaints pertaining to securities broking please
             write to{" "}
             <a className="blue-link" href="link">
-              complaints@zerodha.com
+              complaints@Tradox.com
             </a>
             , for DP related to{" "}
             <a className="blue-link" href="link">
-              dp@zerodha.com
+              dp@Tradox.com
             </a>
             . Please ensure you carefully read the Risk Disclosure Document as
             prescribed by SEBI | ICF <br />
@@ -195,7 +195,7 @@ function Footer() {
             of allotment. In case of non allotment the funds will remain in your
             bank account. As a business we don't give stock tips, and have not
             authorized anyone to trade on behalf of others. If you find anyone
-            claiming to be part of Zerodha and offering such services, please{" "}
+            claiming to be part of Tradox and offering such services, please{" "}
             <a className="blue-link" href="link">
               create a ticket here.
             </a>

@@ -1,57 +1,59 @@
 function Hero() {
   return (
     <div className="container">
-      <div className="row mt-5 mb-5 p-5">
-        <h1 className="fs-2 text-center">
-          We pioneered the discount broking model in India.
-          <br />
-          Now, we are breaking ground with our technology.
+      {/* Header Section */}
+      <div className="row mt-5 mb-5 p-5 text-center">
+        <h1 className="fs-2 fw-bold">
+          Redefining the Trading Experience.  
+          <br />  
+          Powered by Simplicity & Technology.
         </h1>
+        <p className="text-muted mt-3" style={{ fontSize: "1.1em" }}>
+          Tradox is a modern stock trading platform concept, designed to make market participation
+          more accessible, transparent, and efficient for everyone.
+        </p>
       </div>
 
+      {/* About Section */}
       <div
-        className="row p-5 mt-5 border-top fs-6 text-muted"
-        style={{ lineHeight: "1.8", fontSize: "1.2em" }}
+        className="row p-5 mt-5 border-top text-muted"
+        style={{ lineHeight: "1.8", fontSize: "1.1em" }}
       >
-        <div className="col-6 p-5 ">
+        <div className="col-lg-6 col-12 p-4">
           <p>
-            We kick-started operations on the 15th of August, 2010 with the goal
-            of breaking all barriers that traders and investors face in India in
-            terms of cost, support, and technology. We named the company
-            Zerodha, a combination of Zero and "Rodha", the Sanskrit word for
-            barrier.
+            Tradox started as a personal project to explore the world of financial technology.  
+            The goal is simple — to remove barriers faced by traders and investors through  
+            intuitive design, cost efficiency, and cutting-edge tools.
           </p>
           <p>
-            Today, our disruptive pricing models and in-house technology have
-            made us the biggest stock broker in India.
+            Built with real-time APIs and a robust backend, Tradox mimics the  
+            core features of professional brokerage platforms — including watchlists,  
+            live price updates, and seamless order management.
           </p>
           <p>
-            Over 1.6+ crore clients place billions of orders every year through
-            our powerful ecosystem of investment platforms, contributing over
-            15% of all Indian retail trading volumes.
+            From responsive UI to secure authentication, every feature is crafted  
+            with a focus on user experience and performance.
           </p>
         </div>
-        <div className="col-6 p-5">
-          <p>
-            In addition, we run a number of popular open online educational and
-            community initiatives to empower retail traders and investors.
-          </p>
 
+        <div className="col-lg-6 col-12 p-4">
+          <p>
+            The project also aims to bring educational and community-driven resources  
+            to help new investors learn about the markets while exploring the platform.
+          </p>
           <p>
             <a
               className="blue-link"
               href="link"
               style={{ textDecoration: "none" }}
             >
-              Rainmatter
-            </a>
-            , our fintech fund and incubator, has invested in several fintech
-            startups with the goal of growing the Indian capital markets.
+              Tradox Labs
+            </a>{" "}
+            is a dedicated space for experimenting with new ideas — from automated  
+            alerts to AI-assisted trading insights.
           </p>
-
           <p>
-            And yet, we are always up to something new every day. Catch up on
-            the latest updates on our{" "}
+            Stay tuned for the latest updates on our{" "}
             <a
               className="blue-link"
               href="link"
@@ -59,23 +61,15 @@ function Hero() {
             >
               blog
             </a>{" "}
-            or see what the media is{" "}
+            or explore our{" "}
             <a
               className="blue-link"
               href="link"
               style={{ textDecoration: "none" }}
             >
-              saying about us
+              design philosophy
             </a>{" "}
-            or learn more about our business and product{" "}
-            <a
-              className="blue-link"
-              href="link"
-              style={{ textDecoration: "none" }}
-            >
-              philosophies
-            </a>
-            .
+            to understand the thought process behind the platform.
           </p>
         </div>
       </div>

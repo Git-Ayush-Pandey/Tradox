@@ -211,7 +211,7 @@ function Signup() {
           </form>
 
           <p className="text-muted text-12 m-0">
-            By proceeding, you agree to the Zerodha
+            By proceeding, you agree to the Tradox
             <a className="blue-link" href="link">
               {" "}
               terms{" "}

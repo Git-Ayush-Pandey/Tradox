@@ -2,14 +2,14 @@ function Universe() {
   return (
     <div className="product-universe container mt-5">
       <div className="row text-center">
-        <h1>The Zerodha Universe</h1>
+        <h1>The Tradox Universe</h1>
         <p>
           Extend your trading and investment experience even further with our
           partner platforms
         </p>
 
         <div className="col-4 p-3 mt-5">
-          <img src="media/images/zerodhaFundhouse.png" alt="img"/>
+          <img src="media/images/tradoxFundhouse.png" alt="img"/>
           <p className="text-muted">
             Our asset management venture that is creating simple and transparent
             index funds to help you save for your goals.

@@ -31,13 +31,13 @@ router.post("/new", isLoggedIn, async (req, res) => {
     (timeInMinutes >= 1140 && timeInMinutes <= 1439) || // 7:00 PM to 11:59 PM
     (timeInMinutes >= 0 && timeInMinutes <= 90); // 12:00 AM to 1:30 AM
 
-  if (isWeekend || !isMarketOpen) {
-    return res.status(403).json({
-      success: false,
-      message:
-        "Orders can only be placed between 7:00 PM and 1:30 AM IST on weekdays.",
-    });
-  }
+  // if (isWeekend || !isMarketOpen) {
+  //   return res.status(403).json({
+  //     success: false,
+  //     message:
+  //       "Orders can only be placed between 7:00 PM and 1:30 AM IST on weekdays.",
+  //   });
+  // }
 
   const { name, qty, price, mode, type } = req.body;
   const userId = req.user._id;
@@ -77,21 +77,32 @@ router.post("/new", isLoggedIn, async (req, res) => {
 router.delete("/delete/:id", isLoggedIn, async (req, res) => {
   const { id } = req.params;
   const userId = req.user._id;
+
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).send("Invalid order ID");
   }
+
   try {
-    const order = await Order.findOneAndDelete({ _id: id, userId });
+    const order = await Order.findOne({ _id: id, userId });
     if (!order) {
       return res.status(404).send("Order not found or unauthorized");
     }
-    await updateFundsOnOrderAction(userId, order, "cancel");
-    res.status(200).send("Order cancelled and funds updated");
+
+    // If not executed, reverse funds
+    if (!order.executed && !order.cancelled) {
+      await updateFundsOnOrderAction(userId, order, "cancel");
+    }
+
+    // Permanently delete the order
+    await order.deleteOne();
+
+    res.status(200).send("Order deleted successfully");
   } catch (error) {
     console.error("Error deleting order:", error);
     res.status(500).send("Internal Server Error");
   }
 });
+
 
 router.post("/execute/:id", isLoggedIn, async (req, res) => {
   try {
@@ -137,31 +148,31 @@ router.post("/execute/:id", isLoggedIn, async (req, res) => {
           await existing.save();
         }
       } else if (order.type === "Intraday") {
-  const existing = await Position.findOne({ userId, name: order.name });
+        const existing = await Position.findOne({ userId, name: order.name });
 
-  if (!existing) {
-    // Create new position
-    await Position.create({
-      name: order.name,
-      qty: order.qty,
-      avg: order.price,
-      price: order.price,
-      userId,
-    });
-  } else {
-    // Update existing position
-    const totalQty = existing.qty + order.qty;
-    const totalCost = existing.avg * existing.qty + order.price * order.qty;
-    const newAvg = totalCost / totalQty;
+        if (!existing) {
+          // Create new position
+          await Position.create({
+            name: order.name,
+            qty: order.qty,
+            avg: order.price,
+            price: order.price,
+            userId,
+          });
+        } else {
+          // Update existing position
+          const totalQty = existing.qty + order.qty;
+          const totalCost =
+            existing.avg * existing.qty + order.price * order.qty;
+          const newAvg = totalCost / totalQty;
 
-    existing.qty = totalQty;
-    existing.avg = newAvg;
-    existing.price = order.price;
+          existing.qty = totalQty;
+          existing.avg = newAvg;
+          existing.price = order.price;
 
-    await existing.save();
-  }
-}
-
+          await existing.save();
+        }
+      }
     }
 
     // SELL execution
@@ -250,6 +261,38 @@ router.put("/edit/:id", isLoggedIn, async (req, res) => {
       success: false,
       message: "Server error while editing order",
     });
+  }
+});
+
+router.post("/cancel/:id", isLoggedIn, async (req, res) => {
+  const userId = req.user._id;
+  const { id } = req.params;
+
+  try {
+    const order = await Order.findOne({ _id: id, userId });
+
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    if (order.executed) {
+      return res.status(400).json({ error: "Order already executed" });
+    }
+
+    if (order.cancelled) {
+      return res.status(400).json({ error: "Order already cancelled" });
+    }
+
+    order.cancelled = true;
+    await order.save();
+
+    // Refund funds if necessary
+    await updateFundsOnOrderAction(userId, order, "cancel");
+
+    res.status(200).json({ success: true, message: "Order cancelled" });
+  } catch (err) {
+    console.error("Cancel order error:", err);
+    res.status(500).json({ error: "Failed to cancel order" });
   }
 });
 

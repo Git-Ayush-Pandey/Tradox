@@ -11,9 +11,9 @@ const WatchListItem = ({ stock, onDelete }) => {
       onMouseLeave={() => setHover(false)}
     >
       <div className="stock-info">
-        <div className="stock-name">{stock.name}</div>
+        <div className="stock-name">{stock.symbol}</div>
         <div className="stock-details">
-          <span className="price">₹{stock.price}</span>
+          <span className="price">$ {stock.price}</span>
           <span className={`percent ${stock.isDown ? "down" : "up"}`}>
             {stock.percent}
           </span>

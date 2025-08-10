@@ -12,7 +12,7 @@ import { useState, useEffect, useContext } from "react";
 import GeneralContext from "../../contexts/GeneralContext";
 const WatchlistWindow = ({
   open,
-  type, // "create" | "rename" | "delete"
+  type,
   loading = false,
   oldName = "",
   itemCount = 0,

@@ -110,7 +110,7 @@ const Menu = () => {
             cursor: "pointer",
           }}
         >
-          AU
+          TU
         </div>
 
         {isProfileDropdownOpen && (

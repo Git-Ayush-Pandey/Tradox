@@ -23,6 +23,10 @@ const OrdersSchema = new Schema({
     ref: "User",
     required: true,
   },
+  cancelled: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const Order = model("Order", OrdersSchema);

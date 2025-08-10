@@ -52,7 +52,7 @@ function CreateTicket() {
         </div>
         <div className="col-4 p-5 mt-2 mb-2">
           <h4 style={{ fontWeight: 400, fontSize: "20px" }}>
-            <i class="fa fa-plus-circle" aria-hidden="true"></i> Your Zerodha
+            <i class="fa fa-plus-circle" aria-hidden="true"></i> Your Tradox
             Account
           </h4>
           <a

@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { 
-  fetchWatchlists, 
-  deleteStock, 
-  addStock, 
-  createWatchlist, 
-  deleteWatchlist 
+import {
+  fetchWatchlists,
+  deleteStock,
+  addStock,
+  createWatchlist,
+  deleteWatchlist,
+  renameWatchlist,
 } from "../hooks/api";
 
 export const useWatchlist = () => {
@@ -21,12 +22,12 @@ export const useWatchlist = () => {
   const loadWatchlists = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const res = await fetchWatchlists();
       const data = res.data;
       const first = Object.keys(data)[0] || "Watchlist 1";
-      
+
       setWatchlists(data);
       setActiveList(first);
     } catch (error) {
@@ -54,7 +55,7 @@ export const useWatchlist = () => {
 
     try {
       const response = await createWatchlist(newName);
-      
+
       if (response.data.success) {
         // Update local state
         setWatchlists((prev) => ({ ...prev, [newName]: [] }));
@@ -65,7 +66,8 @@ export const useWatchlist = () => {
         return { success: false, message: response.data.message };
       }
     } catch (error) {
-      const errorMessage = error.response?.data?.message || "Failed to create watchlist";
+      const errorMessage =
+        error.response?.data?.message || "Failed to create watchlist";
       setError(errorMessage);
       console.error("Error creating watchlist:", error);
       return { success: false, message: errorMessage };
@@ -86,27 +88,27 @@ export const useWatchlist = () => {
 
     try {
       const response = await deleteWatchlist(listName);
-      
+
       if (response.data.success) {
         // Update local state
         const updated = { ...watchlists };
         delete updated[listName];
-        
+
         // Switch to next available watchlist if we deleted the active one
-        const nextList = listName === activeList 
-          ? Object.keys(updated)[0] 
-          : activeList;
-        
+        const nextList =
+          listName === activeList ? Object.keys(updated)[0] : activeList;
+
         setWatchlists(updated);
         setActiveList(nextList);
-        
+
         return { success: true, deletedCount: response.data.deletedCount };
       } else {
         setError(response.data.message);
         return { success: false, message: response.data.message };
       }
     } catch (error) {
-      const errorMessage = error.response?.data?.message || "Failed to delete watchlist";
+      const errorMessage =
+        error.response?.data?.message || "Failed to delete watchlist";
       setError(errorMessage);
       console.error("Error deleting watchlist:", error);
       return { success: false, message: errorMessage };
@@ -118,19 +120,20 @@ export const useWatchlist = () => {
   // Enhanced: Delete stock with better error handling
   const handleDeleteStock = async (id) => {
     setError(null);
-    
+
     try {
       await deleteStock(id);
-      
+
       // Update local state
       setWatchlists((prev) => {
         const updatedList = prev[activeList].filter((s) => s._id !== id);
         return { ...prev, [activeList]: updatedList };
       });
-      
+
       return { success: true };
     } catch (error) {
-      const errorMessage = error.response?.data?.message || "Failed to delete stock";
+      const errorMessage =
+        error.response?.data?.message || "Failed to delete stock";
       setError(errorMessage);
       console.error("Error deleting stock:", error);
       return { success: false, message: errorMessage };
@@ -140,13 +143,13 @@ export const useWatchlist = () => {
   // Enhanced: Add stock with better error handling
   const handleAddStock = async (stock) => {
     setError(null);
-    
+
     try {
       const res = await addStock(stock);
-      
+
       if (res.data?.success) {
         const returnedItem = res.data.item;
-        
+
         // Update local state
         setWatchlists((prev) => {
           const updatedList = prev[activeList]
@@ -154,7 +157,7 @@ export const useWatchlist = () => {
             : [returnedItem];
           return { ...prev, [activeList]: updatedList };
         });
-        
+
         return { success: true };
       } else {
         const message = res.data?.message || "Failed to add stock";
@@ -162,7 +165,8 @@ export const useWatchlist = () => {
         return { success: false, message };
       }
     } catch (error) {
-      const errorMessage = error.response?.data?.message || "Something went wrong";
+      const errorMessage =
+        error.response?.data?.message || "Something went wrong";
       setError(errorMessage);
       console.error("Add Error:", error);
       return { success: false, message: errorMessage };
@@ -180,38 +184,51 @@ export const useWatchlist = () => {
     }
 
     if (watchlists[newName.trim()]) {
-      return { success: false, message: "Watchlist with this name already exists" };
+      return {
+        success: false,
+        message: "Watchlist with this name already exists",
+      };
     }
 
     setLoading(true);
     setError(null);
 
     try {
-      // Create new watchlist
-      const createResult = await handleCreateNewWatchlist(newName.trim());
-      
-      if (!createResult.success) {
-        return createResult;
-      }
 
-      // Move all stocks to new watchlist
-      const stocksToMove = watchlists[oldName] || [];
-      for (const stock of stocksToMove) {
-        const stockPayload = {
-          ...stock,
-          listName: newName.trim()
+      setWatchlists((prev) => {
+        const updated = { ...prev };
+        updated[newName.trim()] = updated[oldName];
+        delete updated[oldName];
+        return updated;
+      });
+
+      // If the renamed list is active, update activeList too
+      if (activeList === oldName) {
+        setActiveList(newName.trim());
+      }
+      const res = await renameWatchlist(oldName, newName.trim());
+
+      if (res.data?.success) {
+        setWatchlists((prev) => {
+          const updated = { ...prev };
+          updated[newName.trim()] = updated[oldName];
+          delete updated[oldName];
+          return updated;
+        });
+
+        if (activeList === oldName) {
+          setActiveList(newName.trim());
+        }
+        return { success: true, message: res.data.message };
+      } else {
+        return {
+          success: false,
+          message: res.data?.message || "Failed to rename watchlist",
         };
-        delete stockPayload._id; // Remove ID so it creates new entries
-        
-        await addStock(stockPayload);
       }
-
-      // Delete old watchlist
-      await handleDeleteList(oldName);
-
-      return { success: true };
     } catch (error) {
-      const errorMessage = "Failed to rename watchlist";
+      const errorMessage =
+        error.response?.data?.message || "Failed to rename watchlist.";
       setError(errorMessage);
       console.error("Error renaming watchlist:", error);
       return { success: false, message: errorMessage };
@@ -221,7 +238,6 @@ export const useWatchlist = () => {
   };
 
   const currentList = watchlists[activeList] || [];
-
   return {
     // State
     watchlists,
@@ -229,11 +245,11 @@ export const useWatchlist = () => {
     currentList,
     loading,
     error,
-    
+
     // Setters
     setWatchlists,
     setActiveList,
-    
+
     // Actions
     handleCreateNewWatchlist,
     handleDeleteList,
@@ -241,7 +257,7 @@ export const useWatchlist = () => {
     handleAddStock,
     handleRenameWatchlist,
     loadWatchlists,
-    
+
     // Utilities
     clearError: () => setError(null),
   };

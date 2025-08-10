@@ -2,16 +2,11 @@ import { useContext, useEffect } from "react";
 import GeneralContext from "../contexts/GeneralContext";
 
 const Summary = () => {
-  const {
-    user,
-    holdings,
-    allPositions: positions,
-    loading,
-    showAlert,
-  } = useContext(GeneralContext);
+  const { user, holdings, positions, loading, showAlert } =
+    useContext(GeneralContext);
 
   const formatINR = (val) =>
-    `${val.toLocaleString("en-IN", { minimumFractionDigits: 2 })} ₹`;
+    `${val.toLocaleString("en-IN", { minimumFractionDigits: 2 })} $`;
 
   const calculatePL = (list) => {
     const investment = list.reduce(
@@ -33,22 +28,13 @@ const Summary = () => {
   const positionsPL = calculatePL(positions);
 
   useEffect(() => {
-    if (!loading && user) {
+    if (!loading) {
       if (holdings.length === 0 && positions.length === 0) {
         showAlert("warning", "You don't have any holdings or positions yet.");
-      } else {
-        const totalLoss = holdingsPL.pnl + positionsPL.pnl;
-        if (totalLoss < -1000) {
-          showAlert(
-            "error",
-            "You are in a significant loss. Consider reviewing your trades."
-          );
-        }
       }
     }
   }, [
     loading,
-    user,
     holdings.length,
     positions.length,
     holdingsPL.pnl,
@@ -58,9 +44,6 @@ const Summary = () => {
 
   if (loading)
     return <div className="text-center mt-4">Loading summary...</div>;
-
-  if (!user)
-    return <div className="text-center mt-4">User not authenticated</div>;
 
   return (
     <>
@@ -77,7 +60,9 @@ const Summary = () => {
           <div className="first">
             <h3 className={getPLClass(positionsPL.pnl)}>
               {formatINR(positionsPL.pnl)}{" "}
-              <small>({positionsPL.percent.toFixed(2)}%)</small>
+              <small className={getPLClass(positionsPL.pnl)}>
+                ({positionsPL.percent.toFixed(2)}%)
+              </small>
             </h3>
             <p>P&L</p>
           </div>
@@ -102,7 +87,9 @@ const Summary = () => {
           <div className="first">
             <h3 className={getPLClass(holdingsPL.pnl)}>
               {formatINR(holdingsPL.pnl)}{" "}
-              <small>({holdingsPL.percent.toFixed(2)}%)</small>
+              <small className={getPLClass(holdingsPL.pnl)}>
+                ({holdingsPL.percent.toFixed(2)}%)
+              </small>
             </h3>
             <p>P&L</p>
           </div>

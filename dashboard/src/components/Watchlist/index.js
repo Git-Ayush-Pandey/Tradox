@@ -116,7 +116,7 @@ const Watchlist = () => {
                 quote.data?.pc ?? stock.price
               );
             } catch (err) {
-              console.error(`Quote fetch failed for ${stock.name}:`, err);
+              console.error(`Quote fetch failed for ${stock.symbol}:`, err);
               return stock;
             }
           })
@@ -159,7 +159,6 @@ const Watchlist = () => {
   useEffect(() => {
     setPricesFetched(new Set());
   }, [activeList]);
-
   return (
     <Box className="watchlist-container">
       <WatchlistManager

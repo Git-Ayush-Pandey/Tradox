@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { verifyToken } from "../hooks/api";
+import React, { useState, useEffect, useCallback } from "react";
+import { verifyToken, fetchHoldings, fetchPositions } from "../hooks/api";
 import BuyActionWindow from "../components/windows/BuyActionWindow";
 import SellActionWindow from "../components/windows/SellActionWindow";
 import AnalyticsWindow from "../components/windows/AnalyticsWindow";
@@ -31,7 +31,7 @@ export const GeneralContextProvider = (props) => {
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const [analyticsStock, setAnalyticsStock] = useState(null);
   const [holdings, setHoldings] = useState([]);
-  const [allPositions, setAllPositions] = useState([]);
+  const [positions, setPositions] = useState([]);
   const [alert, setAlert] = useState(null);
 
   const handleOpenBuyWindow = (stock, order = null) => {
@@ -40,10 +40,10 @@ export const GeneralContextProvider = (props) => {
     setSelectedStock(stock);
     setEditOrder(order);
   };
-  const showAlert = (type, message, duration = 3000) => {
+  const showAlert = useCallback((type, message, duration = 3000) => {
     setAlert({ type, message });
     setTimeout(() => setAlert(null), duration);
-  };
+  },[])
 
   const handleCloseBuyWindow = () => {
     setIsBuyWindowOpen(false);
@@ -74,6 +74,33 @@ export const GeneralContextProvider = (props) => {
     setAnalyticsStock(null);
     setIsAnalyticsOpen(false);
   };
+  const fetchData = useCallback(async () => {
+    try {
+      const [holdingsRes, positionsRes] = await Promise.all([
+        fetchHoldings(),
+        fetchPositions(),
+      ]);
+      setHoldings(holdingsRes.data.holdings || []);
+      setPositions(positionsRes.data.positions || []);
+    } catch (error) {
+      console.error("Failed to fetch holdings or positions", error);
+    }
+  }, []); 
+  useEffect(() => {
+    setLoading(true);
+    verifyToken()
+      .then((res) => {
+        if (res.data.status) {
+          setUser(res.data.safeUser);
+          // If user is verified, fetch their data
+          fetchData();
+        } else {
+          setUser(null);
+        }
+      })
+      .catch(() => setUser(null))
+      .finally(() => setLoading(false));
+  }, [fetchData]);
 
   useEffect(() => {
     verifyToken()
@@ -84,7 +111,6 @@ export const GeneralContextProvider = (props) => {
       .catch(() => setUser(null))
       .finally(() => setLoading(false));
   }, []);
-
   return (
     <GeneralContext.Provider
       value={{
@@ -92,8 +118,8 @@ export const GeneralContextProvider = (props) => {
         loading,
         holdings,
         setHoldings,
-        allPositions,
-        setAllPositions,
+        positions,
+        setPositions,
         openBuyWindow: handleOpenBuyWindow,
         closeBuyWindow: handleCloseBuyWindow,
         openSellWindow: handleOpenSellWindow,

@@ -15,6 +15,7 @@ import { FetchFunds, editOrder, placeOrder } from "../../hooks/api";
 import GeneralContext from "../../contexts/GeneralContext";
 
 const BuyActionWindow = ({ uid, existingOrder = null }) => {
+  console.log(uid)
   const isEdit = !!existingOrder;
   const [stockQuantity, setStockQuantity] = useState(existingOrder?.qty || 1);
   const [stockPrice, setStockPrice] = useState(existingOrder?.price || 0);
@@ -42,9 +43,9 @@ const BuyActionWindow = ({ uid, existingOrder = null }) => {
     if (marginRequired > availableMargin) {
       showAlert?.(
       "error",
-      `Insufficient margin. Required: ₹${marginRequired.toFixed(
+      `Insufficient margin. Required: $${marginRequired.toFixed(
         2
-      )}, Available: ₹${availableMargin.toFixed(2)}`
+      )}, Available: $${availableMargin.toFixed(2)}`
     );
       return;
     }
@@ -117,7 +118,7 @@ const BuyActionWindow = ({ uid, existingOrder = null }) => {
         />
         <TextField
           fullWidth
-          label="Price (₹)"
+          label="Price ($)"
           type="number"
           margin="normal"
           step="0.05"
@@ -127,13 +128,13 @@ const BuyActionWindow = ({ uid, existingOrder = null }) => {
 
         <Box mt={2}>
           <Typography variant="body2">
-            Margin required: <strong>₹{marginRequired.toFixed(2)}</strong>
+            Margin required: <strong>${marginRequired.toFixed(2)}</strong>
           </Typography>
           <Typography
             variant="body2"
             color={availableMargin < marginRequired ? "error" : "success.main"}
           >
-            Available margin: ₹{availableMargin?.toFixed(2)}
+            Available margin: ${availableMargin?.toFixed(2)}
           </Typography>
         </Box>
       </DialogContent>

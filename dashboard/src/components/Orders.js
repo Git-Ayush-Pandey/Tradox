@@ -1,20 +1,29 @@
 import { useState, useEffect, useRef, useContext, useMemo } from "react";
-import { FetchOrders, deleteOrder, executeOrder, getQuote } from "../hooks/api";
+import {
+  FetchOrders,
+  executeOrder,
+  getQuote,
+  cancelOrder,
+  deleteOrder,
+} from "../hooks/api";
 import GeneralContext from "../contexts/GeneralContext";
 import { isMarketOpen } from "../hooks/isMarketOpen";
 import { useLivePriceContext } from "../contexts/LivePriceContext";
 
 const enrichOrder = (order, livePrice, basePrice) => {
-  const change = livePrice - basePrice;
-  const percent = basePrice ? (change / basePrice) * 100 : 0;
   return {
     ...order,
     livePrice,
     basePrice,
-    change: change.toFixed(2),
-    percent: percent.toFixed(2),
-    isDown: change < 0,
   };
+};
+const isNotSameDate = (date1) => {
+  const date2 = new Date(); // current date/time
+
+  const diffMs = Math.abs(date2 - new Date(date1)); // difference in ms
+  const diffHours = diffMs / (1000 * 60 * 60); // convert to hours
+
+  return diffHours > 17;
 };
 
 const Orders = () => {
@@ -23,7 +32,8 @@ const Orders = () => {
   const [loading, setLoading] = useState(true);
   const executingRef = useRef(new Set());
 
-  const { openBuyWindow, openSellWindow, showAlert } = useContext(GeneralContext);
+  const { openBuyWindow, openSellWindow, showAlert } =
+    useContext(GeneralContext);
   const { livePrices, updateSymbols } = useLivePriceContext();
 
   const symbols = useMemo(
@@ -38,11 +48,16 @@ const Orders = () => {
         const res = await FetchOrders();
 
         if (!marketOpen) {
-          const toDelete = res.data.filter((o) => !o.executed);
-          await Promise.all(toDelete.map((o) => deleteOrder(o._id)));
-          setAllOrders([]);
-          showAlert("warning", "Market closed. Pending orders auto-cancelled.");
-          return;
+          const toCancel = res.data.filter((o) => !o.executed && !o.cancelled);
+          await Promise.all(toCancel.map((o) => cancelOrder(o._id)));
+        }
+        const expiredOrders = res.data.filter((o) => isNotSameDate(o.placedAt));
+        if (expiredOrders.length > 0) {                                     
+          await Promise.all(expiredOrders.map((o) => deleteOrder(o._id)));
+          showAlert(                              
+            "warning",                  
+            `${expiredOrders.length} expired orders auto-deleted                                                                                .`
+          );
         }
 
         const rawOrders = res.data;
@@ -74,8 +89,11 @@ const Orders = () => {
           );
         });
 
+        enriched.sort((a, b) => new Date(b.placedAt) - new Date(a.placedAt));
         setAllOrders(enriched);
+
         const upperSymbols = enriched.map((o) => o.name.toUpperCase());
+
         updateSymbols(upperSymbols);
       } catch (err) {
         console.error("Failed to fetch orders:", err);
@@ -143,13 +161,15 @@ const Orders = () => {
     };
 
     executeMatchingOrders();
-     // eslint-disable-next-line
+    // eslint-disable-next-line
   }, [livePrices, allOrders, marketOpen]);
 
   const handleCancel = async (id) => {
     try {
-      await deleteOrder(id);
-      setAllOrders((prev) => prev.filter((o) => o._id !== id));
+      await cancelOrder(id);
+      setAllOrders((prev) =>
+        prev.map((o) => (o._id === id ? { ...o, cancelled: true } : o))
+      );
       showAlert("success", "Order cancelled.");
     } catch (err) {
       console.error("Failed to cancel order", err);
@@ -161,9 +181,11 @@ const Orders = () => {
 
   if (allOrders.length === 0)
     return (
-      <div className="text-center mt-4 text-muted">No active orders found.</div>
+      <div className="no-orders">
+        <div className="icon mt-4">📉</div>
+        <p className="mt-5">No active orders found.</p>
+      </div>
     );
-
   return (
     <>
       <h3 className="title">Orders ({allOrders.length})</h3>
@@ -181,14 +203,19 @@ const Orders = () => {
           </thead>
           <tbody>
             {allOrders.map((order) => {
-              const rowPriceClass =
-                order.mode === "BUY" &&
-                livePrices[order.name.toUpperCase()] <= order.price
-                  ? "profit"
-                  : order.mode === "SELL" &&
-                    livePrices[order.name.toUpperCase()] >= order.price
-                  ? "loss"
-                  : "";
+              const rowPriceClass = (() => {
+                if (!order.executed) return "";
+
+                if (order.mode === "BUY") {
+                  return order.livePrice >= order.price ? "profit" : "loss";
+                }
+
+                if (order.mode === "SELL") {
+                  return order.livePrice <= order.price ? "profit" : "loss";
+                }
+
+                return "";
+              })();
 
               return (
                 <tr
@@ -208,7 +235,9 @@ const Orders = () => {
                         className="d-flex gap-2"
                         style={{
                           visibility:
-                            hoveredRow === order._id && !order.executed
+                            hoveredRow === order._id &&
+                            !order.executed &&
+                            !order.cancelled
                               ? "visible"
                               : "hidden",
                         }}
@@ -242,12 +271,22 @@ const Orders = () => {
                   <td>{order.qty}</td>
                   <td>{order.price.toFixed(2)}</td>
                   <td>{order.mode}</td>
-                  <td className={rowPriceClass}>{order.livePrice.toFixed(2)}</td>
+                  <td className={rowPriceClass}>
+                    {order.livePrice.toFixed(2)}
+                  </td>
                   <td>
-                    {order.executed ? (
-                      <span className="profit" style={{fontSize:"20px"}}>Executed</span>
+                    {order.cancelled ? (
+                      <span className="text-muted" style={{ fontSize: "20px" }}>
+                        Cancelled
+                      </span>
+                    ) : order.executed ? (
+                      <span className="profit" style={{ fontSize: "20px" }}>
+                        Executed
+                      </span>
                     ) : (
-                      <span style={{color:"orange", fontSize:"20px"}}>Pending</span>
+                      <span style={{ color: "orange", fontSize: "20px" }}>
+                        Pending
+                      </span>
                     )}
                   </td>
                 </tr>

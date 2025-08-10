@@ -1,3 +1,4 @@
+// Existing functional Alert component
 const Alert = ({ type, message }) => {
   const colors = {
     success: "#d4edda",
@@ -34,4 +35,11 @@ const Alert = ({ type, message }) => {
   );
 };
 
+// Alert utility function (like toast-based)
+export const showAlert = (type, message) => {
+  // example placeholder – or leave empty if unused
+  console.warn("showAlert called:", type, message);
+};
+
+// 🔧 This makes both `Alert` (default export) and `showAlert` (named export) usable
 export default Alert;

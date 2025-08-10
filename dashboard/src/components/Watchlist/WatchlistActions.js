@@ -5,7 +5,6 @@ import GeneralContext from "../../contexts/GeneralContext";
 
 const WatchListActions = ({ stock, onDelete }) => {
   const generalContext = useContext(GeneralContext);
-
   return (
     <div className="watchlist-actions" style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
       <Tooltip title="Buy" placement="top">
@@ -67,7 +66,7 @@ const WatchListActions = ({ stock, onDelete }) => {
             onClick={async () => {
               const result = await onDelete?.();
               if (result?.success) {
-                generalContext.showAlert?.("success", "Removed from watchlist.");
+                generalContext.showAlert?.("success", ` ${stock.name} Removed from watchlist.`);
               } else if (result?.message) {
                 generalContext.showAlert?.("error", result.message);
               }

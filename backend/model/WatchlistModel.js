@@ -1,6 +1,7 @@
 const { model, Schema } = require("mongoose");
 
 const WatchListModel = new Schema({
+  symbol:String,
   name: String,
   price: Number,
   percent: String,
