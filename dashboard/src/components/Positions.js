@@ -1,41 +1,28 @@
-import { useState, useEffect, useContext, useMemo } from "react";
+import { useState, useEffect, useContext, useMemo, useRef } from "react";
 import { fetchPositions, getQuote } from "../hooks/api";
 import GeneralContext from "../contexts/GeneralContext";
 import { isMarketOpen } from "../hooks/isMarketOpen";
 import { useLivePriceContext } from "../contexts/LivePriceContext";
 import InvestmentBarChart from "./ChartJs/InvestmentBarChart";
-// Format number to ₹ currency
-const formatCurrency = (val) =>
-  Number(val).toLocaleString("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 2,
-  });
 
 const enrichPosition = (item, price, basePrice) => {
   const currentValue = price * item.qty;
   const investment = item.avg * item.qty;
 
-  const today = new Date().toISOString().split("T")[0];
-  let boughtToday = false;
+  const boughtDate = new Date(item.boughtday);
+const today = new Date();
+const boughtToday =
+  boughtDate.getFullYear() === today.getFullYear() &&
+  boughtDate.getMonth() === today.getMonth() &&
+  boughtDate.getDate() === today.getDate();
 
-  if (item.createdAt) {
-    const date = new Date(item.createdAt);
-    if (!isNaN(date)) {
-      const buyDate = date.toISOString().split("T")[0];
-      boughtToday = buyDate === today;
-    }
-  }
+  let refPrice = boughtToday ? item.avg : basePrice;
 
-  const dayChange = (price - (boughtToday ? item.avg : basePrice)) * item.qty;
-  const dayChangePercent =
-    ((price - (boughtToday ? item.avg : basePrice)) /
-      (boughtToday ? item.avg : basePrice)) *
-    100;
-
+  const dayChange = (price - refPrice) * item.qty;
+  const dayChangePercent = ((price - refPrice) / refPrice) * 100;
   const totalChange = price - item.avg;
   const totalChangePercent = (totalChange / item.avg) * 100;
-
+  
   return {
     ...item,
     price,
@@ -50,24 +37,35 @@ const enrichPosition = (item, price, basePrice) => {
 };
 
 const Positions = () => {
-  const { positions: allPositions, setPositions: setAllPositions, openSellWindow, showAlert } =
-    useContext(GeneralContext);
+  const {
+    positions: allPositions,
+    setPositions: setAllPositions,
+    openSellWindow,
+    showAlert,
+  } = useContext(GeneralContext);
   const [hoveredRow, setHoveredRow] = useState(null);
   const [loading, setLoading] = useState(true);
-  const { livePrices, updateSymbols } = useLivePriceContext();
+  const { livePrices, subscribe, unsubscribe, updateSymbols } =
+    useLivePriceContext();
   const [lastUpdate, setLastUpdate] = useState(null);
   const marketOpen = useMemo(() => isMarketOpen(), []);
+  const componentId = useRef(
+    "positions-" + Math.random().toString(36).slice(2)
+  ).current;
 
+  // initial load + enrich with getQuote
   useEffect(() => {
+    let mounted = true;
     const loadPositions = async () => {
       try {
+        setLoading(true);
         const res = await fetchPositions();
         const raw = res.data;
-      
+
         const quotes = await Promise.all(
-          raw.map(async (item) => {
+          raw.map(async (item, idx) => {
             try {
-              await new Promise((r) => setTimeout(r, 100));
+              await new Promise((r) => setTimeout(r, idx * 80));
               const quote = await getQuote(item.name);
               return {
                 symbol: item.name,
@@ -93,43 +91,104 @@ const Positions = () => {
           );
         });
 
+        if (!mounted) return;
         setAllPositions(enriched);
 
-        // ✅ Only subscribe if market is open
+        // subscribe if market is open
         if (marketOpen && enriched.length > 0) {
           const uniqueSymbols = [
             ...new Set(enriched.map((s) => s.name.toUpperCase())),
           ];
-          updateSymbols(uniqueSymbols);
+          if (subscribe) subscribe(componentId, uniqueSymbols);
+          if (typeof updateSymbols === "function") updateSymbols(uniqueSymbols);
         }
       } catch (err) {
         console.error("Error loading positions:", err);
         showAlert("error", "Failed to load positions.");
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
 
     loadPositions();
     // eslint-disable-next-line
-  }, [setAllPositions, updateSymbols, marketOpen]);
+  }, [setAllPositions, subscribe, updateSymbols, marketOpen]);
 
+  // live price updates when market open
   useEffect(() => {
     if (!marketOpen) return;
 
     setAllPositions((prev) =>
       prev.map((item) => {
-        const live = livePrices[item.name];
+        const live =
+          livePrices[item.name] ??
+          livePrices[item.name?.toUpperCase?.()] ??
+          livePrices[item.name?.toLowerCase?.()];
         if (!live) return item;
         return enrichPosition(item, live, item.basePrice);
       })
     );
+    setLastUpdate(new Date());
   }, [livePrices, setAllPositions, marketOpen]);
+
+  // closed market polling
   useEffect(() => {
     if (marketOpen) return;
-    const interval = setInterval(() => setLastUpdate(new Date()), 60000);
-    return () => clearInterval(interval);
-  }, [marketOpen]);
+    if (!allPositions || allPositions.length === 0) return;
+    let mounted = true;
+
+    const fetchClosedPrices = async () => {
+      try {
+        const results = await Promise.all(
+          allPositions.map(async (item, idx) => {
+            try {
+              await new Promise((r) => setTimeout(r, idx * 80));
+              const quote = await getQuote(item.name);
+              return {
+                symbol: item.name,
+                price: quote.data?.c ?? item.price ?? item.avg,
+                basePrice: quote.data?.pc ?? item.basePrice ?? item.avg,
+              };
+            } catch {
+              return {
+                symbol: item.name,
+                price: item.price ?? item.avg,
+                basePrice: item.basePrice ?? item.avg,
+              };
+            }
+          })
+        );
+
+        if (!mounted) return;
+
+        setAllPositions((prev) =>
+          prev.map((p) => {
+            const upd = results.find((r) => r.symbol === p.name);
+            if (!upd) return p;
+            return enrichPosition(p, upd.price, upd.basePrice);
+          })
+        );
+        setLastUpdate(new Date());
+      } catch (err) {
+        console.error("Closed-market positions price refresh failed", err);
+      }
+    };
+
+    fetchClosedPrices();
+    const id = setInterval(fetchClosedPrices, 60000);
+    return () => {
+      mounted = false;
+      clearInterval(id);
+    };
+  }, [marketOpen, allPositions, setAllPositions]);
+
+  // cleanup subscription on unmount
+  useEffect(() => {
+    return () => {
+      if (unsubscribe) unsubscribe(componentId);
+    };
+    // eslint-disable-next-line
+  }, []);
 
   const totalPositionValue = allPositions.reduce(
     (acc, stock) => acc + stock.price * stock.qty,
@@ -245,19 +304,19 @@ const Positions = () => {
       <div className="row mt-5">
         <div className="col">
           <h5>
-            {formatCurrency(totalCost)} <br />
+            ${totalCost.toFixed(2)} <br />
             <span>Total cost</span>
           </h5>
         </div>
         <div className="col">
           <h5>
-            {formatCurrency(totalPositionValue)} <br />
+            ${totalPositionValue.toFixed(2)} <br />
             <span>Current value</span>
           </h5>
         </div>
         <div className="col">
           <h5 className={totalProfitLoss < 0 ? "loss" : "profit"}>
-            {formatCurrency(totalProfitLoss)} ({totalPLPercent.toFixed(2)}%)
+            ${totalProfitLoss.toFixed(2)} ({totalPLPercent.toFixed(2)}%)
             <br />
             <span>P&L</span>
           </h5>

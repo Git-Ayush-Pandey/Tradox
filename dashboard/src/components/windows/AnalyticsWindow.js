@@ -25,6 +25,7 @@ const AnalyticsWindow = ({ stock, onClose }) => {
   const [tabValue, setTabValue] = useState("overview");
   const generalContext = useContext(GeneralContext);
   const { showAlert } = useContext(GeneralContext);
+  const [visibleCount, setVisibleCount] = useState(10);
 
   const handleTabChange = (_, newValue) => {
     setTabValue(newValue);
@@ -156,7 +157,7 @@ const AnalyticsWindow = ({ stock, onClose }) => {
             </Typography>
           </Box>
         ) : (
-          <div style={{height:"10px"}}></div>
+          <div style={{ height: "10px" }}></div>
         )}
 
         <IconButton
@@ -173,8 +174,8 @@ const AnalyticsWindow = ({ stock, onClose }) => {
 
           {stock.type === "index" ? (
             <Typography variant="body2" sx={{ mt: 2 }}>
-              This is a market index chart. Live prices are shown above. F&O,
-              overview, and news data are not available for indices.
+              This is a market index chart. Live price is not available for
+              index. F&O, overview, and news data are not available for indices.
             </Typography>
           ) : (
             <>
@@ -243,45 +244,58 @@ const AnalyticsWindow = ({ stock, onClose }) => {
                       No news available.
                     </Typography>
                   ) : (
-                    <Grid container spacing={2}>
-                      {news.map((item, index) => (
-                        <Grid item xs={12} sm={6} md={4} key={index}>
-                          <Box
-                            p={2}
-                            border={1}
-                            borderRadius={2}
-                            borderColor="grey.300"
-                            sx={{ height: "100%" }}
+                    <>
+                      <Grid container spacing={2}>
+                        {news.slice(0, visibleCount).map((item, index) => (
+                          <Grid item xs={12} sm={6} md={4} key={index}>
+                            <Box
+                              p={2}
+                              border={1}
+                              borderRadius={2}
+                              borderColor="grey.300"
+                              sx={{ height: "100%" }}
+                            >
+                              <Typography variant="subtitle1" fontWeight={600}>
+                                {item.headline}
+                              </Typography>
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                                sx={{ my: 1 }}
+                              >
+                                {new Date(item.datetime).toLocaleDateString()} |{" "}
+                                {item.source}
+                              </Typography>
+                              <Typography variant="body2" paragraph>
+                                {item.summary.length > 100
+                                  ? `${item.summary.slice(0, 100)}...`
+                                  : item.summary}
+                              </Typography>
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                href={item.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                Read More
+                              </Button>
+                            </Box>
+                          </Grid>
+                        ))}
+                      </Grid>
+
+                      {visibleCount < news.length && (
+                        <Box mt={3} textAlign="center">
+                          <Button
+                            variant="contained"
+                            onClick={() => setVisibleCount((prev) => prev + 10)}
                           >
-                            <Typography variant="subtitle1" fontWeight={600}>
-                              {item.headline}
-                            </Typography>
-                            <Typography
-                              variant="body2"
-                              color="text.secondary"
-                              sx={{ my: 1 }}
-                            >
-                              {new Date(item.datetime).toLocaleDateString()} |{" "}
-                              {item.source}
-                            </Typography>
-                            <Typography variant="body2" paragraph>
-                              {item.summary.length > 100
-                                ? `${item.summary.slice(0, 100)}...`
-                                : item.summary}
-                            </Typography>
-                            <Button
-                              size="small"
-                              variant="outlined"
-                              href={item.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              Read More
-                            </Button>
-                          </Box>
-                        </Grid>
-                      ))}
-                    </Grid>
+                            More
+                          </Button>
+                        </Box>
+                      )}
+                    </>
                   )}
                 </Box>
               )}

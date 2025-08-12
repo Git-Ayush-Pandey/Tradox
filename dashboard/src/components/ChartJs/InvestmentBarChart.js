@@ -34,9 +34,9 @@ const CustomTooltip = ({ active, payload, label }) => {
       }}
     >
       <strong>{label}</strong>
-      <div>Investment: {formatCurrency(invested)}</div>
+      <div>Investment: ${(invested.toFixed(2))}</div>
       <div style={{ color: pnl >= 0 ? "#2e7d32" : "#c62828" }}>
-        P&L: {formatCurrency(pnl)}
+        P&L: ${(pnl.toFixed(2))}
       </div>
     </div>
   );

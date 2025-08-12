@@ -45,6 +45,14 @@ app.use(
     credentials: true,
   })
 );
+app.use((req, res, next) => {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  res.setHeader("Surrogate-Control", "no-store");
+  next();
+});
+
 
 app.use(express.json());
 app.use(cookieParser());
@@ -130,7 +138,6 @@ wss.on("connection", (ws) => {
       symbolSubscriptions[upperSymbol].add(ws);
 
       if (isFirst && finnhubSocket.readyState === WebSocket.OPEN) {
-        console.log(`📡 Subscribing to ${upperSymbol} on Finnhub`);
         finnhubSocket.send(JSON.stringify({ type: "subscribe", symbol: upperSymbol }));
       }
     }
@@ -142,7 +149,6 @@ wss.on("connection", (ws) => {
       symbolSubscriptions[upperSymbol]?.delete(ws);
 
       if (symbolSubscriptions[upperSymbol]?.size === 0) {
-        console.log(`❎ Unsubscribing from ${upperSymbol} on Finnhub`);
         finnhubSocket.send(JSON.stringify({ type: "unsubscribe", symbol: upperSymbol }));
         delete symbolSubscriptions[upperSymbol];
       }
@@ -156,7 +162,6 @@ wss.on("connection", (ws) => {
       symbolSubscriptions[symbol]?.delete(ws);
 
       if (symbolSubscriptions[symbol]?.size === 0) {
-        console.log(`❎ Unsubscribing from ${symbol} (client disconnect)`);
         finnhubSocket.send(JSON.stringify({ type: "unsubscribe", symbol }));
         delete symbolSubscriptions[symbol];
       }

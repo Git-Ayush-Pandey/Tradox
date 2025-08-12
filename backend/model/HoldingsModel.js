@@ -5,7 +5,10 @@ const HoldingsSchema = new Schema({
   qty: Number,
   avg: Number,
   price: Number,
-  net: String,
+  boughtday: {
+  type: Date,
+  default: Date.now
+},
   day: String,
   userId: {
     type: Schema.Types.ObjectId,

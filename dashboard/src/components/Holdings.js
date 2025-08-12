@@ -1,38 +1,24 @@
-import { useState, useEffect, useContext, useMemo } from "react";
+import { useState, useEffect, useContext, useMemo, useRef } from "react";
 import { fetchHoldings, getQuote } from "../hooks/api";
 import GeneralContext from "../contexts/GeneralContext";
 import { isMarketOpen } from "../hooks/isMarketOpen";
 import { useLivePriceContext } from "../contexts/LivePriceContext";
 import InvestmentBarChart from "./ChartJs/InvestmentBarChart";
-// Format number to ₹ currency
-const formatCurrency = (val) =>
-  Number(val).toLocaleString("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 2,
-  });
 
 const enrichHolding = (item, price, basePrice) => {
   const currentValue = price * item.qty;
   const investment = item.avg * item.qty;
 
-  const today = new Date().toISOString().split("T")[0];
-  let boughtToday = false;
+  const boughtDate = new Date(item.boughtday);
+const today = new Date();
+const boughtToday =
+  boughtDate.getFullYear() === today.getFullYear() &&
+  boughtDate.getMonth() === today.getMonth() &&
+  boughtDate.getDate() === today.getDate();
 
-  if (item.createdAt) {
-    const date = new Date(item.createdAt);
-    if (!isNaN(date)) {
-      const buyDate = date.toISOString().split("T")[0];
-      boughtToday = buyDate === today;
-    }
-  }
-
-  const dayChange = (price - (boughtToday ? item.avg : basePrice)) * item.qty;
-  const dayChangePercent =
-    ((price - (boughtToday ? item.avg : basePrice)) /
-      (boughtToday ? item.avg : basePrice)) *
-    100;
-
+  let refPrice = boughtToday ? item.avg : basePrice;
+  const dayChange = (price - refPrice) * item.qty;
+  const dayChangePercent = ((price - refPrice) / refPrice) * 100;
   const totalChange = price - item.avg;
   const totalChangePercent = (totalChange / item.avg) * 100;
 
@@ -59,10 +45,15 @@ const Holdings = () => {
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(null);
   const generalContext = useContext(GeneralContext);
-  const { livePrices, updateSymbols } = useLivePriceContext();
+  const { livePrices, subscribe, unsubscribe, updateSymbols } =
+    useLivePriceContext();
   const marketOpen = useMemo(() => isMarketOpen(), []);
+  const componentId = useRef(
+    "holdings-" + Math.random().toString(36).slice(2)
+  ).current;
 
   useEffect(() => {
+    let mounted = true;
     const fetchWithQuotes = async () => {
       try {
         setLoading(true);
@@ -70,9 +61,10 @@ const Holdings = () => {
         const rawHoldings = res.data;
 
         const priceResults = await Promise.all(
-          rawHoldings.map(async (item) => {
+          rawHoldings.map(async (item, idx) => {
             try {
-              await new Promise((r) => setTimeout(r, 100));
+              // small stagger to avoid API burst
+              await new Promise((r) => setTimeout(r, idx * 80));
               const quote = await getQuote(item.name);
               return {
                 symbol: item.name,
@@ -98,17 +90,31 @@ const Holdings = () => {
           );
         });
 
+        if (!mounted) return;
         setAllHoldings(enriched);
-        updateSymbols(rawHoldings.map((i) => i.name));
+        setLastUpdate(new Date());
+
+        // subscribe if market open
+        if (marketOpen && enriched.length > 0) {
+          const symsUpper = [
+            ...new Set(enriched.map((i) => i.name.toUpperCase())),
+          ];
+          // prefer subscribe if available
+          if (subscribe) subscribe(componentId, symsUpper);
+          if (typeof updateSymbols === "function") updateSymbols(symsUpper);
+        }
       } catch (err) {
         console.error("Error fetching holdings:", err);
         showAlert("error", "Failed to fetch holdings.");
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
 
     fetchWithQuotes();
+    return () => {
+      mounted = false;
+    };
     // eslint-disable-next-line
   }, [setAllHoldings]);
 
@@ -117,10 +123,12 @@ const Holdings = () => {
 
     setAllHoldings((prev) =>
       prev.map((item) => {
-        const live = livePrices[item.name];
+        // try different key shapes to be robust
+        const live =
+          livePrices[item.name] ??
+          livePrices[item.name?.toUpperCase?.()] ??
+          livePrices[item.name?.toLowerCase?.()];
         if (!live) return item;
-
-        // Preserve basePrice from earlier enrich
         return enrichHolding(item, live, item.basePrice ?? item.avg);
       })
     );
@@ -130,10 +138,62 @@ const Holdings = () => {
 
   useEffect(() => {
     if (marketOpen) return;
-    const interval = setInterval(() => setLastUpdate(new Date()), 60000);
-    return () => clearInterval(interval);
-  }, [marketOpen]);
+    if (!allHoldings || allHoldings.length === 0) return;
+    let mounted = true;
 
+    const fetchClosedPrices = async () => {
+      try {
+        const results = await Promise.all(
+          allHoldings.map(async (item, idx) => {
+            try {
+              await new Promise((r) => setTimeout(r, idx * 80));
+              const quote = await getQuote(item.name);
+              return {
+                symbol: item.name,
+                price: quote.data?.c ?? item.price ?? item.avg,
+                basePrice: quote.data?.pc ?? item.basePrice ?? item.avg,
+              };
+            } catch {
+              return {
+                symbol: item.name,
+                price: item.price ?? item.avg,
+                basePrice: item.basePrice ?? item.avg,
+              };
+            }
+          })
+        );
+
+        if (!mounted) return;
+
+        setAllHoldings((prev) =>
+          prev.map((h) => {
+            const updated = results.find((r) => r.symbol === h.name);
+            if (!updated) return h;
+            // keep existing fields but update price/basePrice and recompute via enrichHolding
+            return enrichHolding(h, updated.price, updated.basePrice);
+          })
+        );
+        setLastUpdate(new Date());
+      } catch (err) {
+        console.error("Closed-market price refresh failed", err);
+      }
+    };
+
+    // initial closed-market refresh
+    fetchClosedPrices();
+    const id = setInterval(fetchClosedPrices, 60000);
+    return () => {
+      mounted = false;
+      clearInterval(id);
+    };
+    // eslint-disable-next-line
+  }, [marketOpen, allHoldings, setAllHoldings]);
+  useEffect(() => {
+    return () => {
+      if (unsubscribe) unsubscribe(componentId);
+    };
+    // eslint-disable-next-line
+  }, []);
   const totalInvestment = allHoldings.reduce(
     (acc, stock) => acc + stock.avg * stock.qty,
     0
@@ -148,7 +208,7 @@ const Holdings = () => {
 
   if (loading) return <div>Loading...</div>;
 
-    if (allHoldings.length === 0)
+  if (allHoldings.length === 0)
     return (
       <div className="no-orders">
         <div className="icon mt-4">📉</div>
@@ -246,13 +306,13 @@ const Holdings = () => {
       <div className="row mt-5">
         <div className="col">
           <h5>
-            {formatCurrency(totalInvestment)} <br />
+            ${totalInvestment.toFixed(2)} <br />
             <span>Total investment</span>
           </h5>
         </div>
         <div className="col">
           <h5>
-            {formatCurrency(totalCurrentValue)} <br />
+            ${totalCurrentValue.toFixed(2)} <br />
             <span>Current value</span>
           </h5>
         </div>
@@ -260,7 +320,7 @@ const Holdings = () => {
           <h5
             className={totalCurrentValue < totalInvestment ? "loss" : "profit"}
           >
-            {formatCurrency(totalProfitLoss)} ({totalPLPercent.toFixed(2)}%)
+            ${totalProfitLoss.toFixed(2)} ({totalPLPercent.toFixed(2)}%)
             <br />
             <span>P&L</span>
           </h5>

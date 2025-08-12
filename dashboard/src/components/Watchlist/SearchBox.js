@@ -33,10 +33,13 @@ const SearchBox = ({ currentList, activeList, handleAddStock }) => {
       searchStocks(term)
         .then((res) => {
           const matches = res.data?.bestMatches || [];
-          const cleaned = matches.map((item) => ({
-            name: item.symbol || item.displaySymbol || "",
-            symbol: item.description || "",
-          }));
+          const cleaned = matches
+            .map((item) => ({
+              name: item.symbol || item.displaySymbol || "",
+              symbol: item.description || "",
+            }))
+            .filter((item) => !item.name.includes(".")); // remove all with suffix
+
           setSearchResults(cleaned);
         })
         .catch(() => setSearchResults([]));
@@ -44,7 +47,7 @@ const SearchBox = ({ currentList, activeList, handleAddStock }) => {
   };
 
   const handleAddToWatchlist = async (stock) => {
-    console.log(stock)
+    console.log(stock);
     if (adding || currentList.length >= 25) {
       if (currentList.length >= 25) {
         showAlert?.("warning", "Limit reached. You can only add 25 stocks.");
@@ -98,7 +101,7 @@ const SearchBox = ({ currentList, activeList, handleAddStock }) => {
       <Box className="search-wrapper">
         <TextField
           fullWidth
-          placeholder="Search eg: infy, bse"
+          placeholder="Search eg: GOOG, META, TSLA"
           value={searchTerm}
           onChange={handleSearchChange}
           InputProps={{

@@ -7,7 +7,7 @@ const Menu = () => {
   const location = useLocation();
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
-  const { showAlert } = useContext(GeneralContext);
+  const { showAlert, setUser } = useContext(GeneralContext);
   const handleProfileClick = () => {
     setIsProfileDropdownOpen((prev) => !prev);
   };
@@ -15,9 +15,10 @@ const Menu = () => {
   const handleLogoutClick = async () => {
     try {
       await logout();
+      setUser(null)
        showAlert("success", "Logged out successfully.");
       setIsProfileDropdownOpen(false);
-      window.location.href = "http://localhost:3001/signup";
+      window.location.replace("http://localhost:3001/signup");
     } catch (error) {
       console.error("Logout failed", error);
       showAlert("error", "Logout failed.");

@@ -5,9 +5,12 @@ const PositionsSchema = new Schema({
   qty: Number,
   avg: Number,
   price: Number,
-  net: String,
   day: String,
   isLoss: Boolean,
+  boughtday: {
+  type: Date,
+  default: Date.now
+  },
   userId: {
     type: Schema.Types.ObjectId,
     ref: "User",

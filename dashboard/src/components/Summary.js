@@ -30,7 +30,6 @@ const Summary = () => {
   useEffect(() => {
     if (!loading) {
       if (holdings.length === 0 && positions.length === 0) {
-        showAlert("warning", "You don't have any holdings or positions yet.");
       }
     }
   }, [

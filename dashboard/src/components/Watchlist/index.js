@@ -14,7 +14,6 @@ import WatchlistManager from "./WatchlistManager";
 import { getQuote } from "../../hooks/api";
 import { isMarketOpen } from "../../hooks/isMarketOpen";
 import { useLivePriceContext } from "../../contexts/LivePriceContext";
-import debounce from "lodash.debounce";
 import GeneralContext from "../../contexts/GeneralContext";
 
 // Helper to enrich stock with live/base price
@@ -49,51 +48,37 @@ const Watchlist = () => {
   } = useWatchlist();
 
   const [pricesFetched, setPricesFetched] = useState(new Set());
-  const { livePrices, updateSymbols } = useLivePriceContext();
-  const prevSymbolsRef = useRef([]);
-  const { showAlert } = useContext(GeneralContext);
+    // NEW: Get subscribe and unsubscribe from the context
+    const { livePrices, subscribe, unsubscribe } = useLivePriceContext();
+    const { showAlert } = useContext(GeneralContext);
+
+  const componentId = useRef("watchlist-component").current;
 
   const symbols = useMemo(() => currentList.map((s) => s.name), [currentList]);
   const marketOpen = useMemo(() => isMarketOpen(), []);
 
   // ✅ Debounced symbol subscription defined at the top level using useRef
-  const debouncedSubscribe = useRef(
-    debounce((syms) => {
-      const hasChanged =
-        prevSymbolsRef.current.length !== syms.length ||
-        !prevSymbolsRef.current.every((s, i) => syms[i] === prevSymbolsRef.current[i]);
-
-      if (hasChanged) {
-        updateSymbols(syms);
-        prevSymbolsRef.current = syms;
-      }
-    }, 250)
-  ).current;
 
   const updateWatchlistPrices = useCallback(
     (updatedList) => {
       const currentRaw = JSON.stringify(watchlists[activeList] || []);
       const updatedRaw = JSON.stringify(updatedList);
       if (currentRaw !== updatedRaw) {
-        setWatchlists((prev) => ({
-          ...prev,
-          [activeList]: updatedList,
-        }));
+        setWatchlists((prev) => ({ ...prev, [activeList]: updatedList }));
       }
     },
     [activeList, setWatchlists, watchlists]
   );
-
   useEffect(() => {
     if (marketOpen && symbols.length > 0) {
-      debouncedSubscribe(symbols);
-    } else if (!marketOpen) {
-      updateSymbols([]);
+      subscribe(componentId, symbols);
     }
-
-    return () => debouncedSubscribe.cancel();
-  }, [symbols, marketOpen, updateSymbols, debouncedSubscribe]);
-
+    // CRUCIAL: Cleanup function to unsubscribe when component unmounts or symbols change
+    return () => {
+      unsubscribe(componentId);
+    };
+  }, [symbols, marketOpen, subscribe, unsubscribe, componentId]);
+  
   useEffect(() => {
     const fetchInitialPrices = async () => {
       if (currentList.length === 0) return;

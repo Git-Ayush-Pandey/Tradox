@@ -34,17 +34,19 @@ const Orders = () => {
 
   const { openBuyWindow, openSellWindow, showAlert } =
     useContext(GeneralContext);
-  const { livePrices, updateSymbols } = useLivePriceContext();
+  const { livePrices, subscribe, unsubscribe, updateSymbols } = useLivePriceContext();
 
   const symbols = useMemo(
     () => [...new Set(allOrders.map((o) => o.name))],
     [allOrders]
   );
   const marketOpen = useMemo(() => isMarketOpen(), []);
+  const componentId = useRef("orders-" + Math.random().toString(36).slice(2)).current;
 
   useEffect(() => {
     const loadOrders = async () => {
       try {
+        setLoading(true);
         const res = await FetchOrders();
 
         if (!marketOpen) {
@@ -52,19 +54,19 @@ const Orders = () => {
           await Promise.all(toCancel.map((o) => cancelOrder(o._id)));
         }
         const expiredOrders = res.data.filter((o) => isNotSameDate(o.placedAt));
-        if (expiredOrders.length > 0) {                                     
+        if (expiredOrders.length > 0) {
           await Promise.all(expiredOrders.map((o) => deleteOrder(o._id)));
-          showAlert(                              
-            "warning",                  
+          showAlert(
+            "warning",
             `${expiredOrders.length} expired orders auto-deleted                                                                                .`
           );
         }
 
         const rawOrders = res.data;
         const priceResults = await Promise.all(
-          rawOrders.map(async (o) => {
+          rawOrders.map(async (o, idx) => {
             try {
-              await new Promise((r) => setTimeout(r, 100));
+              await new Promise((r) => setTimeout(r, idx * 80));
               const quote = await getQuote(o.name);
               return {
                 symbol: o.name,
@@ -94,7 +96,10 @@ const Orders = () => {
 
         const upperSymbols = enriched.map((o) => o.name.toUpperCase());
 
-        updateSymbols(upperSymbols);
+        if (marketOpen) {
+          if (subscribe) subscribe(componentId, upperSymbols);
+          if (typeof updateSymbols === "function") updateSymbols(upperSymbols);
+        }
       } catch (err) {
         console.error("Failed to fetch orders:", err);
         showAlert("error", "Failed to fetch orders.");
@@ -105,27 +110,93 @@ const Orders = () => {
 
     loadOrders();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [updateSymbols, marketOpen]);
+  }, [componentId, subscribe, updateSymbols, marketOpen]);
 
+  // live updates when market open
   useEffect(() => {
     if (!marketOpen) return;
 
     setAllOrders((prev) =>
       prev.map((order) => {
-        const live = livePrices[order.name.toUpperCase()];
+        // try different key shapes
+        const live =
+          livePrices[order.name] ??
+          livePrices[order.name?.toUpperCase?.()] ??
+          livePrices[order.name?.toLowerCase?.()];
         if (!live) return order;
         return enrichOrder(order, live, order.basePrice);
       })
     );
-  }, [livePrices, allOrders.length, marketOpen]);
+  }, [livePrices, marketOpen]);
 
+  // If market open, ensure we subscribe to symbol list when it changes
   useEffect(() => {
     if (marketOpen && symbols.length > 0) {
-      updateSymbols(symbols);
+      const symsUpper = symbols.map((s) => s.toUpperCase());
+      if (subscribe) subscribe(componentId, symsUpper);
+      if (typeof updateSymbols === "function") updateSymbols(symsUpper);
     }
-  }, [symbols, updateSymbols, marketOpen]);
+    // eslint-disable-next-line
+  }, [symbols, subscribe, marketOpen, updateSymbols]);
 
+  // When market closed: poll getQuote for current orders to update livePrice/basePrice
   useEffect(() => {
+    if (marketOpen) return;
+    if (!allOrders || allOrders.length === 0) return;
+    let mounted = true;
+
+    const fetchClosedPrices = async () => {
+      try {
+        const results = await Promise.all(
+          allOrders.map(async (o, idx) => {
+            try {
+              await new Promise((r) => setTimeout(r, idx * 80));
+              const quote = await getQuote(o.name);
+              return {
+                symbol: o.name,
+                price: quote.data?.c ?? o.livePrice ?? o.price,
+                basePrice: quote.data?.pc ?? o.basePrice ?? o.price,
+              };
+            } catch {
+              return {
+                symbol: o.name,
+                price: o.livePrice ?? o.price,
+                basePrice: o.basePrice ?? o.price,
+              };
+            }
+          })
+        );
+
+        if (!mounted) return;
+
+        setAllOrders((prev) =>
+          prev.map((o) => {
+            const upd = results.find((r) => r.symbol === o.name);
+            if (!upd) return o;
+            return enrichOrder(o, upd.price, upd.basePrice);
+          })
+        );
+      } catch (err) {
+        console.error("Closed-market order price refresh failed", err);
+      }
+    };
+
+    fetchClosedPrices();
+    const id = setInterval(fetchClosedPrices, 60000);
+    return () => {
+      mounted = false;
+      clearInterval(id);
+    };
+  }, [marketOpen, allOrders, setAllOrders]);
+
+  // cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (unsubscribe) unsubscribe(componentId);
+    };
+    // eslint-disable-next-line
+  }, []);
+    useEffect(() => {
     if (!marketOpen) return;
 
     const executeMatchingOrders = async () => {
@@ -272,7 +343,7 @@ const Orders = () => {
                   <td>{order.price.toFixed(2)}</td>
                   <td>{order.mode}</td>
                   <td className={rowPriceClass}>
-                    {order.livePrice.toFixed(2)}
+                    {(order.livePrice ?? order.price).toFixed(2)}
                   </td>
                   <td>
                     {order.cancelled ? (
