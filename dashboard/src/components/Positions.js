@@ -10,11 +10,11 @@ const enrichPosition = (item, price, basePrice) => {
   const investment = item.avg * item.qty;
 
   const boughtDate = new Date(item.boughtday);
-const today = new Date();
-const boughtToday =
-  boughtDate.getFullYear() === today.getFullYear() &&
-  boughtDate.getMonth() === today.getMonth() &&
-  boughtDate.getDate() === today.getDate();
+  const today = new Date();
+  const boughtToday =
+    boughtDate.getFullYear() === today.getFullYear() &&
+    boughtDate.getMonth() === today.getMonth() &&
+    boughtDate.getDate() === today.getDate();
 
   let refPrice = boughtToday ? item.avg : basePrice;
 
@@ -22,7 +22,7 @@ const boughtToday =
   const dayChangePercent = ((price - refPrice) / refPrice) * 100;
   const totalChange = price - item.avg;
   const totalChangePercent = (totalChange / item.avg) * 100;
-  
+
   return {
     ...item,
     price,
@@ -47,7 +47,6 @@ const Positions = () => {
   const [loading, setLoading] = useState(true);
   const { livePrices, subscribe, unsubscribe, updateSymbols } =
     useLivePriceContext();
-  const [lastUpdate, setLastUpdate] = useState(null);
   const marketOpen = useMemo(() => isMarketOpen(), []);
   const componentId = useRef(
     "positions-" + Math.random().toString(36).slice(2)
@@ -112,7 +111,7 @@ const Positions = () => {
 
     loadPositions();
     // eslint-disable-next-line
-  }, [setAllPositions, subscribe, updateSymbols, marketOpen]);
+  }, [subscribe, updateSymbols, marketOpen]);
 
   // live price updates when market open
   useEffect(() => {
@@ -128,8 +127,8 @@ const Positions = () => {
         return enrichPosition(item, live, item.basePrice);
       })
     );
-    setLastUpdate(new Date());
-  }, [livePrices, setAllPositions, marketOpen]);
+    // eslint-disable-next-line
+  }, [livePrices, marketOpen]);
 
   // closed market polling
   useEffect(() => {
@@ -168,7 +167,6 @@ const Positions = () => {
             return enrichPosition(p, upd.price, upd.basePrice);
           })
         );
-        setLastUpdate(new Date());
       } catch (err) {
         console.error("Closed-market positions price refresh failed", err);
       }
@@ -180,7 +178,8 @@ const Positions = () => {
       mounted = false;
       clearInterval(id);
     };
-  }, [marketOpen, allPositions, setAllPositions]);
+    // eslint-disable-next-line
+  }, [marketOpen]);
 
   // cleanup subscription on unmount
   useEffect(() => {
@@ -224,16 +223,8 @@ const Positions = () => {
             <span>⚫ Market Closed - Latest Prices</span>
           )}
         </span>
-        <span>
-          {lastUpdate &&
-            `Last Updated: ${lastUpdate.toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}`}
-        </span>
       </div>
       <h3 className="title">Positions ({allPositions.length})</h3>
-
       <div className="order-table">
         <table>
           <thead>

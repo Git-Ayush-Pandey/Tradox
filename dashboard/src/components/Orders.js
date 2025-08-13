@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useContext, useMemo } from "react";
 import {
   FetchOrders,
-  executeOrder,
   getQuote,
   cancelOrder,
   deleteOrder,
@@ -9,6 +8,7 @@ import {
 import GeneralContext from "../contexts/GeneralContext";
 import { isMarketOpen } from "../hooks/isMarketOpen";
 import { useLivePriceContext } from "../contexts/LivePriceContext";
+import { OrdersContext } from "../contexts/OrdersContext";
 
 const enrichOrder = (order, livePrice, basePrice) => {
   return {
@@ -27,21 +27,24 @@ const isNotSameDate = (date1) => {
 };
 
 const Orders = () => {
-  const [allOrders, setAllOrders] = useState([]);
+  const { orders: allOrders, setOrders: setAllOrders } =
+    useContext(OrdersContext);
   const [hoveredRow, setHoveredRow] = useState(null);
   const [loading, setLoading] = useState(true);
-  const executingRef = useRef(new Set());
 
   const { openBuyWindow, openSellWindow, showAlert } =
     useContext(GeneralContext);
-  const { livePrices, subscribe, unsubscribe, updateSymbols } = useLivePriceContext();
+  const { livePrices, subscribe, unsubscribe, updateSymbols } =
+    useLivePriceContext();
 
   const symbols = useMemo(
     () => [...new Set(allOrders.map((o) => o.name))],
     [allOrders]
   );
   const marketOpen = useMemo(() => isMarketOpen(), []);
-  const componentId = useRef("orders-" + Math.random().toString(36).slice(2)).current;
+  const componentId = useRef(
+    "orders-" + Math.random().toString(36).slice(2)
+  ).current;
 
   useEffect(() => {
     const loadOrders = async () => {
@@ -127,6 +130,7 @@ const Orders = () => {
         return enrichOrder(order, live, order.basePrice);
       })
     );
+     // eslint-disable-next-line
   }, [livePrices, marketOpen]);
 
   // If market open, ensure we subscribe to symbol list when it changes
@@ -187,7 +191,8 @@ const Orders = () => {
       mounted = false;
       clearInterval(id);
     };
-  }, [marketOpen, allOrders, setAllOrders]);
+     // eslint-disable-next-line
+  }, [marketOpen]);
 
   // cleanup on unmount
   useEffect(() => {
@@ -196,43 +201,6 @@ const Orders = () => {
     };
     // eslint-disable-next-line
   }, []);
-    useEffect(() => {
-    if (!marketOpen) return;
-
-    const executeMatchingOrders = async () => {
-      for (const order of allOrders) {
-        if (order.executed) {
-          continue;
-        }
-        if (executingRef.current.has(order._id)) continue;
-
-        const price = livePrices[order.name];
-        if (!price) continue;
-
-        const match =
-          (order.mode === "BUY" && price <= order.price) ||
-          (order.mode === "SELL" && price >= order.price);
-
-        if (!match) continue;
-
-        executingRef.current.add(order._id);
-        try {
-          const res = await executeOrder(order._id);
-          setAllOrders((prev) =>
-            prev.map((o) => (o._id === order._id ? res.data.order : o))
-          );
-          showAlert("success", `Order for ${order.name} executed.`);
-        } catch (err) {
-          console.error(`Failed to execute order ${order._id}`, err);
-        } finally {
-          executingRef.current.delete(order._id);
-        }
-      }
-    };
-
-    executeMatchingOrders();
-    // eslint-disable-next-line
-  }, [livePrices, allOrders, marketOpen]);
 
   const handleCancel = async (id) => {
     try {

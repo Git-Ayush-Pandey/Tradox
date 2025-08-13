@@ -187,7 +187,7 @@ const Holdings = () => {
       clearInterval(id);
     };
     // eslint-disable-next-line
-  }, [marketOpen, allHoldings, setAllHoldings]);
+  }, [marketOpen]);
   useEffect(() => {
     return () => {
       if (unsubscribe) unsubscribe(componentId);

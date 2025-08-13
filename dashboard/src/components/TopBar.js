@@ -5,7 +5,6 @@ import GeneralContext from "../contexts/GeneralContext";
 const TopBar = () => {
   const { openAnalyticsWindow } = useContext(GeneralContext);
   const [showMore, setShowMore] = useState(false);
-  const [livePrices] = useState({}); // No fetching, stays empty unless populated externally
 
   const indices = useMemo(
     () => ({

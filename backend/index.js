@@ -1,4 +1,5 @@
 require("dotenv").config();
+require("./util/orderCleaner");
 
 const express = require("express");
 const mongoose = require("mongoose");
@@ -8,6 +9,8 @@ const passport = require("passport");
 const localStr = require("passport-local").Strategy;
 const http = require("http");
 const WebSocket = require("ws");
+const cron = require("node-cron");
+const { autoSquareOffIntraday } = require("./util/autoSquareOff");
 
 const app = express();
 const server = http.createServer(app);
@@ -30,7 +33,7 @@ const holdingsRoute = require("./routes/HoldingsRoute");
 const watchlistRoute = require("./routes/WatchlistRoute");
 const apiRouter = require("./routes/apiRouter");
 const fundRoute = require("./routes/fundsRoute");
-const otpRoute = require("./routes/otpRoute")
+const otpRoute = require("./routes/otpRoute");
 
 const allowedOrigins = ["http://localhost:3000", "http://localhost:3001"];
 app.use(
@@ -46,13 +49,15 @@ app.use(
   })
 );
 app.use((req, res, next) => {
-  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.setHeader(
+    "Cache-Control",
+    "no-store, no-cache, must-revalidate, proxy-revalidate"
+  );
   res.setHeader("Pragma", "no-cache");
   res.setHeader("Expires", "0");
   res.setHeader("Surrogate-Control", "no-store");
   next();
 });
-
 
 app.use(express.json());
 app.use(cookieParser());
@@ -68,7 +73,7 @@ app.use("/watchlist", watchlistRoute);
 app.use("/orders", orderRoute);
 app.use("/stock", apiRouter);
 app.use("/funds", fundRoute);
-app.use("/otp", otpRoute)
+app.use("/otp", otpRoute);
 
 const connectToMongoDB = async () => {
   try {
@@ -81,7 +86,19 @@ const connectToMongoDB = async () => {
 };
 connectToMongoDB();
 
-const finnhubSocket = new WebSocket(`wss://ws.finnhub.io?token=${process.env.LIVEPRICE_API_KEY}`);
+cron.schedule("50 0 * * 1-5", async () => {
+  console.log("🚀 Running auto square-off job at 12:50 AM IST...");
+  try {
+    await autoSquareOffIntraday();
+    console.log("✅ Auto square-off completed.");
+  } catch (err) {
+    console.error("❌ Auto square-off error:", err);
+  }
+});
+
+const finnhubSocket = new WebSocket(
+  `wss://ws.finnhub.io?token=${process.env.LIVEPRICE_API_KEY}`
+);
 
 finnhubSocket.on("open", () => {
   console.log("🔗 Connected to Finnhub WebSocket");
@@ -138,18 +155,20 @@ wss.on("connection", (ws) => {
       symbolSubscriptions[upperSymbol].add(ws);
 
       if (isFirst && finnhubSocket.readyState === WebSocket.OPEN) {
-        finnhubSocket.send(JSON.stringify({ type: "subscribe", symbol: upperSymbol }));
+        finnhubSocket.send(
+          JSON.stringify({ type: "subscribe", symbol: upperSymbol })
+        );
       }
-    }
-
-    else if (type === "unsubscribe") {
+    } else if (type === "unsubscribe") {
       if (!ws.subscribedSymbols.has(upperSymbol)) return;
 
       ws.subscribedSymbols.delete(upperSymbol);
       symbolSubscriptions[upperSymbol]?.delete(ws);
 
       if (symbolSubscriptions[upperSymbol]?.size === 0) {
-        finnhubSocket.send(JSON.stringify({ type: "unsubscribe", symbol: upperSymbol }));
+        finnhubSocket.send(
+          JSON.stringify({ type: "unsubscribe", symbol: upperSymbol })
+        );
         delete symbolSubscriptions[upperSymbol];
       }
     }
@@ -168,7 +187,6 @@ wss.on("connection", (ws) => {
     }
   });
 });
-
 
 server.listen(PORT, () => {
   console.log(`🚀 App + WebSocket running at http://localhost:${PORT}`);

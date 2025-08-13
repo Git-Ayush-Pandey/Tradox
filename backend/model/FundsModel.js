@@ -1,6 +1,8 @@
 const { Schema, model } = require("mongoose");
 
 const FundsSchema = new Schema({
+  realisedPnL: { type: Number, default: 0 },
+  unrealisedPnL: { type: Number, default: 0 },
   userId: {
     type: Schema.Types.ObjectId,
     ref: "User",
