@@ -14,7 +14,7 @@ import PropTypes from "prop-types";
 const formatCurrency = (val) =>
   Number(val).toLocaleString("en-IN", {
     style: "currency",
-    currency: "INR",
+    currency: "USD",
     maximumFractionDigits: 0,
   });
 

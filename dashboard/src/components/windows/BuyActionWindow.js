@@ -13,9 +13,9 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import { FetchFunds, editOrder, placeOrder } from "../../hooks/api";
 import GeneralContext from "../../contexts/GeneralContext";
+import { isMarketOpen } from "../../hooks/isMarketOpen";
 
 const BuyActionWindow = ({ uid, existingOrder = null }) => {
-  console.log(uid)
   const isEdit = !!existingOrder;
   const [stockQuantity, setStockQuantity] = useState(existingOrder?.qty || 1);
   const [stockPrice, setStockPrice] = useState(existingOrder?.price || 0);
@@ -40,13 +40,18 @@ const BuyActionWindow = ({ uid, existingOrder = null }) => {
   }, []);
 
   const handleBuyClick = async () => {
+    if (!isMarketOpen()) {
+      showAlert?.("error", "Can't place order in a closed market.");
+      closeBuyWindow();
+      return;
+    }
     if (marginRequired > availableMargin) {
       showAlert?.(
-      "error",
-      `Insufficient margin. Required: $${marginRequired.toFixed(
-        2
-      )}, Available: $${availableMargin.toFixed(2)}`
-    );
+        "error",
+        `Insufficient margin. Required: $${marginRequired.toFixed(
+          2
+        )}, Available: $${availableMargin.toFixed(2)}`
+      );
       return;
     }
     const payload = {
@@ -60,10 +65,10 @@ const BuyActionWindow = ({ uid, existingOrder = null }) => {
 
     try {
       if (isEdit) {
-        await editOrder( existingOrder._id, payload)
+        await editOrder(existingOrder._id, payload);
         showAlert?.("success", "Order updated successfully.");
       } else {
-        await placeOrder(payload)
+        await placeOrder(payload);
         showAlert?.("success", "Order placed successfully.");
       }
 

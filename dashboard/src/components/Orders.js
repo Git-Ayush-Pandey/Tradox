@@ -226,7 +226,6 @@ const Orders = () => {
           console.error(`Failed to execute order ${order._id}`, err);
         } finally {
           executingRef.current.delete(order._id);
-          showAlert("error", `Failed to execute ${order.name}.`);
         }
       }
     };

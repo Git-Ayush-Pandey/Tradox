@@ -1,18 +1,13 @@
-const socket = new WebSocket('wss://ws.finnhub.io?token=d1ouo1pr01qi9vk1jp0gd1ouo1pr01qi9vk1jp10');
+const fetch = require("node-fetch");
+require("dotenv").config();
 
-// Connection opened -> Subscribe
-socket.addEventListener('open', function (event) {
-    socket.send(JSON.stringify({'type':'subscribe', 'symbol': 'AAPL'}))
-    socket.send(JSON.stringify({'type':'subscribe', 'symbol': 'BINANCE:BTCUSDT'}))
-    socket.send(JSON.stringify({'type':'subscribe', 'symbol': 'IC MARKETS:1'}))
-});
+const API_KEY = process.env.SEARCH_API_KEY;
 
-// Listen for messages
-socket.addEventListener('message', function (event) {
-    console.log('Message from server ', event.data);
-});
-
-// Unsubscribe
- var unsubscribe = function(symbol) {
-    socket.send(JSON.stringify({'type':'unsubscribe','symbol': symbol}))
+async function test() {
+  const url = `https://finnhub.io/api/v1/index/constituents?symbol=%5ENDX&token=${API_KEY}`;
+  const res = await fetch(url);
+  const data = await res.json();
+  console.log("NASDAQ-100 Constituents:", data);
 }
+
+test();

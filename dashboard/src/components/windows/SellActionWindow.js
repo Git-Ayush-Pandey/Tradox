@@ -1,7 +1,13 @@
-import { useState, useContext, useEffect } from "react";
-import { fetchHoldings, fetchPositions, editOrder, placeOrder } from "../../hooks/api";
-import GeneralContext from "../../contexts/GeneralContext";
 import "./Window.css";
+import { useState, useContext, useEffect } from "react";
+import {
+  fetchHoldings,
+  fetchPositions,
+  editOrder,
+  placeOrder,
+} from "../../hooks/api";
+import GeneralContext from "../../contexts/GeneralContext";
+import { isMarketOpen } from "../../hooks/isMarketOpen";
 import {
   Dialog,
   DialogTitle,
@@ -26,15 +32,13 @@ const SellActionWindow = ({ uid, existingOrder = null }) => {
   const stockName = uid.name;
 
   useEffect(() => {
-    fetchPositions()
-      .then((res) => {
-        setPositions(res.data);
-      });
+    fetchPositions().then((res) => {
+      setPositions(res.data);
+    });
 
-   fetchHoldings()
-      .then((res) => {
-        setHoldings(res.data);
-      });
+    fetchHoldings().then((res) => {
+      setHoldings(res.data);
+    });
   }, []);
 
   useEffect(() => {
@@ -54,11 +58,18 @@ const SellActionWindow = ({ uid, existingOrder = null }) => {
   }, [positions, holdings, stockName, orderType]);
 
   const handleSellClick = async () => {
-    if (!user) {
-      showAlert("warning", "You must be logged in to place a sell order."); // ✅
+    if (!isMarketOpen()) {
+      showAlert?.("error", "Can't place order in a closed market.");
       closeSellWindow();
       return;
     }
+
+    if (!user) {
+      showAlert("warning", "You must be logged in to place a sell order.");
+      closeSellWindow();
+      return;
+    }
+
     const payload = {
       name: stockName,
       qty: Number(stockQuantity),
@@ -68,8 +79,8 @@ const SellActionWindow = ({ uid, existingOrder = null }) => {
     };
     try {
       if (isEdit) {
-        await editOrder(existingOrder._id, payload)
- showAlert("success", "Order updated successfully."); // ✅
+        await editOrder(existingOrder._id, payload);
+        showAlert("success", "Order updated successfully."); // ✅
       } else {
         await placeOrder(payload);
         showAlert("success", "Sell order placed."); // ✅
@@ -77,7 +88,8 @@ const SellActionWindow = ({ uid, existingOrder = null }) => {
       closeSellWindow();
     } catch (err) {
       const message =
-        err.response?.data?.message || "An error occurred while placing the order.";
+        err.response?.data?.message ||
+        "An error occurred while placing the order.";
       showAlert("error", message); // ✅
       console.error("Sell order error:", err);
     }
