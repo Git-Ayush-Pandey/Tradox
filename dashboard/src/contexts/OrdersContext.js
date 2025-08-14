@@ -1,13 +1,15 @@
-import React, { createContext, useEffect, useRef, useState } from "react";
+import React, { createContext, useEffect, useRef, useState, useContext } from "react";
 import { executeOrder, FetchOrders } from "../hooks/api";
 import { useLivePriceContext } from "./LivePriceContext";
 import { isMarketOpen } from "../hooks/isMarketOpen";
+import GeneralContext from "./GeneralContext";
 
 export const OrdersContext = createContext();
 
 export function OrdersProvider({ children }) {
   const [orders, setOrders] = useState([]);
   const { livePrices } = useLivePriceContext();
+  const { showAlert } = useContext(GeneralContext);
   const executingRef = useRef(new Set());
 
   useEffect(() => {
@@ -25,7 +27,9 @@ export function OrdersProvider({ children }) {
       for (const order of orders) {
         if (order.executed || executingRef.current.has(order._id)) continue;
 
-        const price = livePrices[order.name];
+        const price = livePrices[order.name] ??
+                      livePrices[order.name?.toUpperCase?.()] ??
+                      livePrices[order.name?.toLowerCase?.()];
         if (!price) continue;
 
         const match =
@@ -37,11 +41,13 @@ export function OrdersProvider({ children }) {
         executingRef.current.add(order._id);
         try {
           const res = await executeOrder(order._id);
-          setOrders((prev) =>
-            prev.map((o) => (o._id === order._id ? res.data.order : o))
-          );
+          setOrders(prev => prev.map(o =>
+            o._id === order._id ? res.data.order : o
+          ));
+          showAlert?.("success", `Order for ${order.name} executed.`);
         } catch (err) {
           console.error(`Failed to execute order ${order._id}`, err);
+          showAlert?.("error", `Failed to execute order for ${order.name}.`);
         } finally {
           executingRef.current.delete(order._id);
         }
@@ -49,7 +55,7 @@ export function OrdersProvider({ children }) {
     };
 
     executeMatchingOrders();
-  }, [livePrices, orders]);
+  }, [livePrices, orders, showAlert]);
 
   return (
     <OrdersContext.Provider value={{ orders, setOrders }}>

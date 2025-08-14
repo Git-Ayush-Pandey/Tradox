@@ -21,7 +21,8 @@ const GeneralContext = React.createContext({
   analyticsStock: null,
 });
 
-const enrichPosition = (item, price, basePrice) => {
+// Exported so components can reuse (no need to duplicate)
+export const enrichPosition = (item, price, basePrice) => {
   const currentValue = price * item.qty;
   const investment = item.avg * item.qty;
 
@@ -36,11 +37,9 @@ const enrichPosition = (item, price, basePrice) => {
     }
   }
 
-  const dayChange = (price - (boughtToday ? item.avg : basePrice)) * item.qty;
-  const dayChangePercent =
-    ((price - (boughtToday ? item.avg : basePrice)) /
-      (boughtToday ? item.avg : basePrice)) *
-    100;
+  const ref = boughtToday ? item.avg : basePrice;
+  const dayChange = (price - ref) * item.qty;
+  const dayChangePercent = ((price - ref) / ref) * 100;
 
   const totalChange = price - item.avg;
   const totalChangePercent = (totalChange / item.avg) * 100;
@@ -57,7 +56,9 @@ const enrichPosition = (item, price, basePrice) => {
     isLoss: currentValue < investment,
   };
 };
-const enrichHolding = (item, price, basePrice) => {
+
+// Exported so components can reuse (no need to duplicate)
+export const enrichHolding = (item, price, basePrice) => {
   const currentValue = price * item.qty;
   const investment = item.avg * item.qty;
 
@@ -72,11 +73,9 @@ const enrichHolding = (item, price, basePrice) => {
     }
   }
 
-  const dayChange = (price - (boughtToday ? item.avg : basePrice)) * item.qty;
-  const dayChangePercent =
-    ((price - (boughtToday ? item.avg : basePrice)) /
-      (boughtToday ? item.avg : basePrice)) *
-    100;
+  const ref = boughtToday ? item.avg : basePrice;
+  const dayChange = (price - ref) * item.qty;
+  const dayChangePercent = ((price - ref) / ref) * 100;
 
   const totalChange = price - item.avg;
   const totalChangePercent = (totalChange / item.avg) * 100;
@@ -109,11 +108,11 @@ export const GeneralContextProvider = (props) => {
   const [orders, setOrders] = useState([]);
 
   const handleOpenBuyWindow = (stock, order = null) => {
-    console.log("Opening BuyActionWindow for:", stock);
     setIsBuyWindowOpen(true);
     setSelectedStock(stock);
     setEditOrder(order);
   };
+
   const showAlert = useCallback((type, message, duration = 3000) => {
     setAlert({ type, message });
     setTimeout(() => setAlert(null), duration);
@@ -126,7 +125,6 @@ export const GeneralContextProvider = (props) => {
   };
 
   const handleOpenSellWindow = (stock, order = null) => {
-    console.log("Opening SellActionWindow for:", stock);
     setIsSellWindowOpen(true);
     setSelectedStock(stock);
     setEditOrder(order);
@@ -139,7 +137,6 @@ export const GeneralContextProvider = (props) => {
   };
 
   const handleOpenAnalyticsWindow = (stock) => {
-    console.log("Opening analytics for:", stock);
     setAnalyticsStock(stock);
     setIsAnalyticsOpen(true);
   };
@@ -148,6 +145,7 @@ export const GeneralContextProvider = (props) => {
     setAnalyticsStock(null);
     setIsAnalyticsOpen(false);
   };
+
   const fetchHoldingsWithQuotes = async () => {
     const res = await fetchHoldings();
     const raw = res.data;
@@ -204,7 +202,6 @@ export const GeneralContextProvider = (props) => {
     });
   };
 
-  // inside fetchData()
   const fetchData = useCallback(async () => {
     try {
       const [holdingsEnriched, positionsEnriched] = await Promise.all([
@@ -217,14 +214,14 @@ export const GeneralContextProvider = (props) => {
       console.error("Failed to fetch holdings or positions", error);
     }
   }, []);
+
   useEffect(() => {
     setLoading(true);
     verifyToken()
       .then((res) => {
         if (res.data.status) {
           setUser(res.data.safeUser);
-          // If user is verified, fetch their data
-          fetchData();
+          fetchData(); // user verified → load data
         } else {
           setUser(null);
         }

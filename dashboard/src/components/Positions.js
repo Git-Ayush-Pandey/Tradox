@@ -1,40 +1,9 @@
 import { useState, useEffect, useContext, useMemo, useRef } from "react";
-import { fetchPositions, getQuote } from "../hooks/api";
-import GeneralContext from "../contexts/GeneralContext";
+import { getQuote } from "../hooks/api";
+import GeneralContext, { enrichPosition } from "../contexts/GeneralContext";
 import { isMarketOpen } from "../hooks/isMarketOpen";
 import { useLivePriceContext } from "../contexts/LivePriceContext";
 import InvestmentBarChart from "./ChartJs/InvestmentBarChart";
-
-const enrichPosition = (item, price, basePrice) => {
-  const currentValue = price * item.qty;
-  const investment = item.avg * item.qty;
-
-  const boughtDate = new Date(item.boughtday);
-  const today = new Date();
-  const boughtToday =
-    boughtDate.getFullYear() === today.getFullYear() &&
-    boughtDate.getMonth() === today.getMonth() &&
-    boughtDate.getDate() === today.getDate();
-
-  let refPrice = boughtToday ? item.avg : basePrice;
-
-  const dayChange = (price - refPrice) * item.qty;
-  const dayChangePercent = ((price - refPrice) / refPrice) * 100;
-  const totalChange = price - item.avg;
-  const totalChangePercent = (totalChange / item.avg) * 100;
-
-  return {
-    ...item,
-    price,
-    basePrice,
-    boughtToday,
-    dayChange,
-    dayChangePercent,
-    totalChange,
-    totalChangePercent,
-    isLoss: currentValue < investment,
-  };
-};
 
 const Positions = () => {
   const {
@@ -42,76 +11,24 @@ const Positions = () => {
     setPositions: setAllPositions,
     openSellWindow,
     showAlert,
+    loading: appLoading,
   } = useContext(GeneralContext);
+
   const [hoveredRow, setHoveredRow] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const { livePrices, subscribe, unsubscribe, updateSymbols } =
-    useLivePriceContext();
+  const { livePrices, subscribe, unsubscribe } = useLivePriceContext();
   const marketOpen = useMemo(() => isMarketOpen(), []);
-  const componentId = useRef(
-    "positions-" + Math.random().toString(36).slice(2)
-  ).current;
+  const componentId = useRef("positions-" + Math.random().toString(36).slice(2)).current;
 
-  // initial load + enrich with getQuote
+  // Subscribe to live prices when market is open and we have positions
   useEffect(() => {
-    let mounted = true;
-    const loadPositions = async () => {
-      try {
-        setLoading(true);
-        const res = await fetchPositions();
-        const raw = res.data;
-
-        const quotes = await Promise.all(
-          raw.map(async (item, idx) => {
-            try {
-              await new Promise((r) => setTimeout(r, idx * 80));
-              const quote = await getQuote(item.name);
-              return {
-                symbol: item.name,
-                price: quote.data?.c ?? item.avg,
-                basePrice: quote.data?.pc ?? item.avg,
-              };
-            } catch {
-              return {
-                symbol: item.name,
-                price: item.avg,
-                basePrice: item.avg,
-              };
-            }
-          })
-        );
-
-        const enriched = raw.map((item) => {
-          const match = quotes.find((q) => q.symbol === item.name);
-          return enrichPosition(
-            { ...item, prevPrice: match?.basePrice },
-            match?.price,
-            match?.basePrice
-          );
-        });
-
-        if (!mounted) return;
-        setAllPositions(enriched);
-
-        // subscribe if market is open
-        if (marketOpen && enriched.length > 0) {
-          const uniqueSymbols = [
-            ...new Set(enriched.map((s) => s.name.toUpperCase())),
-          ];
-          if (subscribe) subscribe(componentId, uniqueSymbols);
-          if (typeof updateSymbols === "function") updateSymbols(uniqueSymbols);
-        }
-      } catch (err) {
-        console.error("Error loading positions:", err);
-        showAlert("error", "Failed to load positions.");
-      } finally {
-        if (mounted) setLoading(false);
-      }
+    if (!marketOpen || !allPositions || allPositions.length === 0) return;
+    const uniqueSymbols = [...new Set(allPositions.map((s) => s.name.toUpperCase()))];
+    subscribe?.(componentId, uniqueSymbols);
+    return () => {
+      unsubscribe?.(componentId);
     };
-
-    loadPositions();
-    // eslint-disable-next-line
-  }, [subscribe, updateSymbols, marketOpen]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [marketOpen, allPositions]);
 
   // live price updates when market open
   useEffect(() => {
@@ -127,15 +44,15 @@ const Positions = () => {
         return enrichPosition(item, live, item.basePrice);
       })
     );
-    // eslint-disable-next-line
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [livePrices, marketOpen]);
 
   // closed market polling
   useEffect(() => {
     if (marketOpen) return;
     if (!allPositions || allPositions.length === 0) return;
-    let mounted = true;
 
+    let mounted = true;
     const fetchClosedPrices = async () => {
       try {
         const results = await Promise.all(
@@ -169,6 +86,7 @@ const Positions = () => {
         );
       } catch (err) {
         console.error("Closed-market positions price refresh failed", err);
+        showAlert("error", "Failed to refresh prices.");
       }
     };
 
@@ -178,30 +96,15 @@ const Positions = () => {
       mounted = false;
       clearInterval(id);
     };
-    // eslint-disable-next-line
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [marketOpen]);
 
-  // cleanup subscription on unmount
-  useEffect(() => {
-    return () => {
-      if (unsubscribe) unsubscribe(componentId);
-    };
-    // eslint-disable-next-line
-  }, []);
-
-  const totalPositionValue = allPositions.reduce(
-    (acc, stock) => acc + stock.price * stock.qty,
-    0
-  );
-  const totalCost = allPositions.reduce(
-    (acc, stock) => acc + stock.avg * stock.qty,
-    0
-  );
+  const totalPositionValue = allPositions.reduce((acc, s) => acc + s.price * s.qty, 0);
+  const totalCost = allPositions.reduce((acc, s) => acc + s.avg * s.qty, 0);
   const totalProfitLoss = totalPositionValue - totalCost;
-  const totalPLPercent =
-    totalCost === 0 ? 0 : (totalProfitLoss / totalCost) * 100;
+  const totalPLPercent = totalCost === 0 ? 0 : (totalProfitLoss / totalCost) * 100;
 
-  if (loading) return <div>Loading...</div>;
+  if (appLoading) return <div>Loading...</div>;
 
   if (allPositions.length === 0)
     return (
@@ -216,9 +119,7 @@ const Positions = () => {
       <div className="market-status">
         <span>
           {marketOpen ? (
-            <span style={{ color: "#4caf50" }}>
-              🟢 Market Open - Live Prices
-            </span>
+            <span style={{ color: "#4caf50" }}>🟢 Market Open - Live Prices</span>
           ) : (
             <span>⚫ Market Closed - Latest Prices</span>
           )}
@@ -254,9 +155,7 @@ const Positions = () => {
                     >
                       <span>{stock.name}</span>
                       <button
-                        className={`btn btn-danger btn-sm ms-2 ${
-                          hoveredRow === index ? "" : "invisible"
-                        }`}
+                        className={`btn btn-danger btn-sm ms-2 ${hoveredRow === index ? "" : "invisible"}`}
                         onClick={() =>
                           openSellWindow({
                             id: stock._id,
@@ -281,8 +180,7 @@ const Positions = () => {
                   </td>
                   <td className={stock.dayChange < 0 ? "loss" : "profit"}>
                     {stock.dayChange >= 0 ? "+" : ""}
-                    {stock.dayChange.toFixed(2)} (
-                    {stock.dayChangePercent >= 0 ? "+" : ""}
+                    {stock.dayChange.toFixed(2)} ({stock.dayChangePercent >= 0 ? "+" : ""}
                     {stock.dayChangePercent.toFixed(2)}%)
                   </td>
                 </tr>

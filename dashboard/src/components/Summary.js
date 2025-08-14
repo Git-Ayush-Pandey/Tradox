@@ -2,7 +2,7 @@ import { useContext, useEffect } from "react";
 import GeneralContext from "../contexts/GeneralContext";
 
 const Summary = () => {
-  const { user, holdings, positions, loading, showAlert } =
+  const { user, holdings, positions, loading } =
     useContext(GeneralContext);
 
   const formatINR = (val) =>
@@ -38,7 +38,6 @@ const Summary = () => {
     positions.length,
     holdingsPL.pnl,
     positionsPL.pnl,
-    showAlert,
   ]);
 
   if (loading)

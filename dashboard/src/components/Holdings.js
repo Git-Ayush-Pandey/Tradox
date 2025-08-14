@@ -1,129 +1,42 @@
 import { useState, useEffect, useContext, useMemo, useRef } from "react";
-import { fetchHoldings, getQuote } from "../hooks/api";
-import GeneralContext from "../contexts/GeneralContext";
+import { getQuote } from "../hooks/api";
+import GeneralContext, { enrichHolding } from "../contexts/GeneralContext";
 import { isMarketOpen } from "../hooks/isMarketOpen";
 import { useLivePriceContext } from "../contexts/LivePriceContext";
 import InvestmentBarChart from "./ChartJs/InvestmentBarChart";
-
-const enrichHolding = (item, price, basePrice) => {
-  const currentValue = price * item.qty;
-  const investment = item.avg * item.qty;
-
-  const boughtDate = new Date(item.boughtday);
-const today = new Date();
-const boughtToday =
-  boughtDate.getFullYear() === today.getFullYear() &&
-  boughtDate.getMonth() === today.getMonth() &&
-  boughtDate.getDate() === today.getDate();
-
-  let refPrice = boughtToday ? item.avg : basePrice;
-  const dayChange = (price - refPrice) * item.qty;
-  const dayChangePercent = ((price - refPrice) / refPrice) * 100;
-  const totalChange = price - item.avg;
-  const totalChangePercent = (totalChange / item.avg) * 100;
-
-  return {
-    ...item,
-    price,
-    basePrice,
-    boughtToday,
-    dayChange,
-    dayChangePercent,
-    totalChange,
-    totalChangePercent,
-    isLoss: currentValue < investment,
-  };
-};
 
 const Holdings = () => {
   const {
     holdings: allHoldings,
     setHoldings: setAllHoldings,
+    openSellWindow,
     showAlert,
+    loading: appLoading,
   } = useContext(GeneralContext);
+
   const [hoveredRow, setHoveredRow] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(null);
-  const generalContext = useContext(GeneralContext);
-  const { livePrices, subscribe, unsubscribe, updateSymbols } =
-    useLivePriceContext();
+
+  const { livePrices, subscribe, unsubscribe } = useLivePriceContext();
   const marketOpen = useMemo(() => isMarketOpen(), []);
-  const componentId = useRef(
-    "holdings-" + Math.random().toString(36).slice(2)
-  ).current;
+  const componentId = useRef("holdings-" + Math.random().toString(36).slice(2)).current;
 
+  // Subscribe to live prices when market is open and we have holdings
   useEffect(() => {
-    let mounted = true;
-    const fetchWithQuotes = async () => {
-      try {
-        setLoading(true);
-        const res = await fetchHoldings();
-        const rawHoldings = res.data;
-
-        const priceResults = await Promise.all(
-          rawHoldings.map(async (item, idx) => {
-            try {
-              // small stagger to avoid API burst
-              await new Promise((r) => setTimeout(r, idx * 80));
-              const quote = await getQuote(item.name);
-              return {
-                symbol: item.name,
-                price: quote.data?.c ?? item.avg,
-                basePrice: quote.data?.pc ?? item.avg,
-              };
-            } catch {
-              return {
-                symbol: item.name,
-                price: item.avg,
-                basePrice: item.avg,
-              };
-            }
-          })
-        );
-
-        const enriched = rawHoldings.map((item) => {
-          const pricing = priceResults.find((p) => p.symbol === item.name);
-          return enrichHolding(
-            item,
-            pricing?.price ?? item.avg,
-            pricing?.basePrice ?? item.avg
-          );
-        });
-
-        if (!mounted) return;
-        setAllHoldings(enriched);
-        setLastUpdate(new Date());
-
-        // subscribe if market open
-        if (marketOpen && enriched.length > 0) {
-          const symsUpper = [
-            ...new Set(enriched.map((i) => i.name.toUpperCase())),
-          ];
-          // prefer subscribe if available
-          if (subscribe) subscribe(componentId, symsUpper);
-          if (typeof updateSymbols === "function") updateSymbols(symsUpper);
-        }
-      } catch (err) {
-        console.error("Error fetching holdings:", err);
-        showAlert("error", "Failed to fetch holdings.");
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-
-    fetchWithQuotes();
+    if (!marketOpen || !allHoldings || allHoldings.length === 0) return;
+    const symsUpper = [...new Set(allHoldings.map((i) => i.name.toUpperCase()))];
+    subscribe?.(componentId, symsUpper);
     return () => {
-      mounted = false;
+      unsubscribe?.(componentId);
     };
-    // eslint-disable-next-line
-  }, [setAllHoldings]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [marketOpen, allHoldings]);
 
+  // Live updates while market open
   useEffect(() => {
     if (!marketOpen) return;
-
     setAllHoldings((prev) =>
       prev.map((item) => {
-        // try different key shapes to be robust
         const live =
           livePrices[item.name] ??
           livePrices[item.name?.toUpperCase?.()] ??
@@ -133,14 +46,15 @@ const Holdings = () => {
       })
     );
     setLastUpdate(new Date());
-    // eslint-disable-next-line
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [livePrices, marketOpen]);
 
+  // Closed-market polling (refresh c/pc periodically)
   useEffect(() => {
     if (marketOpen) return;
     if (!allHoldings || allHoldings.length === 0) return;
-    let mounted = true;
 
+    let mounted = true;
     const fetchClosedPrices = async () => {
       try {
         const results = await Promise.all(
@@ -169,44 +83,31 @@ const Holdings = () => {
           prev.map((h) => {
             const updated = results.find((r) => r.symbol === h.name);
             if (!updated) return h;
-            // keep existing fields but update price/basePrice and recompute via enrichHolding
             return enrichHolding(h, updated.price, updated.basePrice);
           })
         );
         setLastUpdate(new Date());
       } catch (err) {
         console.error("Closed-market price refresh failed", err);
+        showAlert("error", "Failed to refresh prices.");
       }
     };
 
-    // initial closed-market refresh
     fetchClosedPrices();
     const id = setInterval(fetchClosedPrices, 60000);
     return () => {
       mounted = false;
       clearInterval(id);
     };
-    // eslint-disable-next-line
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [marketOpen]);
-  useEffect(() => {
-    return () => {
-      if (unsubscribe) unsubscribe(componentId);
-    };
-    // eslint-disable-next-line
-  }, []);
-  const totalInvestment = allHoldings.reduce(
-    (acc, stock) => acc + stock.avg * stock.qty,
-    0
-  );
-  const totalCurrentValue = allHoldings.reduce(
-    (acc, stock) => acc + stock.price * stock.qty,
-    0
-  );
-  const totalProfitLoss = totalCurrentValue - totalInvestment;
-  const totalPLPercent =
-    totalInvestment === 0 ? 0 : (totalProfitLoss / totalInvestment) * 100;
 
-  if (loading) return <div>Loading...</div>;
+  const totalInvestment = allHoldings.reduce((acc, s) => acc + s.avg * s.qty, 0);
+  const totalCurrentValue = allHoldings.reduce((acc, s) => acc + s.price * s.qty, 0);
+  const totalProfitLoss = totalCurrentValue - totalInvestment;
+  const totalPLPercent = totalInvestment === 0 ? 0 : (totalProfitLoss / totalInvestment) * 100;
+
+  if (appLoading) return <div>Loading...</div>;
 
   if (allHoldings.length === 0)
     return (
@@ -215,14 +116,13 @@ const Holdings = () => {
         <p className="mt-5">No open holdings found.</p>
       </div>
     );
+
   return (
     <div className="orders">
       <div className="market-status">
         <span>
           {marketOpen ? (
-            <span style={{ color: "#4caf50" }}>
-              🟢 Market Open - Live Prices
-            </span>
+            <span style={{ color: "#4caf50" }}>🟢 Market Open - Live Prices</span>
           ) : (
             <span>⚫ Market Closed - Latest Prices</span>
           )}
@@ -268,10 +168,8 @@ const Holdings = () => {
                       <span>{stock.name}</span>
                       <div className="d-flex ms-2">
                         <button
-                          className={`btn btn-danger btn-sm me-2 ${
-                            hoveredRow === index ? "" : "invisible"
-                          }`}
-                          onClick={() => generalContext.openSellWindow(stock)}
+                          className={`btn btn-danger btn-sm me-2 ${hoveredRow === index ? "" : "invisible"}`}
+                          onClick={() => openSellWindow(stock)}
                         >
                           SELL
                         </button>
@@ -289,11 +187,9 @@ const Holdings = () => {
                   <td className={stock.isLoss ? "loss" : "profit"}>
                     {(currentValue - stock.avg * stock.qty).toFixed(2)}
                   </td>
-
                   <td className={stock.dayChange < 0 ? "loss" : "profit"}>
                     {stock.dayChange >= 0 ? "+" : ""}
-                    {stock.dayChange.toFixed(2)} (
-                    {stock.dayChangePercent >= 0 ? "+" : ""}
+                    {stock.dayChange.toFixed(2)} ({stock.dayChangePercent >= 0 ? "+" : ""}
                     {stock.dayChangePercent.toFixed(2)}%)
                   </td>
                 </tr>
@@ -317,9 +213,7 @@ const Holdings = () => {
           </h5>
         </div>
         <div className="col">
-          <h5
-            className={totalCurrentValue < totalInvestment ? "loss" : "profit"}
-          >
+          <h5 className={totalCurrentValue < totalInvestment ? "loss" : "profit"}>
             ${totalProfitLoss.toFixed(2)} ({totalPLPercent.toFixed(2)}%)
             <br />
             <span>P&L</span>
