@@ -1,14 +1,13 @@
 import { useState, useEffect, useRef, useContext, useMemo } from "react";
 import {
   FetchOrders,
+  executeOrder,
   getQuote,
   cancelOrder,
-  deleteOrder,
 } from "../hooks/api";
 import GeneralContext from "../contexts/GeneralContext";
 import { isMarketOpen } from "../hooks/isMarketOpen";
 import { useLivePriceContext } from "../contexts/LivePriceContext";
-import { OrdersContext } from "../contexts/OrdersContext";
 
 const enrichOrder = (order, livePrice, basePrice) => {
   return {
@@ -17,53 +16,29 @@ const enrichOrder = (order, livePrice, basePrice) => {
     basePrice,
   };
 };
-const isNotSameDate = (date1) => {
-  const date2 = new Date(); // current date/time
-
-  const diffMs = Math.abs(date2 - new Date(date1)); // difference in ms
-  const diffHours = diffMs / (1000 * 60 * 60); // convert to hours
-
-  return diffHours > 17;
-};
 
 const Orders = () => {
-  const { orders: allOrders, setOrders: setAllOrders } =
-    useContext(OrdersContext);
+  const [allOrders, setAllOrders] = useState([]);
   const [hoveredRow, setHoveredRow] = useState(null);
   const [loading, setLoading] = useState(true);
+  const executingRef = useRef(new Set());
 
   const { openBuyWindow, openSellWindow, showAlert } =
     useContext(GeneralContext);
-  const { livePrices, subscribe, unsubscribe, updateSymbols } =
-    useLivePriceContext();
+  const { livePrices, subscribe, unsubscribe, updateSymbols } = useLivePriceContext();
 
   const symbols = useMemo(
     () => [...new Set(allOrders.map((o) => o.name))],
     [allOrders]
   );
   const marketOpen = useMemo(() => isMarketOpen(), []);
-  const componentId = useRef(
-    "orders-" + Math.random().toString(36).slice(2)
-  ).current;
+  const componentId = useRef("orders-" + Math.random().toString(36).slice(2)).current;
 
   useEffect(() => {
     const loadOrders = async () => {
       try {
         setLoading(true);
         const res = await FetchOrders();
-
-        if (!marketOpen) {
-          const toCancel = res.data.filter((o) => !o.executed && !o.cancelled);
-          await Promise.all(toCancel.map((o) => cancelOrder(o._id)));
-        }
-        const expiredOrders = res.data.filter((o) => isNotSameDate(o.placedAt));
-        if (expiredOrders.length > 0) {
-          await Promise.all(expiredOrders.map((o) => deleteOrder(o._id)));
-          showAlert(
-            "warning",
-            `${expiredOrders.length} expired orders auto-deleted                                                                                .`
-          );
-        }
 
         const rawOrders = res.data;
         const priceResults = await Promise.all(
@@ -130,7 +105,6 @@ const Orders = () => {
         return enrichOrder(order, live, order.basePrice);
       })
     );
-     // eslint-disable-next-line
   }, [livePrices, marketOpen]);
 
   // If market open, ensure we subscribe to symbol list when it changes
@@ -191,7 +165,7 @@ const Orders = () => {
       mounted = false;
       clearInterval(id);
     };
-     // eslint-disable-next-line
+    // eslint-disable-next-line 
   }, [marketOpen]);
 
   // cleanup on unmount
@@ -201,6 +175,43 @@ const Orders = () => {
     };
     // eslint-disable-next-line
   }, []);
+    useEffect(() => {
+    if (!marketOpen) return;
+
+    const executeMatchingOrders = async () => {
+      for (const order of allOrders) {
+        if (order.executed) {
+          continue;
+        }
+        if (executingRef.current.has(order._id)) continue;
+
+        const price = livePrices[order.name];
+        if (!price) continue;
+
+        const match =
+          (order.mode === "BUY" && price <= order.price) ||
+          (order.mode === "SELL" && price >= order.price);
+
+        if (!match) continue;
+
+        executingRef.current.add(order._id);
+        try {
+          const res = await executeOrder(order._id);
+          setAllOrders((prev) =>
+            prev.map((o) => (o._id === order._id ? res.data.order : o))
+          );
+          showAlert("success", `Order for ${order.name} executed.`);
+        } catch (err) {
+          console.error(`Failed to execute order ${order._id}`, err);
+        } finally {
+          executingRef.current.delete(order._id);
+        }
+      }
+    };
+
+    executeMatchingOrders();
+    // eslint-disable-next-line
+  }, [livePrices, allOrders, marketOpen]);
 
   const handleCancel = async (id) => {
     try {
