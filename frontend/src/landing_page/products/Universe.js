@@ -9,7 +9,7 @@ function Universe() {
         </p>
 
         <div className="col-4 p-3 mt-5">
-          <img src="media/images/tradoxFundhouse.png" alt="img"/>
+          <img src="media/images/tradoxFundhouse.png" alt="img" />
           <p className="text-muted">
             Our asset management venture that is creating simple and transparent
             index funds to help you save for your goals.

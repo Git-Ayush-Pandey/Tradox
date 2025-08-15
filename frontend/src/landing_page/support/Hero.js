@@ -1,25 +1,25 @@
 import { useState } from "react";
 
 function Hero() {
-
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
       console.log("Searching for:", searchQuery);
     }
-    setSearchQuery("")
+    setSearchQuery("");
   };
 
   return (
-    <section className="container-fluid" id="supportHero">
-      <div className="p-5" id="supportWrapper">
-        <h4>Support Portal</h4>
-        <a href="link">Track Tickets</a>
-      </div>
+    <section
+      className="container-fluid"
+      style={{ paddingTop: "50px", height: "400px" }}
+      id="supportHero"
+    >
       <div className="row">
-        <div className="col-7 p-3">
-          <h1 className="fs-3">
+        <div className="col-7">
+          <h4>Support Portal</h4>
+          <h1 className="fs-3 mt-5">
             Search for an answer or browse help topics to create a ticket
           </h1>
 
@@ -30,7 +30,7 @@ function Hero() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="form-control"
-              style={{ paddingRight: "40px" }} 
+              style={{ paddingRight: "40px" }}
             />
             <span
               onClick={handleSearch}
@@ -41,14 +41,14 @@ function Hero() {
                 transform: "translateY(-50%)",
                 cursor: "pointer",
                 color: "#007bff",
-                fontSize: "18px"
+                fontSize: "18px",
               }}
             >
               🔍
             </span>
           </div>
 
-          <div className="d-flex flex-wrap gap-3">
+          <div className="d-flex flex-wrap gap-.5">
             <p>
               <a href="link">Track account opening</a>
             </p>
@@ -63,8 +63,10 @@ function Hero() {
             </p>
           </div>
         </div>
-        <div className="col-5 p-3">
-          <h1 className="fs-3">Featured</h1>
+
+        <div className="col-5">
+          <a href="link">Track Tickets</a>
+          <h1 className="fs-3 mt-5">Featured</h1>
           <ol>
             <li>
               <a href="link">

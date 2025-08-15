@@ -43,11 +43,11 @@ const Login = () => {
           window.location.href = "http://localhost:3000/";
         }, 1000);
       } else {
-        handleError(message); // show invalid email/password
+        handleError(message);
       }
     } catch (error) {
       const errorMsg = error.response?.data?.message || "Something went wrong";
-      handleError(errorMsg); // 🧨 show toast for server/network errors too
+      handleError(errorMsg);
       console.error("Login error:", error);
     }
 
@@ -101,6 +101,7 @@ const Login = () => {
             <button type="submit" className="btn btn-primary w-100">
               Login
             </button>
+            <br />
             <span className="text-muted">
               Don't have an account?{" "}
               <Link to={"/signup"} className="blue-link">

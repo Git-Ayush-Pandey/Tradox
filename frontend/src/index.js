@@ -1,6 +1,7 @@
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "./index.css";
+import "./responsiveness.css";
 import HomePage from "./landing_page/home/HomePage";
 import Signup from "./landing_page/signup/Signup";
 import AboutPage from "./landing_page/about/AboutPage";
@@ -17,8 +18,8 @@ import { ToastContainer } from "react-toastify";
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <BrowserRouter>
-    <Navbar/>
-     <ToastContainer/>
+    <Navbar />
+    <ToastContainer />
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/about" element={<AboutPage />} />

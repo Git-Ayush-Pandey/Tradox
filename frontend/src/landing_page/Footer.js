@@ -1,37 +1,44 @@
 function Footer() {
   return (
-    <footer className="footer " style={{ backgroundColor: "rgb(250,250,250)" }}>
-      <div className="container border-top mt-5">
-        <div className="row mt-5 text-muted">
-          <div className="col-3 mr-5">
-            <img
-              className="mb-3"
-              src="media/images/logo.png"
-              alt="Company logo"
-              style={{ width: "50%" }}
-            />
-            <p style={{ lineHeight: "20px", fontSize: "13px" }}>
-              &copy; 2010 - 2024, Not Tradox Broking Ltd.
-              <br />
-              All rights reserved.
-            </p>
-            <a href="link">
-              <i className="fa fa-instagram" aria-hidden="true"></i>
-              <i className="fa fa-facebook-official" aria-hidden="true"></i>
-              <i className="fa fa-linkedin-square" aria-hidden="true"></i>
-              <i className="fa fa-twitter-square" aria-hidden="true"></i>
-              <hr
-                style={{
-                  border: "none",
-                  borderTop: "1px solid #ccc",
-                  opacity: 0.5,
-                }}
+    <footer
+      className="footer  main-footer"
+      style={{ backgroundColor: "rgb(250,250,250)" }}
+    >
+      <div className="container border-top mt-5 footer-container">
+        <div className="row mt-5 text-muted footer-links">
+          <div className="col-3  mr-5 footer-details">
+            <div className="info">
+              <img
+                className="mb-3"
+                src="media/images/logo.png"
+                alt="Company logo"
+                style={{ width: "120px" }}
               />
+              <p style={{ lineHeight: "20px", fontSize: "13px" }}>
+                &copy; 2010 - 2024, Not Tradox Broking Ltd.
+                <br />
+                All rights reserved.
+              </p>
+            </div>
+            <div className="links">
+              <a href="link">
+                <i className="fa fa-instagram" aria-hidden="true"></i>
+                <i className="fa fa-facebook-official" aria-hidden="true"></i>
+                <i className="fa fa-linkedin-square" aria-hidden="true"></i>
+                <i className="fa fa-twitter-square" aria-hidden="true"></i>
+                <hr
+                  style={{
+                    border: "none",
+                    borderTop: "1px solid #ccc",
+                    opacity: 0.5,
+                  }}
+                />
 
-              <i className="fa fa-youtube-play" aria-hidden="true"></i>
-              <i className="fa fa-whatsapp" aria-hidden="true"></i>
-              <i className="fa fa-telegram" aria-hidden="true"></i>
-            </a>
+                <i className="fa fa-youtube-play" aria-hidden="true"></i>
+                <i className="fa fa-whatsapp" aria-hidden="true"></i>
+                <i className="fa fa-telegram" aria-hidden="true"></i>
+              </a>
+            </div>
           </div>
 
           <div className="col-9 d-flex">
@@ -125,7 +132,7 @@ function Footer() {
         </div>
 
         <div
-          className="mt-5 mb-5"
+          className="mt-5 mb-5 footer-disclaimer"
           style={{
             fontSize: "11px",
             color: "#A0A0A0",
@@ -135,8 +142,8 @@ function Footer() {
             Tradox Broking Ltd.: Member of NSE, BSE​ &​ MCX – SEBI Registration
             no.: INZ000031633 CDSL/NSDL: Depository services through Tradox
             Broking Ltd. – SEBI Registration no.: IN-DP-431-2019 Commodity
-            Trading through Tradox Commodities Pvt. Ltd. MCX: 46025; NSE-50001
-            – SEBI Registration no.: INZ000038238 Registered Address: Tradox
+            Trading through Tradox Commodities Pvt. Ltd. MCX: 46025; NSE-50001 –
+            SEBI Registration no.: INZ000038238 Registered Address: Tradox
             Broking Ltd., #153/154, 4th Cross, Dollars Colony, Opp. Clarence
             Public School, J.P Nagar 4th Phase, Bengaluru - 560078, Karnataka,
             India. For any complaints pertaining to securities broking please

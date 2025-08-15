@@ -22,8 +22,26 @@ exports.sendEmailOTP = async (to, otp) => {
 // Mock SMS sender — logs OTP to console
 const axios = require("axios");
 
-exports.sendSMSOTP = async (phone, otp) => {
+exports.sendSMSOTP = async (phone, otp, url = null) => {
   try {
+    // 1) Template config from env (so you never hardcode again)
+    const templateName = process.env.MSG91_TEMPLATE_NAME || "otptemplate";
+    const languageCode = process.env.MSG91_TEMPLATE_LANG || "en";
+
+    // 2) Phone normalization: keep single leading 91
+    let digits = String(phone || "").replace(/\D/g, "");
+    if (!digits.startsWith("91")) {
+      // if user passed 10 digits, prepend 91
+      if (digits.length === 10) digits = `91${digits}`;
+      else digits = `91${digits}`;
+    }
+
+    // 3) Components: body_1 is mandatory; button_1 only if you pass a URL
+    const components = {
+      body_1: { type: "text", value: otp },
+      ...(url && { button_1: { subtype: "url", type: "text", value: url } }),
+    };
+
     const payload = {
       integrated_number: process.env.MSG91_WHATSAPP_NUMBER,
       content_type: "template",
@@ -31,26 +49,26 @@ exports.sendSMSOTP = async (phone, otp) => {
         messaging_product: "whatsapp",
         type: "template",
         template: {
-          name: "otp_template", // The name of your approved template in MSG91
-          language: {
-            code: "en",
-            policy: "deterministic",
-          },
+          name: templateName,
+          language: { code: languageCode, policy: "deterministic" },
           namespace: process.env.MSG91_NAMESPACE,
           to_and_components: [
             {
-              to: [`91${phone}`], // Prepend country code (assuming Indian numbers)
-              components: {
-                body_1: {
-                  type: "text",
-                  value: otp, // The OTP is passed as the first variable in the template
-                },
-              },
+              to: [digits],
+              components,
             },
           ],
         },
       },
     };
+
+    // Helpful debug so logs always show which template was used
+    console.log("➡️ Sending WhatsApp template", {
+      templateName,
+      languageCode,
+      to: digits,
+      hasButton: !!url,
+    });
 
     const response = await axios.post(
       "https://api.msg91.com/api/v5/whatsapp/whatsapp-outbound-message/bulk/",
@@ -60,17 +78,26 @@ exports.sendSMSOTP = async (phone, otp) => {
           "Content-Type": "application/json",
           authkey: process.env.MSG91_AUTH_KEY,
         },
+        timeout: 10000,
       }
     );
 
-    console.log(`✅ WhatsApp OTP sent to ${phone}:`, response.data);
+    console.log(`✅ OTP ${otp} sent to ${digits}:`, response.data);
   } catch (error) {
-    // Log the detailed error from the API for easier debugging
-    console.error(
-      `❌ Failed to send WhatsApp OTP to ${phone}:`,
-      error.response?.data || error.message
-    );
-    // Re-throw the error so the route handler can manage the response
+    const apiErr = error.response?.data || error.message;
+    console.error("❌ MSG91 send error:", apiErr);
+
+    // Friendly hints for the 3 most common causes
+    if (String(apiErr).toLowerCase().includes("disabled")) {
+      console.error("⚠ The template is disabled. Enable it in MSG91 > WhatsApp > Templates.");
+    }
+    if (String(apiErr).toLowerCase().includes("does not exist")) {
+      console.error("⚠ Template name/language mismatch. Verify name & language exactly as in MSG91.");
+    }
+    if (String(apiErr).toLowerCase().includes("namespace")) {
+      console.error("⚠ Namespace mismatch. Verify the namespace tied to your integrated number.");
+    }
+
     throw error;
   }
 };

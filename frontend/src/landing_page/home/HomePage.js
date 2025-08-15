@@ -7,7 +7,7 @@ import Stats from "./Stats";
 
 function HomePage() {
   return (
-    <div className="main-container" >
+    <div style={{ paddingTop: "50px" }}>
       <Hero />
       <Awards />
       <Stats />

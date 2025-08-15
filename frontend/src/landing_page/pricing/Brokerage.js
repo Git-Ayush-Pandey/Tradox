@@ -2,7 +2,7 @@ function Brokerage() {
   return (
     <div className="container">
       <div id="charges_tabs" class="container py-4">
-        <ul class="nav nav-tabs mb-4" id="chargesTab" role="tablist">
+        <ul className="nav nav-tabs mb-4" id="chargesTab" role="tablist">
           <li class="nav-item" role="presentation">
             <button
               class="nav-link active"
