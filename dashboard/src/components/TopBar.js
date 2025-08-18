@@ -1,10 +1,29 @@
-import { useContext, useMemo, useState } from "react";
+import { useContext, useMemo, useState, useEffect } from "react";
 import Menu from "./Menu";
 import GeneralContext from "../contexts/GeneralContext";
 
-const TopBar = () => {
+const TopBar = ({onWatchlistClick}) => {
   const { openAnalyticsWindow } = useContext(GeneralContext);
   const [showMore, setShowMore] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [visibleSymbols, setVisibleSymbols] = useState([]);
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Update visible symbols whenever windowWidth changes
+  useEffect(() => {
+    if (windowWidth < 768) {
+      setVisibleSymbols([]);
+    } else if (windowWidth < 992) {
+      setVisibleSymbols(["NDX"]);
+    } else {
+      setVisibleSymbols(["DJI", "NDX"]);
+    }
+  }, [windowWidth]);
 
   const indices = useMemo(
     () => ({
@@ -16,40 +35,36 @@ const TopBar = () => {
     []
   );
 
-  const IndexBlock = ({ index, onClick }) => {
-    return (
-      <div
-        onClick={onClick}
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-start",
-          padding: "6px 10px",
-          borderRadius: "8px",
-          backgroundColor: "#f9fafb",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-          marginRight: "16px",
-          cursor: "pointer",
-          transition: "all 0.2s ease-in-out",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = "#eef2f7";
-          e.currentTarget.style.transform = "scale(1.03)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = "#f9fafb";
-          e.currentTarget.style.transform = "scale(1)";
-        }}
-      >
-        <span style={{ fontSize: "0.88rem", fontWeight: "600", color: "#333" }}>
-          {index.name}
-        </span>
-        <div style={{ display: "flex", gap: "8px", fontSize: "0.8rem" }}></div>
-      </div>
-    );
-  };
+  const IndexBlock = ({ index, onClick }) => (
+    <div
+      onClick={onClick}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-start",
+        padding: "6px 10px",
+        borderRadius: "8px",
+        backgroundColor: "#f9fafb",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+        marginRight: "16px",
+        cursor: "pointer",
+        transition: "all 0.2s ease-in-out",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.backgroundColor = "#eef2f7";
+        e.currentTarget.style.transform = "scale(1.03)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.backgroundColor = "#f9fafb";
+        e.currentTarget.style.transform = "scale(1)";
+      }}
+    >
+      <span style={{ fontSize: "0.88rem", fontWeight: "600", color: "#333" }}>
+        {index.name}
+      </span>
+    </div>
+  );
 
-  const visibleSymbols = ["DJI", "NDX"];
   const moreSymbols = Object.keys(indices).filter(
     (key) => !visibleSymbols.includes(indices[key].symbol)
   );
@@ -63,56 +78,86 @@ const TopBar = () => {
         alignItems: "center",
         borderBottom: "1px solid #e0e0e0",
         backgroundColor: "#fff",
-        padding: "10px 20px",
         width: "100%",
       }}
     >
+      {/* Left Section */}
       <div
         style={{
           display: "flex",
           alignItems: "center",
           gap: "10px",
-          flexBasis: "31%",
-          maxWidth: "31%",
+          flexBasis: "32%",
+          maxWidth: "32%",
         }}
       >
+        {/* Visible index blocks */}
+        {visibleSymbols.length === 1 ? (
+          <div
+            style={{
+              flexBasis: "40%",
+              maxWidth: "40%",
+              display: "grid",
+              gridTemplateColumns: "repeat(1, minmax(0, 1fr))",
+              gap: "10px",
+            }}
+          >
+            {visibleSymbols.map((sym) => {
+              const idx = Object.values(indices).find(
+                (item) => item.symbol === sym
+              );
+              return (
+                <IndexBlock
+                  key={sym}
+                  index={idx}
+                  onClick={() =>
+                    openAnalyticsWindow({
+                      name: idx.symbol,
+                      symbol: idx.symbol,
+                      type: "index",
+                    })
+                  }
+                />
+              );
+            })}
+          </div>
+        ) : visibleSymbols.length === 2 ? (
+          <div
+            style={{
+              flexBasis: "80%",
+              maxWidth: "80%",
+              display: "grid",
+              gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+              gap: "10px",
+            }}
+          >
+            {visibleSymbols.map((sym) => {
+              const idx = Object.values(indices).find(
+                (item) => item.symbol === sym
+              );
+              return (
+                <IndexBlock
+                  key={sym}
+                  index={idx}
+                  onClick={() =>
+                    openAnalyticsWindow({
+                      name: idx.symbol,
+                      symbol: idx.symbol,
+                      type: "index",
+                    })
+                  }
+                />
+              );
+            })}
+          </div>
+        ) : null}
+        {/* Dropdown */}
         <div
           style={{
-            flexBasis: "80%",
-            maxWidth: "80%",
-            display: "grid",
-            gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-            gap: "10px",
-          }}
-        >
-          {visibleSymbols.map((sym) => {
-            const idx = Object.values(indices).find(
-              (item) => item.symbol === sym
-            );
-            return (
-              <IndexBlock
-                key={sym}
-                index={idx}
-                onClick={() =>
-                  openAnalyticsWindow({
-                    name: idx.symbol,
-                    symbol: idx.symbol,
-                    type: "index",
-                  })
-                }
-              />
-            );
-          })}
-
-          
-        </div>
-
-        <div
-          style={{
+            justifyContent: "flex-start",
             flexBasis: "20%",
             maxWidth: "20%",
-            display: "flex",
-            position: "relative", // so dropdown positions under this container
+            position: "relative",
           }}
         >
           <button
@@ -128,7 +173,13 @@ const TopBar = () => {
               whiteSpace: "nowrap",
             }}
           >
-            {showMore ? "Less ▲" : "More ▼"}
+            {windowWidth < 768
+              ? showMore
+                ? "Close ▲"
+                : "Market Indexes ▼"
+              : showMore
+              ? "Less ▲"
+              : "More ▼"}
           </button>
 
           {showMore && (
@@ -136,7 +187,7 @@ const TopBar = () => {
               style={{
                 position: "absolute",
                 top: "100%",
-                right: 0,
+                ...(windowWidth < 768 ? { left: 0 } : { right: 0 }),
                 marginTop: "5px",
                 background: "#fff",
                 border: "1px solid #ddd",
@@ -182,9 +233,8 @@ const TopBar = () => {
         </div>
       </div>
 
-      {/* Right section: Menu */}
       <div style={{ flexBasis: "68%", maxWidth: "68%" }}>
-        <Menu />
+        <Menu onWatchlistClick={onWatchlistClick} />
       </div>
     </div>
   );

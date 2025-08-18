@@ -165,8 +165,7 @@ const Funds = () => {
           </div>
         </div>
 
-        {/* Commodity Section */}
-        <div className="col-6">
+        <div className="col-md-6">
           <div className="card shadow-sm rounded-3">
             <div className="card-body">
               <h5 className="card-title d-flex justify-content-between align-items-center mb-4">

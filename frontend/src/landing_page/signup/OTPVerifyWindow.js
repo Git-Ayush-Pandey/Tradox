@@ -76,7 +76,7 @@ const OTPVerifyWindow = ({ open, onClose, type, value, onVerified }) => {
           bgcolor: "background.paper",
           p: 4,
           borderRadius: 2,
-          maxWidth: 400,
+          maxWidth: 450,
           mx: "auto",
           mt: "20vh",
           boxShadow: 24,

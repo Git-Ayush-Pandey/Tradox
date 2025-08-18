@@ -7,14 +7,14 @@ import { LivePriceProvider } from "./contexts/LivePriceContext";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { GeneralContextProvider } from "./contexts/GeneralContext";
 import { OrdersProvider } from "./contexts/OrdersContext";
+import ProtectedRoute from "./routes/ProtectedRoute";
 
-// ✅ Suppress ResizeObserver loop limit exceeded errors
 const resizeObserverErr =
   /ResizeObserver loop completed with undelivered notifications/;
 const originalError = console.error;
 console.error = (...args) => {
   if (args.length > 0 && resizeObserverErr.test(args[0])) {
-    return; // skip logging this specific harmless error
+    return;
   }
   originalError.apply(console, args);
 };
@@ -25,11 +25,13 @@ root.render(
     <GeneralContextProvider>
       <LivePriceProvider>
         <OrdersProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route path="/*" element={<Home />} />
-            </Routes>
-          </BrowserRouter>
+          <ProtectedRoute>
+            <BrowserRouter>
+              <Routes>
+                <Route path="/*" element={<Home />} />
+              </Routes>
+            </BrowserRouter>
+          </ProtectedRoute>
         </OrdersProvider>
       </LivePriceProvider>
     </GeneralContextProvider>

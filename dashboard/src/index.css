@@ -571,6 +571,7 @@ hr {
   align-items: center;
   box-shadow: 0px 0px 4px 2px rgb(236, 235, 235);
   box-sizing: border-box;
+  padding: 10px 20px;
   z-index: 9;
 }
 
@@ -686,8 +687,6 @@ hr {
   opacity: 0.6;
   pointer-events: none;
 }
-
-
 
 /* List Items */
 .list {
@@ -951,4 +950,87 @@ h3 small {
 .analytics-btn,
 .delete-btn {
   padding: 4px;
+}
+/* Mobile styles */
+@media (max-width: 992px) {
+  .dashboard-container {
+    flex-direction: column;
+  }
+  .content{
+    flex-basis: 100%;
+    width: 100%;
+  }
+  .watchlist-container {
+    max-width: 450px;
+    height: 1000px;
+  }
+  .topbar-container {
+    padding: 0;
+  }
+}
+
+@media (max-width: 530px) {
+  .order-table table,
+  .order-table thead,
+  .order-table tbody,
+  .order-table th,
+  .order-table td,
+  .order-table tr {
+    display: block;
+    width: 100%;
+  }
+
+  /* Hide table headers */
+  .order-table thead {
+    display: none;
+  }
+
+  .order-table tr {
+    margin-bottom: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 8px;
+    background: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  }
+
+  .order-table td {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 8px;
+    font-size: 14px;
+    border: none;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .order-table td:last-child {
+    border-bottom: none;
+  }
+
+  /* Add labels (since headers are hidden) */
+  .order-table td:nth-of-type(1)::before { content: "Name"; font-weight: bold; }
+  .order-table td:nth-of-type(2)::before { content: "Qty"; font-weight: bold; }
+  .order-table td:nth-of-type(3)::before { content: "Order Price"; font-weight: bold; }
+  .order-table td:nth-of-type(4)::before { content: "Mode"; font-weight: bold; }
+  .order-table td:nth-of-type(5)::before { content: "Current Price"; font-weight: bold; }
+  .order-table td:nth-of-type(6)::before { content: "Status"; font-weight: bold; }
+
+  .order-table td::before {
+    flex: 1;
+    text-align: left;
+    margin-right: 10px;
+    color: #666;
+  }
+
+  .order-table td span,
+  .order-table td button {
+    flex: 2;
+    text-align: right;
+  }
+
+  /* Buttons inside card */
+  .order-table td .btn {
+    font-size: 12px;
+    padding: 4px 6px;
+  }
 }
