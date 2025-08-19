@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext, useMemo, useRef } from "react";
 import { getQuote } from "../hooks/api";
-import GeneralContext, { enrichPosition } from "../contexts/GeneralContext";
+import GeneralContext, { enrichHoldingsandPositions } from "../contexts/GeneralContext";
 import { isMarketOpen } from "../hooks/isMarketOpen";
 import { useLivePriceContext } from "../contexts/LivePriceContext";
 import InvestmentBarChart from "./ChartJs/InvestmentBarChart";
@@ -41,7 +41,7 @@ const Positions = () => {
           livePrices[item.name?.toUpperCase?.()] ??
           livePrices[item.name?.toLowerCase?.()];
         if (!live) return item;
-        return enrichPosition(item, live, item.basePrice);
+        return enrichHoldingsandPositions(item, live, item.basePrice);
       })
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -81,7 +81,7 @@ const Positions = () => {
           prev.map((p) => {
             const upd = results.find((r) => r.symbol === p.name);
             if (!upd) return p;
-            return enrichPosition(p, upd.price, upd.basePrice);
+            return enrichHoldingsandPositions(p, upd.price, upd.basePrice);
           })
         );
       } catch (err) {

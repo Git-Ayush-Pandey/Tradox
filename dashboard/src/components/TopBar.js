@@ -2,7 +2,7 @@ import { useContext, useMemo, useState, useEffect } from "react";
 import Menu from "./Menu";
 import GeneralContext from "../contexts/GeneralContext";
 
-const TopBar = ({onWatchlistClick}) => {
+const TopBar = ({ onWatchlistClick }) => {
   const { openAnalyticsWindow } = useContext(GeneralContext);
   const [showMore, setShowMore] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
@@ -161,17 +161,8 @@ const TopBar = ({onWatchlistClick}) => {
           }}
         >
           <button
+            className="indexesButton"
             onClick={() => setShowMore((prev) => !prev)}
-            style={{
-              border: "1px solid #ccc",
-              borderRadius: "4px",
-              background: "#f8f8f8",
-              cursor: "pointer",
-              fontSize: "0.75rem",
-              padding: "4px 10px",
-              height: "fit-content",
-              whiteSpace: "nowrap",
-            }}
           >
             {windowWidth < 768
               ? showMore

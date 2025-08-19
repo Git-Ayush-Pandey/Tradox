@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { verifyToken, fetchHoldings, fetchPositions, getQuote } from "../hooks/api";
+import {
+  verifyToken,
+  fetchHoldings,
+  fetchPositions,
+  getQuote,
+  FetchFunds,
+  FetchOrders,
+} from "../hooks/api";
 import BuyActionWindow from "../components/windows/BuyActionWindow";
 import SellActionWindow from "../components/windows/SellActionWindow";
 import AnalyticsWindow from "../components/windows/AnalyticsWindow";
@@ -22,61 +29,20 @@ const GeneralContext = React.createContext({
 });
 
 // Exported so components can reuse (no need to duplicate)
-export const enrichPosition = (item, price, basePrice) => {
+export const enrichHoldingsandPositions = (item, price, basePrice) => {
   const currentValue = price * item.qty;
   const investment = item.avg * item.qty;
 
-  const today = new Date().toISOString().split("T")[0];
-  let boughtToday = false;
+  const boughtDate = new Date(item.boughtday);
+  const today = new Date();
+  const boughtToday =
+    boughtDate.getFullYear() === today.getFullYear() &&
+    boughtDate.getMonth() === today.getMonth() &&
+    boughtDate.getDate() === today.getDate();
 
-  if (item.createdAt) {
-    const date = new Date(item.createdAt);
-    if (!isNaN(date)) {
-      const buyDate = date.toISOString().split("T")[0];
-      boughtToday = buyDate === today;
-    }
-  }
-
-  const ref = boughtToday ? item.avg : basePrice;
-  const dayChange = (price - ref) * item.qty;
-  const dayChangePercent = ((price - ref) / ref) * 100;
-
-  const totalChange = price - item.avg;
-  const totalChangePercent = (totalChange / item.avg) * 100;
-
-  return {
-    ...item,
-    price,
-    basePrice,
-    boughtToday,
-    dayChange,
-    dayChangePercent,
-    totalChange,
-    totalChangePercent,
-    isLoss: currentValue < investment,
-  };
-};
-
-// Exported so components can reuse (no need to duplicate)
-export const enrichHolding = (item, price, basePrice) => {
-  const currentValue = price * item.qty;
-  const investment = item.avg * item.qty;
-
-  const today = new Date().toISOString().split("T")[0];
-  let boughtToday = false;
-
-  if (item.createdAt) {
-    const date = new Date(item.createdAt);
-    if (!isNaN(date)) {
-      const buyDate = date.toISOString().split("T")[0];
-      boughtToday = buyDate === today;
-    }
-  }
-
-  const ref = boughtToday ? item.avg : basePrice;
-  const dayChange = (price - ref) * item.qty;
-  const dayChangePercent = ((price - ref) / ref) * 100;
-
+  let refPrice = boughtToday ? item.avg : basePrice;
+  const dayChange = (price - refPrice) * item.qty;
+  const dayChangePercent = ((price - refPrice) / refPrice) * 100;
   const totalChange = price - item.avg;
   const totalChangePercent = (totalChange / item.avg) * 100;
 
@@ -106,6 +72,7 @@ export const GeneralContextProvider = (props) => {
   const [positions, setPositions] = useState([]);
   const [alert, setAlert] = useState(null);
   const [orders, setOrders] = useState([]);
+  const [funds, setFunds] = useState(null);
 
   const handleOpenBuyWindow = (stock, order = null) => {
     setIsBuyWindowOpen(true);
@@ -166,7 +133,7 @@ export const GeneralContextProvider = (props) => {
     );
     return raw.map((item) => {
       const pricing = priceResults.find((p) => p.symbol === item.name);
-      return enrichHolding(
+      return enrichHoldingsandPositions(
         item,
         pricing?.price ?? item.avg,
         pricing?.basePrice ?? item.avg
@@ -194,12 +161,30 @@ export const GeneralContextProvider = (props) => {
     );
     return raw.map((item) => {
       const match = quotes.find((q) => q.symbol === item.name);
-      return enrichPosition(
+      return enrichHoldingsandPositions(
         item,
         match?.price ?? item.avg,
         match?.basePrice ?? item.avg
       );
     });
+  };
+  const fetchFund = async () => {
+    try {
+      const res = await FetchFunds();
+      console.log(res); // res.data should contain the funds
+      setFunds(res.data); // save the actual funds object
+    } catch (err) {
+      console.error("Failed to refresh Funds:", err);
+      setFunds({ availableMargin: 0 }); // fallback
+    }
+  };
+  const fetchOrder = async () => {
+    try {
+      const res = await FetchOrders();
+      setOrders(res.data || []); // ensure default to empty array
+    } catch (err) {
+      console.error("Failed to refresh Orders:", err);
+    }
   };
 
   const fetchData = useCallback(async () => {
@@ -221,7 +206,7 @@ export const GeneralContextProvider = (props) => {
       .then((res) => {
         if (res.data.status) {
           setUser(res.data.safeUser);
-          fetchData(); // user verified → load data
+          fetchData();
         } else {
           setUser(null);
         }
@@ -240,8 +225,10 @@ export const GeneralContextProvider = (props) => {
         setHoldings,
         positions,
         setPositions,
-        orders,
-        setOrders,
+        funds,
+        fetchOrder,
+        fetchFund,
+        setFunds,
         openBuyWindow: handleOpenBuyWindow,
         closeBuyWindow: handleCloseBuyWindow,
         openSellWindow: handleOpenSellWindow,
@@ -251,6 +238,8 @@ export const GeneralContextProvider = (props) => {
         analyticsStock,
         alert,
         showAlert,
+        orders,
+        setOrders,
       }}
     >
       {props.children}

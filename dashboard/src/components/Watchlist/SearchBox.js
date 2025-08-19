@@ -47,7 +47,6 @@ const SearchBox = ({ currentList, activeList, handleAddStock }) => {
   };
 
   const handleAddToWatchlist = async (stock) => {
-    console.log(stock);
     if (adding || currentList.length >= 25) {
       if (currentList.length >= 25) {
         showAlert?.("warning", "Limit reached. You can only add 25 stocks.");

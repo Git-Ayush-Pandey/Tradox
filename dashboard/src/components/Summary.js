@@ -6,7 +6,7 @@ const Summary = () => {
     useContext(GeneralContext);
 
   const formatINR = (val) =>
-    `${val.toLocaleString("en-IN", { minimumFractionDigits: 2 })} $`;
+    `$${val.toLocaleString("en-IN", { minimumFractionDigits: 2 })} `;
 
   const calculatePL = (list) => {
     const investment = list.reduce(

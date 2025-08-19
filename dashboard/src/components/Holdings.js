@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext, useMemo, useRef } from "react";
 import { getQuote } from "../hooks/api";
-import GeneralContext, { enrichHolding } from "../contexts/GeneralContext";
+import GeneralContext, { enrichHoldingsandPositions } from "../contexts/GeneralContext";
 import { isMarketOpen } from "../hooks/isMarketOpen";
 import { useLivePriceContext } from "../contexts/LivePriceContext";
 import InvestmentBarChart from "./ChartJs/InvestmentBarChart";
@@ -42,7 +42,7 @@ const Holdings = () => {
           livePrices[item.name?.toUpperCase?.()] ??
           livePrices[item.name?.toLowerCase?.()];
         if (!live) return item;
-        return enrichHolding(item, live, item.basePrice ?? item.avg);
+        return enrichHoldingsandPositions(item, live, item.basePrice ?? item.avg);
       })
     );
     setLastUpdate(new Date());
@@ -83,7 +83,7 @@ const Holdings = () => {
           prev.map((h) => {
             const updated = results.find((r) => r.symbol === h.name);
             if (!updated) return h;
-            return enrichHolding(h, updated.price, updated.basePrice);
+            return enrichHoldingsandPositions(h, updated.price, updated.basePrice);
           })
         );
         setLastUpdate(new Date());
