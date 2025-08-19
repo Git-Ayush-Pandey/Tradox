@@ -20,6 +20,12 @@ function Signup() {
       ...inputValue,
       [name]: value,
     });
+    if (name === "email") {
+      setVerified((prev) => ({ ...prev, email: false }));
+    }
+    if (name === "phone") {
+      setVerified((prev) => ({ ...prev, phone: false }));
+    }
   };
   const handleError = (err) =>
     toast.error(err, {
@@ -71,7 +77,7 @@ function Signup() {
     });
   };
   return (
-    <div className="container  mb-5" style={{ paddingTop: "50px" }} >
+    <div className="container  mb-5" style={{ paddingTop: "50px" }}>
       <div className="text-center mt-5  p-3">
         <h1 style={{ color: "#404040" }}>
           Open a free demat and trading account online
