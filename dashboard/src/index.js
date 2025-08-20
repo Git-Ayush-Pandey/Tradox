@@ -11,6 +11,19 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 
 const resizeObserverErr =
   /ResizeObserver loop completed with undelivered notifications/;
+
+window.addEventListener("error", (e) => {
+  if (resizeObserverErr.test(e.message)) {
+    e.stopImmediatePropagation();
+  }
+});
+
+window.addEventListener("unhandledrejection", (e) => {
+  if (resizeObserverErr.test(e.reason?.message || "")) {
+    e.stopImmediatePropagation();
+  }
+});
+
 const originalError = console.error;
 console.error = (...args) => {
   if (args.length > 0 && resizeObserverErr.test(args[0])) {
@@ -18,6 +31,7 @@ console.error = (...args) => {
   }
   originalError.apply(console, args);
 };
+
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
