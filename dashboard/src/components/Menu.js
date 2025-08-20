@@ -21,7 +21,7 @@ const Menu = ({ onWatchlistClick }) => {
       setUser(null);
       showAlert("success", "Logged out successfully.");
       setIsProfileDropdownOpen(false);
-      window.location.replace("http://localhost:3001/signup");
+      window.location.replace(process.env.REACT_APP_LOGOUT_REDIRECT_URL);
     } catch (error) {
       console.error("Logout failed", error);
       showAlert("error", "Logout failed.");

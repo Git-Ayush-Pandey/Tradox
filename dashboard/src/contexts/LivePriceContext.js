@@ -32,15 +32,23 @@ export function LivePriceProvider({ children }) {
     }
 
     const currentSubs = activeWsSubscriptions.current;
-    const toSubscribe = [...allRequiredSymbols].filter((s) => !currentSubs.has(s));
-    const toUnsubscribe = [...currentSubs].filter((s) => !allRequiredSymbols.has(s));
+    const toSubscribe = [...allRequiredSymbols].filter(
+      (s) => !currentSubs.has(s)
+    );
+    const toUnsubscribe = [...currentSubs].filter(
+      (s) => !allRequiredSymbols.has(s)
+    );
 
     if (toSubscribe.length > 0) {
-      toSubscribe.forEach((symbol) => socket.send(JSON.stringify({ type: "subscribe", symbol })));
+      toSubscribe.forEach((symbol) =>
+        socket.send(JSON.stringify({ type: "subscribe", symbol }))
+      );
     }
 
     if (toUnsubscribe.length > 0) {
-      toUnsubscribe.forEach((symbol) => socket.send(JSON.stringify({ type: "unsubscribe", symbol })));
+      toUnsubscribe.forEach((symbol) =>
+        socket.send(JSON.stringify({ type: "unsubscribe", symbol }))
+      );
     }
 
     activeWsSubscriptions.current = allRequiredSymbols;
@@ -50,7 +58,7 @@ export function LivePriceProvider({ children }) {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) return;
 
     try {
-      const socket = new WebSocket("ws://localhost:4000/ws");
+      new WebSocket(process.env.REACT_APP_WEBSOCKET_URL);
       wsRef.current = socket;
 
       socket.onopen = () => {
@@ -99,7 +107,8 @@ export function LivePriceProvider({ children }) {
   useEffect(() => {
     connectWebSocket();
     return () => {
-      if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
+      if (reconnectTimeoutRef.current)
+        clearTimeout(reconnectTimeoutRef.current);
       if (wsRef.current) {
         wsRef.current.close(1000, "Component unmounted");
         console.log("🧹 WebSocket closed on unmount");
@@ -107,18 +116,24 @@ export function LivePriceProvider({ children }) {
     };
   }, [connectWebSocket]);
 
-  const subscribe = useCallback((id, symbols) => {
-    const upperSymbols = new Set(symbols.map((s) => s.toUpperCase()));
-    componentSubscriptionsRef.current.set(id, upperSymbols);
-    updateWebSocketSubscriptions();
-  }, [updateWebSocketSubscriptions]);
-
-  const unsubscribe = useCallback((id) => {
-    if (componentSubscriptionsRef.current.has(id)) {
-      componentSubscriptionsRef.current.delete(id);
+  const subscribe = useCallback(
+    (id, symbols) => {
+      const upperSymbols = new Set(symbols.map((s) => s.toUpperCase()));
+      componentSubscriptionsRef.current.set(id, upperSymbols);
       updateWebSocketSubscriptions();
-    }
-  }, [updateWebSocketSubscriptions]);
+    },
+    [updateWebSocketSubscriptions]
+  );
+
+  const unsubscribe = useCallback(
+    (id) => {
+      if (componentSubscriptionsRef.current.has(id)) {
+        componentSubscriptionsRef.current.delete(id);
+        updateWebSocketSubscriptions();
+      }
+    },
+    [updateWebSocketSubscriptions]
+  );
 
   const value = { livePrices, subscribe, unsubscribe };
 

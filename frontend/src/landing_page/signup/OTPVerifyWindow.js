@@ -13,7 +13,7 @@ const OTPVerifyWindow = ({ open, onClose, type, value, onVerified }) => {
     if (open) {
       sendOtp();
     }
-     // eslint-disable-next-line
+    // eslint-disable-next-line
   }, [open]);
 
   const sendOtp = async () => {
@@ -21,20 +21,22 @@ const OTPVerifyWindow = ({ open, onClose, type, value, onVerified }) => {
 
     setSending(true);
     try {
-      const res = await axios.post("http://localhost:4000/otp/send-otp", {
-        type,
-        value,
-      });
+      const res = await axios.post(
+        `${process.env.REACT_APP_API_BASE_URL}/otp/send-otp`,
+        {
+          type,
+          value,
+        }
+      );
 
       if (res.data.success) {
         toast.success(`${type === "phone" ? "Phone" : "Email"} OTP sent`);
-
       } else {
         throw new Error(res.data.message || "OTP send failed");
       }
     } catch (err) {
       console.error(err);
-      onClose()
+      onClose();
       toast.error(`Failed to send OTP for ${type}`);
     } finally {
       setSending(false);
@@ -46,11 +48,14 @@ const OTPVerifyWindow = ({ open, onClose, type, value, onVerified }) => {
 
     setVerifying(true);
     try {
-      const res = await axios.post("http://localhost:4000/otp/verify-otp", {
-        type,
-        value,
-        otp,
-      });
+      const res = await axios.post(
+        `${process.env.REACT_APP_API_BASE_URL}/otp/verify-otp`,
+        {
+          type,
+          value,
+          otp,
+        }
+      );
 
       if (res.data.success) {
         toast.success(`${type} verified!`);
@@ -88,7 +93,9 @@ const OTPVerifyWindow = ({ open, onClose, type, value, onVerified }) => {
 
         <Typography variant="body2" mb={1}>
           OTP will be sent to:{" "}
-          <strong>{type === "phone" ? `Whattsapp no. +91 ${value}` : value}</strong>
+          <strong>
+            {type === "phone" ? `Whattsapp no. +91 ${value}` : value}
+          </strong>
         </Typography>
 
         <TextField

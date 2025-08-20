@@ -1,5 +1,5 @@
 import axios from "axios";
-const BASE = "http://localhost:4000";
+const BASE = process.env.REACT_APP_API_BASE_URL;
 
 // AUTHENTICATION ROUTES
 

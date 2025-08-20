@@ -16,7 +16,7 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server, path: "/ws" });
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT;
 const MONGO_URL = process.env.MONGO_URL;
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -35,7 +35,8 @@ const apiRouter = require("./routes/apiRouter");
 const fundRoute = require("./routes/fundsRoute");
 const otpRoute = require("./routes/otpRoute");
 
-const allowedOrigins = ["http://localhost:3000", "http://localhost:3001"];
+const allowedOrigins = process.env.ALLOWED_ORIGINS.split(",");
+
 app.use(
   cors({
     origin: function (origin, callback) {

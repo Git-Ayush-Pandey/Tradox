@@ -49,7 +49,7 @@ function Signup() {
     e.preventDefault();
     try {
       const { data } = await axios.post(
-        "http://localhost:4000/auth/signup",
+        `${process.env.REACT_APP_API_BASE_URL}/auth/signup`,
         {
           ...inputValue,
         },
@@ -59,7 +59,7 @@ function Signup() {
       if (success) {
         handleSuccess(message);
         setTimeout(() => {
-          window.location.href = "http://localhost:3000/";
+          window.location.href = process.env.REACT_APP_REDIRECT_URL;
         }, 1000);
       } else {
         handleError(message);
