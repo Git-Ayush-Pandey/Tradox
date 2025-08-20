@@ -7,6 +7,7 @@ import {
   placeOrder,
 } from "../../hooks/api";
 import GeneralContext from "../../contexts/GeneralContext";
+import { OrdersContext } from "../../contexts/OrdersContext";
 import { isMarketOpen } from "../../hooks/isMarketOpen";
 import {
   Dialog,
@@ -25,7 +26,8 @@ const SellActionWindow = ({ uid, existingOrder = null }) => {
   const [stockQuantity, setStockQuantity] = useState(existingOrder?.qty || 1);
   const [stockPrice, setStockPrice] = useState(existingOrder?.price || 0);
   const [orderType, setOrderType] = useState(existingOrder?.type || "Delivery");
-  const { closeSellWindow, user, showAlert } = useContext(GeneralContext);
+  const { closeSellWindow, user, showAlert, refreshFunds } = useContext(GeneralContext);
+  const {refreshOrders} = useContext(OrdersContext)
   const [positions, setPositions] = useState([]);
   const [holdings, setHoldings] = useState([]);
   const [availableQty, setAvailableQty] = useState(0);
@@ -85,6 +87,8 @@ const SellActionWindow = ({ uid, existingOrder = null }) => {
         await placeOrder(payload);
         showAlert("success", "Sell order placed."); // ✅
       }
+       await refreshOrders();
+      await refreshFunds();
       closeSellWindow();
     } catch (err) {
       const message =

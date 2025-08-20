@@ -126,7 +126,7 @@ const Positions = () => {
         </span>
       </div>
       <h3 className="title">Positions ({allPositions.length})</h3>
-      <div className="order-table">
+      <div className="order-table positions-table">
         <table>
           <thead>
             <tr>

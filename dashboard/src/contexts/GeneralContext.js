@@ -5,7 +5,6 @@ import {
   fetchPositions,
   getQuote,
   FetchFunds,
-  FetchOrders,
 } from "../hooks/api";
 import BuyActionWindow from "../components/windows/BuyActionWindow";
 import SellActionWindow from "../components/windows/SellActionWindow";
@@ -178,14 +177,6 @@ export const GeneralContextProvider = (props) => {
       setFunds({ availableMargin: 0 }); // fallback
     }
   };
-  const fetchOrder = async () => {
-    try {
-      const res = await FetchOrders();
-      setOrders(res.data || []); // ensure default to empty array
-    } catch (err) {
-      console.error("Failed to refresh Orders:", err);
-    }
-  };
 
   const fetchData = useCallback(async () => {
     try {
@@ -200,6 +191,19 @@ export const GeneralContextProvider = (props) => {
     }
   }, []);
 
+  const refreshData = async () => {
+    try {
+      const [holdingsEnriched, positionsEnriched] = await Promise.all([
+        fetchHoldingsWithQuotes(),
+        fetchPositionsWithQuotes(),
+      ]);
+      setHoldings(holdingsEnriched || []);
+      setPositions(positionsEnriched || []);
+    } catch (error) {
+      console.error("Failed to fetch holdings or positions", error);
+    }
+  }
+
   useEffect(() => {
     setLoading(true);
     verifyToken()
@@ -207,6 +211,7 @@ export const GeneralContextProvider = (props) => {
         if (res.data.status) {
           setUser(res.data.safeUser);
           fetchData();
+          fetchFund();
         } else {
           setUser(null);
         }
@@ -215,10 +220,23 @@ export const GeneralContextProvider = (props) => {
       .finally(() => setLoading(false));
   }, [fetchData]);
 
+  const refreshFunds = async () => {
+    await fetchFund();
+  };
+  const refreshAll = async () => {
+    try {
+      await Promise.all([fetchData(), fetchFund()]);
+    } catch (err) {
+      console.error("Portfolio refresh failed:", err);
+    }
+  };
+
   return (
     <GeneralContext.Provider
       value={{
         user,
+        refreshAll,
+        refreshFunds,
         setUser,
         loading,
         holdings,
@@ -226,7 +244,7 @@ export const GeneralContextProvider = (props) => {
         positions,
         setPositions,
         funds,
-        fetchOrder,
+        refreshData,
         fetchFund,
         setFunds,
         openBuyWindow: handleOpenBuyWindow,

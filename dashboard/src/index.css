@@ -5,7 +5,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f7f9fc; /* Lighter, cleaner background */
+  background-color: #f7f9fc;
 }
 
 code {
@@ -46,7 +46,7 @@ code {
 .btn {
   text-decoration: none;
   padding: 10px 24px;
-  border-radius: 8px; /* Rounded corners for buttons */
+  border-radius: 8px;
   color: #fff;
   margin: 0 4px;
   border: none;
@@ -54,18 +54,18 @@ code {
   transition: background-color 0.3s ease, transform 0.2s ease;
 }
 .btn:hover {
-  transform: translateY(-2px); /* Subtle lift on hover */
+  transform: translateY(-2px);
 }
 
 .btn-green {
-  background: #28a745; /* A more standard green */
+  background: #28a745;
 }
 .btn-green:hover {
   background: #218838;
 }
 
 .btn-blue {
-  background: #007bff; /* A vibrant, modern blue */
+  background: #007bff;
 }
 .btn-blue:hover {
   background: #0069d9;
@@ -97,7 +97,7 @@ code {
 
 .table {
   border: 1px solid #e9ecef;
-  border-radius: 12px; /* Smoother, larger radius for cards */
+  border-radius: 12px;
   padding: 2rem;
   background-color: #fff;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
@@ -236,7 +236,6 @@ code {
   color: rgb(72, 194, 55);
 }
 
-/* sudo selector */
 .item:hover {
   cursor: pointer;
 }
@@ -407,11 +406,6 @@ hr {
   color: rgb(72, 194, 55);
 }
 
-/* sudo selector */
-.item:hover {
-  cursor: pointer;
-}
-
 .username h6 {
   font-size: 1.5rem;
   font-weight: 400;
@@ -498,7 +492,7 @@ hr {
   display: flex;
   align-items: center;
   background-color: #fff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Softer shadow */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   box-sizing: border-box;
   padding: 10px 20px;
   z-index: 9;
@@ -510,7 +504,6 @@ hr {
   color: rgb(146, 146, 146);
 }
 
-/* Watchlist Container */
 .watchlist-container {
   flex-basis: 32%;
   height: 100%;
@@ -522,7 +515,6 @@ hr {
   border-left: 1px solid #e9ecef;
 }
 
-/* Search Box Wrapper */
 .search-container {
   flex-basis: 32%;
   display: flex;
@@ -538,7 +530,6 @@ hr {
   position: relative;
 }
 
-/* Search Results Dropdown */
 .search-results {
   position: absolute;
   top: 100%;
@@ -549,12 +540,11 @@ hr {
   border: 1px solid #e9ecef;
   background-color: #fff;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-radius: 8px; /* Rounded dropdown */
+  border-radius: 8px;
   z-index: 1000;
   margin-top: 8px;
 }
 
-/* Each Search Result Item */
 .search-item {
   padding: 12px 16px;
   border-bottom: 1px solid #f0f2f5;
@@ -675,7 +665,7 @@ hr {
 }
 
 .loss {
-  color: #d93025 !important; /* Google-style red */
+  color: #d93025 !important;
   font-weight: 600;
   font-size: 1.6rem;
 }
@@ -746,11 +736,11 @@ h3 small {
   color: #f44336;
 }
 .up {
-  color: #28a745; /* Consistent green */
+  color: #28a745;
 }
 
 .down {
-  color: #dc3545; /* Consistent red */
+  color: #dc3545;
 }
 
 .actions-container {
@@ -781,8 +771,8 @@ h3 small {
   width: 100%;
   border-collapse: collapse;
   background-color: #fff;
-  border-radius: 8px; /* Rounded corners for tables */
-  overflow: hidden; /* Ensures radius is applied to corners */
+  border-radius: 8px;
+  overflow: hidden;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
 }
 .order-table th,
@@ -889,13 +879,20 @@ h3 small {
     border-bottom: none;
   }
 
-  /* Add labels (since headers are hidden) */
   .order-table td:nth-of-type(1)::before { content: "Name"; font-weight: bold; }
   .order-table td:nth-of-type(2)::before { content: "Qty"; font-weight: bold; }
   .order-table td:nth-of-type(3)::before { content: "Order Price"; font-weight: bold; }
   .order-table td:nth-of-type(4)::before { content: "Mode"; font-weight: bold; }
   .order-table td:nth-of-type(5)::before { content: "Current Price"; font-weight: bold; }
   .order-table td:nth-of-type(6)::before { content: "Status"; font-weight: bold; }
+
+  .positions-table td:nth-of-type(1)::before { content: "Instrument" !important; }
+  .positions-table td:nth-of-type(2)::before { content: "Qty." !important; }
+  .positions-table td:nth-of-type(3)::before { content: "Avg. cost" !important; }
+  .positions-table td:nth-of-type(4)::before { content: "LTP" !important; }
+  .positions-table td:nth-of-type(5)::before { content: "Cur. val" !important; }
+  .positions-table td:nth-of-type(6)::before { content: "P&L" !important; }
+  .positions-table td:nth-of-type(7)::before { content: "Day chg." !important; }
 
   .order-table td::before {
     flex: 1;
@@ -910,7 +907,6 @@ h3 small {
     text-align: right;
   }
 
-  /* Buttons inside card */
   .order-table td .btn {
     font-size: 12px;
     padding: 4px 6px;

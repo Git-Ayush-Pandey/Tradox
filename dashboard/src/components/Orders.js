@@ -12,19 +12,17 @@ const enrichOrder = (order, livePrice, basePrice) => ({
 });
 
 const Orders = () => {
-  const { orders, setOrders } = useContext(OrdersContext);
   const [displayOrders, setDisplayOrders] = useState([]);
   const [hoveredRow, setHoveredRow] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const { openBuyWindow, openSellWindow, showAlert } = useContext(GeneralContext);
   const { livePrices, subscribe, unsubscribe } = useLivePriceContext();
-
+  const { orders, setOrders } = useContext(OrdersContext);
   const symbols = useMemo(() => [...new Set(orders.map((o) => o.name))], [orders]);
   const marketOpen = useMemo(() => isMarketOpen(), []);
   const componentId = "orders-" + Math.random().toString(36).slice(2);
 
-  // Initial enrichment
   useEffect(() => {
     const enrichInitial = async () => {
       try {

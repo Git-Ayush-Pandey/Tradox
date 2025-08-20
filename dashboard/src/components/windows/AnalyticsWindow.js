@@ -171,11 +171,15 @@ const AnalyticsWindow = ({ stock, onClose }) => {
       <DialogContent>
         <>
           <StockChart symbol={stock.name} />
+          <br />
+          <h5>
+            View stock price charts with data available up to the most recent
+            market closing day.
+          </h5>
 
           {stock.type === "index" ? (
             <Typography variant="body2" sx={{ mt: 2 }}>
-              This is a market index chart. Live price is not available for
-              index. F&O, overview, and news data are not available for indices.
+              F&O, overview, and news data are not available for indices.
             </Typography>
           ) : (
             <>

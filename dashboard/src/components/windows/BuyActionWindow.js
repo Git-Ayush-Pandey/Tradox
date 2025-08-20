@@ -11,8 +11,9 @@ import {
   IconButton,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { editOrder, placeOrder } from "../../hooks/api";
+import { FetchFunds, editOrder, placeOrder } from "../../hooks/api";
 import GeneralContext from "../../contexts/GeneralContext";
+import { OrdersContext } from "../../contexts/OrdersContext";
 import { isMarketOpen } from "../../hooks/isMarketOpen";
 
 const BuyActionWindow = ({ uid, existingOrder = null }) => {
@@ -22,16 +23,24 @@ const BuyActionWindow = ({ uid, existingOrder = null }) => {
   const [orderType, setOrderType] = useState(existingOrder?.type || "Delivery");
   const [marginRequired, setMarginRequired] = useState(0.0);
   const [availableMargin, setAvailableMargin] = useState(null);
-  const { closeBuyWindow, showAlert, fetchOrder, fetchFund, fetchData, funds } =
+  const { closeBuyWindow, showAlert, refreshFunds } =
     useContext(GeneralContext);
+  const { refreshOrders } = useContext(OrdersContext);
 
   useEffect(() => {
     setMarginRequired(stockQuantity * stockPrice);
   }, [stockQuantity, stockPrice]);
 
   useEffect(() => {
-    setAvailableMargin(funds?.availableMargin || 0);
-  }, [funds]);
+    FetchFunds()
+      .then((res) => {
+        setAvailableMargin(res.data.availableMargin || 0);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch margin", err);
+        setAvailableMargin(0);
+      });
+  }, []);
 
   const handleBuyClick = async () => {
     if (!isMarketOpen()) {
@@ -65,7 +74,9 @@ const BuyActionWindow = ({ uid, existingOrder = null }) => {
         await placeOrder(payload);
         showAlert?.("success", "Order placed successfully.");
       }
-      await Promise.all([fetchFund(), fetchOrder(), fetchData()]);
+      await refreshOrders();
+      await refreshFunds();
+
       closeBuyWindow();
     } catch (err) {
       const msg = err?.response?.data?.message || "An error occurred.";
