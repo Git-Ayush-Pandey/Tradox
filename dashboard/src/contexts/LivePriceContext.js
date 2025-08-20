@@ -58,7 +58,7 @@ export function LivePriceProvider({ children }) {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) return;
 
     try {
-      new WebSocket(process.env.REACT_APP_WEBSOCKET_URL);
+       const socket = new WebSocket(process.env.REACT_APP_WEBSOCKET_URL);
       wsRef.current = socket;
 
       socket.onopen = () => {
@@ -81,12 +81,12 @@ export function LivePriceProvider({ children }) {
             }
           }
         } catch (err) {
-          console.error("❌ Invalid message:", event.data, err);
+          console.error("Invalid message:", event.data, err);
         }
       };
 
       socket.onclose = (event) => {
-        console.warn("🔌 WebSocket disconnected", event.code, event.reason);
+        console.warn(" WebSocket disconnected", event.code, event.reason);
         wsRef.current = null;
         if (event.code !== 1000 && retryCountRef.current < MAX_RETRIES) {
           retryCountRef.current++;
@@ -97,10 +97,10 @@ export function LivePriceProvider({ children }) {
       };
 
       socket.onerror = (err) => {
-        console.error("❌ WebSocket error:", err);
+        console.error("WebSocket error:", err);
       };
     } catch (error) {
-      console.error("💥 Failed to setup WebSocket:", error);
+      console.error(" Failed to setup WebSocket:", error);
     }
   }, [updateWebSocketSubscriptions]);
 
@@ -111,7 +111,7 @@ export function LivePriceProvider({ children }) {
         clearTimeout(reconnectTimeoutRef.current);
       if (wsRef.current) {
         wsRef.current.close(1000, "Component unmounted");
-        console.log("🧹 WebSocket closed on unmount");
+        console.log("WebSocket closed on unmount");
       }
     };
   }, [connectWebSocket]);
