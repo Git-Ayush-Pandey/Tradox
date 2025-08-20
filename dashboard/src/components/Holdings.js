@@ -25,7 +25,7 @@ const Holdings = () => {
   useEffect(() => {
     if (!marketOpen || !allHoldings || allHoldings.length === 0) return;
     const symsUpper = [...new Set(allHoldings.map((i) => i.name.toUpperCase()))];
-    subscribe?.(componentId, symsUpper);
+    subscribe?.(componentId, symsUpper)
     return () => {
       unsubscribe?.(componentId);
     };

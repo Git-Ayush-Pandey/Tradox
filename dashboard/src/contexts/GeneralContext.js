@@ -10,6 +10,7 @@ import BuyActionWindow from "../components/windows/BuyActionWindow";
 import SellActionWindow from "../components/windows/SellActionWindow";
 import AnalyticsWindow from "../components/windows/AnalyticsWindow";
 import Alert from "../components/windows/alert";
+import { isMarketOpen } from "../hooks/isMarketOpen";
 
 const GeneralContext = React.createContext({
   user: null,
@@ -27,7 +28,6 @@ const GeneralContext = React.createContext({
   analyticsStock: null,
 });
 
-// Exported so components can reuse (no need to duplicate)
 export const enrichHoldingsandPositions = (item, price, basePrice) => {
   const currentValue = price * item.qty;
   const investment = item.avg * item.qty;
@@ -40,7 +40,11 @@ export const enrichHoldingsandPositions = (item, price, basePrice) => {
     boughtDate.getDate() === today.getDate();
 
   let refPrice = boughtToday ? item.avg : basePrice;
-  const dayChange = (price - refPrice) * item.qty;
+  if (!isMarketOpen() && boughtToday) {
+    refPrice = item.avg;
+  }
+  console.log(item.avg, basePrice, price);
+  let dayChange = (price - refPrice) * item.qty;
   const dayChangePercent = ((price - refPrice) / refPrice) * 100;
   const totalChange = price - item.avg;
   const totalChangePercent = (totalChange / item.avg) * 100;
@@ -170,7 +174,6 @@ export const GeneralContextProvider = (props) => {
   const fetchFund = async () => {
     try {
       const res = await FetchFunds();
-      console.log(res); // res.data should contain the funds
       setFunds(res.data); // save the actual funds object
     } catch (err) {
       console.error("Failed to refresh Funds:", err);
@@ -202,7 +205,7 @@ export const GeneralContextProvider = (props) => {
     } catch (error) {
       console.error("Failed to fetch holdings or positions", error);
     }
-  }
+  };
 
   useEffect(() => {
     setLoading(true);

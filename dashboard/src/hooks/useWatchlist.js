@@ -174,68 +174,43 @@ export const useWatchlist = () => {
   };
 
   // Rename watchlist functionality
-  const handleRenameWatchlist = async (oldName, newName) => {
-    if (!newName || newName.trim().length === 0) {
-      return { success: false, message: "Watchlist name cannot be empty" };
+const handleRenameWatchlist = async (oldName, newName) => {
+  const trimmed = newName.trim();
+  if (!trimmed) return { success: false, message: "Watchlist name cannot be empty" };
+  if (trimmed === oldName) return { success: false, message: "New name must be different" };
+  if (watchlists[trimmed]) return { success: false, message: "Watchlist already exists" };
+
+  setLoading(true);
+  setError(null);
+
+  // Optimistic update
+  setWatchlists((prev) => {
+    const updated = { ...prev };
+    updated[trimmed] = prev[oldName];
+    delete updated[oldName];
+    return updated;
+  });
+  if (activeList === oldName) setActiveList(trimmed);
+
+  try {
+    const res = await renameWatchlist(oldName, trimmed);
+    if (res.data?.success) {
+      return { success: true, message: res.data.message };
+    } else {
+      // rollback if failed
+      await loadWatchlists();
+      return { success: false, message: res.data?.message || "Rename failed" };
     }
+  } catch (err) {
+    await loadWatchlists(); // rollback on error
+    const msg = err.response?.data?.message || "Failed to rename watchlist";
+    setError(msg);
+    return { success: false, message: msg };
+  } finally {
+    setLoading(false);
+  }
+};
 
-    if (newName.trim() === oldName) {
-      return { success: false, message: "New name must be different" };
-    }
-
-    if (watchlists[newName.trim()]) {
-      return {
-        success: false,
-        message: "Watchlist with this name already exists",
-      };
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-
-      setWatchlists((prev) => {
-        const updated = { ...prev };
-        updated[newName.trim()] = updated[oldName];
-        delete updated[oldName];
-        return updated;
-      });
-
-      // If the renamed list is active, update activeList too
-      if (activeList === oldName) {
-        setActiveList(newName.trim());
-      }
-      const res = await renameWatchlist(oldName, newName.trim());
-
-      if (res.data?.success) {
-        setWatchlists((prev) => {
-          const updated = { ...prev };
-          updated[newName.trim()] = updated[oldName];
-          delete updated[oldName];
-          return updated;
-        });
-
-        if (activeList === oldName) {
-          setActiveList(newName.trim());
-        }
-        return { success: true, message: res.data.message };
-      } else {
-        return {
-          success: false,
-          message: res.data?.message || "Failed to rename watchlist",
-        };
-      }
-    } catch (error) {
-      const errorMessage =
-        error.response?.data?.message || "Failed to rename watchlist.";
-      setError(errorMessage);
-      console.error("Error renaming watchlist:", error);
-      return { success: false, message: errorMessage };
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const currentList = watchlists[activeList] || [];
   return {
