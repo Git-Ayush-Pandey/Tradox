@@ -41,15 +41,26 @@ export const deleteStock = (id) =>
   axios.delete(`${BASE}/watchlist/delete/${id}`, { withCredentials: true });
 // Add these new exports to your existing api.js
 export const createWatchlist = (listName) =>
-  axios.post(`${BASE}/watchlist/create`, { listName }, { withCredentials: true });
+  axios.post(
+    `${BASE}/watchlist/create`,
+    { listName },
+    { withCredentials: true }
+  );
 
 export const deleteWatchlist = (listName) =>
-  axios.delete(`${BASE}/watchlist/delete-list/${encodeURIComponent(listName)}`, { 
-    withCredentials: true 
-  });
+  axios.delete(
+    `${BASE}/watchlist/delete-list/${encodeURIComponent(listName)}`,
+    {
+      withCredentials: true,
+    }
+  );
 
-  export const renameWatchlist = (oldName, newName) =>
-  axios.put(`${BASE}/watchlist/rename`, { oldName, newName }, { withCredentials: true });
+export const renameWatchlist = (oldName, newName) =>
+  axios.put(
+    `${BASE}/watchlist/rename`,
+    { oldName, newName },
+    { withCredentials: true }
+  );
 
 // HOLDINGS ROUTES
 
@@ -95,7 +106,7 @@ export const editOrder = (id, payload) =>
   axios.put(`${BASE}/orders/edit/${id}`, payload, { withCredentials: true });
 
 export const cancelOrder = (id) =>
-  axios.post(`${BASE}/orders/cancel/${id}`,{}, { withCredentials: true });
+  axios.post(`${BASE}/orders/cancel/${id}`, {}, { withCredentials: true });
 
 // STOCK DATA (FINNHUB / ALPHA VANTAGE)
 

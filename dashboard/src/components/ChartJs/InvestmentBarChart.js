@@ -1,5 +1,3 @@
-// src/chart/PortfolioStackedChart.js
-
 import {
   BarChart,
   Bar,
@@ -34,9 +32,9 @@ const CustomTooltip = ({ active, payload, label }) => {
       }}
     >
       <strong>{label}</strong>
-      <div>Investment: ${(invested.toFixed(2))}</div>
+      <div>Investment: ${invested.toFixed(2)}</div>
       <div style={{ color: pnl >= 0 ? "#2e7d32" : "#c62828" }}>
-        P&L: ${(pnl.toFixed(2))}
+        P&L: ${pnl.toFixed(2)}
       </div>
     </div>
   );
@@ -59,7 +57,10 @@ const PortfolioStackedChart = ({ data, title = "Portfolio Composition" }) => {
       <h4>{title}</h4>
       <div style={{ width: "100%", height: 400 }}>
         <ResponsiveContainer>
-          <BarChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+          <BarChart
+            data={chartData}
+            margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
+          >
             <XAxis dataKey="name" />
             <YAxis tickFormatter={formatCurrency} />
             <Tooltip content={<CustomTooltip />} />
@@ -68,7 +69,7 @@ const PortfolioStackedChart = ({ data, title = "Portfolio Composition" }) => {
               {chartData.map((entry, index) => (
                 <Cell
                   key={`cell-${index}`}
-                  fill={entry.pnl >= 0 ? "#a5d6a7" : "#ef9a9a"} // soft green or red
+                  fill={entry.pnl >= 0 ? "#a5d6a7" : "#ef9a9a"}
                 />
               ))}
             </Bar>

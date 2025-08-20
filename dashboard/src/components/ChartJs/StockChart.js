@@ -6,7 +6,6 @@ const TradingViewChart = ({ symbol }) => {
   useEffect(() => {
     if (!symbol || !containerRef.current) return;
 
-    // Clean up any previous widget
     containerRef.current.innerHTML = "";
 
     const script = document.createElement("script");
@@ -17,11 +16,11 @@ const TradingViewChart = ({ symbol }) => {
         new window.TradingView.widget({
           container_id: "tradingview_widget",
           autosize: true,
-          symbol: symbol, // e.g., "NSE:INFY"
+          symbol: symbol,
           interval: "D",
           timezone: "Etc/UTC",
           theme: "light",
-          style: "1", // 1 = candlestick
+          style: "1",
           locale: "en",
           enable_publishing: false,
           hide_side_toolbar: false,
@@ -33,7 +32,13 @@ const TradingViewChart = ({ symbol }) => {
     containerRef.current.appendChild(script);
   }, [symbol]);
 
-  return <div id="tradingview_widget" ref={containerRef} style={{ height: "500px" }} />;
+  return (
+    <div
+      id="tradingview_widget"
+      ref={containerRef}
+      style={{ height: "500px" }}
+    />
+  );
 };
 
 export default TradingViewChart;

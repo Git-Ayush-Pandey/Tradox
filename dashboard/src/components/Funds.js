@@ -22,7 +22,7 @@ const Funds = () => {
 
   useEffect(() => {
     fetchFunds();
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
   }, []);
 
   if (!fund) return <p>Loading fund data...</p>;
@@ -35,10 +35,10 @@ const Funds = () => {
 
     try {
       if (modalType === "add") {
-         await addFunds({ amount: parseFloat(amount) });
+        await addFunds({ amount: parseFloat(amount) });
         showAlert("success", "Funds added successfully.");
       } else if (modalType === "withdraw") {
-         await withdrawFunds({ amount: parseFloat(amount) });
+        await withdrawFunds({ amount: parseFloat(amount) });
         showAlert("success", "Withdrawal successful.");
       }
       await fetchFunds();
@@ -87,7 +87,6 @@ const Funds = () => {
       </div>
 
       <div className="row g-4 align-items-start">
-        {/* Equity Section */}
         <div className="col-md-6">
           <div className="card shadow-sm rounded-3">
             <div className="card-body">

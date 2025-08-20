@@ -1,4 +1,4 @@
-import  { useState } from "react";
+import { useState } from "react";
 import {
   Box,
   Typography,
@@ -146,7 +146,11 @@ const WatchlistManager = ({
         </Typography>
       </Box>
 
-      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+      >
         <MenuItem onClick={() => handleOpenDialog("rename", menuWatchlistName)}>
           <ListItemIcon>
             <EditIcon fontSize="small" />
@@ -181,7 +185,7 @@ const WatchlistManager = ({
         onRename={async (oldName, newName) => {
           const result = await onRenameWatchlist(oldName, newName);
           if (result?.success) handleCloseDialog();
-          return result
+          return result;
         }}
         onDelete={onDeleteWatchlist}
       />

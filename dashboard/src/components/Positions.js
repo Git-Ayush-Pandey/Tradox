@@ -1,6 +1,8 @@
 import { useState, useEffect, useContext, useMemo, useRef } from "react";
 import { getQuote } from "../hooks/api";
-import GeneralContext, { enrichHoldingsandPositions } from "../contexts/GeneralContext";
+import GeneralContext, {
+  enrichHoldingsandPositions,
+} from "../contexts/GeneralContext";
 import { isMarketOpen } from "../hooks/isMarketOpen";
 import { useLivePriceContext } from "../contexts/LivePriceContext";
 import InvestmentBarChart from "./ChartJs/InvestmentBarChart";
@@ -17,12 +19,15 @@ const Positions = () => {
   const [hoveredRow, setHoveredRow] = useState(null);
   const { livePrices, subscribe, unsubscribe } = useLivePriceContext();
   const marketOpen = useMemo(() => isMarketOpen(), []);
-  const componentId = useRef("positions-" + Math.random().toString(36).slice(2)).current;
+  const componentId = useRef(
+    "positions-" + Math.random().toString(36).slice(2)
+  ).current;
 
-  // Subscribe to live prices when market is open and we have positions
   useEffect(() => {
     if (!marketOpen || !allPositions || allPositions.length === 0) return;
-    const uniqueSymbols = [...new Set(allPositions.map((s) => s.name.toUpperCase()))];
+    const uniqueSymbols = [
+      ...new Set(allPositions.map((s) => s.name.toUpperCase())),
+    ];
     subscribe?.(componentId, uniqueSymbols);
     return () => {
       unsubscribe?.(componentId);
@@ -30,7 +35,6 @@ const Positions = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [marketOpen, allPositions]);
 
-  // live price updates when market open
   useEffect(() => {
     if (!marketOpen) return;
 
@@ -47,7 +51,6 @@ const Positions = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [livePrices, marketOpen]);
 
-  // closed market polling
   useEffect(() => {
     if (marketOpen) return;
     if (!allPositions || allPositions.length === 0) return;
@@ -99,10 +102,14 @@ const Positions = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [marketOpen]);
 
-  const totalPositionValue = allPositions.reduce((acc, s) => acc + s.price * s.qty, 0);
+  const totalPositionValue = allPositions.reduce(
+    (acc, s) => acc + s.price * s.qty,
+    0
+  );
   const totalCost = allPositions.reduce((acc, s) => acc + s.avg * s.qty, 0);
   const totalProfitLoss = totalPositionValue - totalCost;
-  const totalPLPercent = totalCost === 0 ? 0 : (totalProfitLoss / totalCost) * 100;
+  const totalPLPercent =
+    totalCost === 0 ? 0 : (totalProfitLoss / totalCost) * 100;
 
   if (appLoading) return <div>Loading...</div>;
 
@@ -119,7 +126,9 @@ const Positions = () => {
       <div className="market-status">
         <span>
           {marketOpen ? (
-            <span style={{ color: "#4caf50" }}>🟢 Market Open - Live Prices</span>
+            <span style={{ color: "#4caf50" }}>
+              🟢 Market Open - Live Prices
+            </span>
           ) : (
             <span>⚫ Market Closed - Latest Prices</span>
           )}
@@ -155,7 +164,9 @@ const Positions = () => {
                     >
                       <span>{stock.name}</span>
                       <button
-                        className={`btn btn-danger btn-sm ms-2 ${hoveredRow === index ? "" : "invisible"}`}
+                        className={`btn btn-danger btn-sm ms-2 ${
+                          hoveredRow === index ? "" : "invisible"
+                        }`}
                         onClick={() =>
                           openSellWindow({
                             id: stock._id,
@@ -180,7 +191,8 @@ const Positions = () => {
                   </td>
                   <td className={stock.dayChange < 0 ? "loss" : "profit"}>
                     {stock.dayChange >= 0 ? "+" : ""}
-                    {stock.dayChange.toFixed(2)} ({stock.dayChangePercent >= 0 ? "+" : ""}
+                    {stock.dayChange.toFixed(2)} (
+                    {stock.dayChangePercent >= 0 ? "+" : ""}
                     {stock.dayChangePercent.toFixed(2)}%)
                   </td>
                 </tr>

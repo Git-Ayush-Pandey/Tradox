@@ -38,7 +38,7 @@ const SearchBox = ({ currentList, activeList, handleAddStock }) => {
               name: item.symbol || item.displaySymbol || "",
               symbol: item.description || "",
             }))
-            .filter((item) => !item.name.includes(".")); // remove all with suffix
+            .filter((item) => !item.name.includes("."));
 
           setSearchResults(cleaned);
         })

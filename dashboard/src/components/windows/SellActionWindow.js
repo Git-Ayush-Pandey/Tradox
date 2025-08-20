@@ -26,8 +26,9 @@ const SellActionWindow = ({ uid, existingOrder = null }) => {
   const [stockQuantity, setStockQuantity] = useState(existingOrder?.qty || 1);
   const [stockPrice, setStockPrice] = useState(existingOrder?.price || 0);
   const [orderType, setOrderType] = useState(existingOrder?.type || "Delivery");
-  const { closeSellWindow, user, showAlert, refreshFunds } = useContext(GeneralContext);
-  const {refreshOrders} = useContext(OrdersContext)
+  const { closeSellWindow, user, showAlert, refreshFunds } =
+    useContext(GeneralContext);
+  const { refreshOrders } = useContext(OrdersContext);
   const [positions, setPositions] = useState([]);
   const [holdings, setHoldings] = useState([]);
   const [availableQty, setAvailableQty] = useState(0);
@@ -82,19 +83,19 @@ const SellActionWindow = ({ uid, existingOrder = null }) => {
     try {
       if (isEdit) {
         await editOrder(existingOrder._id, payload);
-        showAlert("success", "Order updated successfully."); // ✅
+        showAlert("success", "Order updated successfully.");
       } else {
         await placeOrder(payload);
-        showAlert("success", "Sell order placed."); // ✅
+        showAlert("success", "Sell order placed.");
       }
-       await refreshOrders();
+      await refreshOrders();
       await refreshFunds();
       closeSellWindow();
     } catch (err) {
       const message =
         err.response?.data?.message ||
         "An error occurred while placing the order.";
-      showAlert("error", message); // ✅
+      showAlert("error", message);
       console.error("Sell order error:", err);
     }
   };

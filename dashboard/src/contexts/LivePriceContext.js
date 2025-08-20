@@ -17,19 +17,15 @@ export function LivePriceProvider({ children }) {
   const reconnectTimeoutRef = useRef(null);
   const retryCountRef = useRef(0);
 
-  // NEW: A Map to hold subscriptions from different components { id: Set<symbol> }
   const componentSubscriptionsRef = useRef(new Map());
-  // NEW: A Set to track what the WebSocket is actually subscribed to
   const activeWsSubscriptions = useRef(new Set());
 
-  // NEW: Internal function to update the actual WebSocket subscriptions
   const updateWebSocketSubscriptions = useCallback(() => {
     const socket = wsRef.current;
     if (!socket || socket.readyState !== WebSocket.OPEN) {
       return;
     }
 
-    // Consolidate all symbols from all components into one Set
     const allRequiredSymbols = new Set();
     for (const symbols of componentSubscriptionsRef.current.values()) {
       symbols.forEach((s) => allRequiredSymbols.add(s.toUpperCase()));
@@ -59,7 +55,6 @@ export function LivePriceProvider({ children }) {
 
       socket.onopen = () => {
         retryCountRef.current = 0;
-        // On connect/reconnect, resync all subscriptions
         updateWebSocketSubscriptions();
       };
 
@@ -112,7 +107,6 @@ export function LivePriceProvider({ children }) {
     };
   }, [connectWebSocket]);
 
-  // NEW: Public functions for components to use
   const subscribe = useCallback((id, symbols) => {
     const upperSymbols = new Set(symbols.map((s) => s.toUpperCase()));
     componentSubscriptionsRef.current.set(id, upperSymbols);

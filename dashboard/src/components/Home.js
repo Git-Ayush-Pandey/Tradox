@@ -46,7 +46,6 @@ const Home = () => {
             },
           }}
         >
-          {/* Drawer header so the close button is always clickable */}
           <div
             style={{
               position: "sticky",
@@ -67,7 +66,6 @@ const Home = () => {
             </IconButton>
           </div>
 
-          {/* Body: WatchList will flex to fill */}
           <div style={{ flex: 1, minHeight: 0 }}>
             <WatchList />
           </div>

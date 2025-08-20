@@ -20,7 +20,9 @@ router.post("/new", isLoggedIn, async (req, res) => {
   try {
     const fund = await Fund.findOne({ userId });
     if (!fund) {
-      return res.status(404).json({ success: false, message: "Fund record not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Fund record not found" });
     }
     await updateFundsOnOrderAction(userId, { qty, price, mode }, "place");
     const newOrder = new Order({ userId, name, qty, price, mode, type });
@@ -32,7 +34,9 @@ router.post("/new", isLoggedIn, async (req, res) => {
     });
   } catch (err) {
     console.error("Order creation error:", err);
-    return res.status(500).json({ success: false, message: "Server error while placing order" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Server error while placing order" });
   }
 });
 
@@ -66,19 +70,26 @@ router.post("/execute/:id", isLoggedIn, async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ error: "Order not found" });
-    if (order.executed) return res.status(400).json({ error: "Order already executed" });
+    if (order.executed)
+      return res.status(400).json({ error: "Order already executed" });
 
     const userId = req.user._id;
 
-    // BUY execution
     if (order.mode === "BUY") {
       if (order.type === "Delivery") {
         const existing = await Holding.findOne({ userId, name: order.name });
         if (!existing) {
-          await Holding.create({ name: order.name, qty: order.qty, avg: order.price, price: order.price, userId });
+          await Holding.create({
+            name: order.name,
+            qty: order.qty,
+            avg: order.price,
+            price: order.price,
+            userId,
+          });
         } else {
           const totalQty = existing.qty + order.qty;
-          const totalCost = existing.avg * existing.qty + order.price * order.qty;
+          const totalCost =
+            existing.avg * existing.qty + order.price * order.qty;
           existing.qty = totalQty;
           existing.avg = totalCost / totalQty;
           existing.price = order.price;
@@ -87,10 +98,17 @@ router.post("/execute/:id", isLoggedIn, async (req, res) => {
       } else if (order.type === "Intraday") {
         const existing = await Position.findOne({ userId, name: order.name });
         if (!existing) {
-          await Position.create({ name: order.name, qty: order.qty, avg: order.price, price: order.price, userId });
+          await Position.create({
+            name: order.name,
+            qty: order.qty,
+            avg: order.price,
+            price: order.price,
+            userId,
+          });
         } else {
           const totalQty = existing.qty + order.qty;
-          const totalCost = existing.avg * existing.qty + order.price * order.qty;
+          const totalCost =
+            existing.avg * existing.qty + order.price * order.qty;
           existing.qty = totalQty;
           existing.avg = totalCost / totalQty;
           existing.price = order.price;
@@ -99,10 +117,7 @@ router.post("/execute/:id", isLoggedIn, async (req, res) => {
       }
 
       await updateFundsOnOrderAction(userId, order, "execute");
-    }
-
-    // SELL execution
-    else if (order.mode === "SELL") {
+    } else if (order.mode === "SELL") {
       const collection = order.type === "Delivery" ? Holding : Position;
       const asset = await collection.findOne({ userId, name: order.name });
 
@@ -119,8 +134,11 @@ router.post("/execute/:id", isLoggedIn, async (req, res) => {
         await asset.save();
       }
 
-      // Pass avg price for correct margin release
-      await updateFundsOnOrderAction(userId, { ...order.toObject(), avg: avgBuyPrice }, "execute");
+      await updateFundsOnOrderAction(
+        userId,
+        { ...order.toObject(), avg: avgBuyPrice },
+        "execute"
+      );
     }
 
     order.executed = true;
@@ -140,30 +158,49 @@ router.put("/edit/:id", isLoggedIn, async (req, res) => {
   const userId = req.user._id;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({ success: false, message: "Invalid order ID" });
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid order ID" });
   }
 
   try {
     const order = await Order.findOne({ _id: id, userId });
     if (!order) {
-      return res.status(404).json({ success: false, message: "Order not found or unauthorized" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found or unauthorized" });
     }
     if (order.executed) {
-      return res.status(400).json({ success: false, message: "Cannot edit an already executed order" });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Cannot edit an already executed order",
+        });
     }
 
     await updateFundsOnOrderAction(userId, order, "edit-revert");
-    await updateFundsOnOrderAction(userId, { qty, price, mode: order.mode }, "edit-apply");
+    await updateFundsOnOrderAction(
+      userId,
+      { qty, price, mode: order.mode },
+      "edit-apply"
+    );
 
     order.qty = qty;
     order.price = price;
     order.type = type;
     await order.save();
 
-    return res.json({ success: true, message: "Order updated successfully", order });
+    return res.json({
+      success: true,
+      message: "Order updated successfully",
+      order,
+    });
   } catch (err) {
     console.error("Edit order error:", err);
-    return res.status(500).json({ success: false, message: "Server error while editing order" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Server error while editing order" });
   }
 });
 
@@ -174,8 +211,10 @@ router.post("/cancel/:id", isLoggedIn, async (req, res) => {
   try {
     const order = await Order.findOne({ _id: id, userId });
     if (!order) return res.status(404).json({ error: "Order not found" });
-    if (order.executed) return res.status(400).json({ error: "Order already executed" });
-    if (order.cancelled) return res.status(400).json({ error: "Order already cancelled" });
+    if (order.executed)
+      return res.status(400).json({ error: "Order already executed" });
+    if (order.cancelled)
+      return res.status(400).json({ error: "Order already cancelled" });
 
     order.cancelled = true;
     await order.save();

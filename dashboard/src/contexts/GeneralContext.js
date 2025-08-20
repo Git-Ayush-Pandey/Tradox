@@ -174,10 +174,10 @@ export const GeneralContextProvider = (props) => {
   const fetchFund = async () => {
     try {
       const res = await FetchFunds();
-      setFunds(res.data); // save the actual funds object
+      setFunds(res.data);
     } catch (err) {
       console.error("Failed to refresh Funds:", err);
-      setFunds({ availableMargin: 0 }); // fallback
+      setFunds({ availableMargin: 0 });
     }
   };
 

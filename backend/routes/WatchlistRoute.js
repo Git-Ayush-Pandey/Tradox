@@ -3,116 +3,122 @@ const mongoose = require("mongoose");
 const { Watchlist } = require("../model/WatchlistModel");
 const { isLoggedIn } = require("../middleware");
 
-// GET all watchlists (existing route)
 router.get("/", isLoggedIn, async (req, res) => {
   const userId = req.user._id;
   const all = await Watchlist.find({ userId });
   const grouped = {};
-  
+
   all.forEach((item) => {
     const list = item.listName || "Watchlist 1";
     if (!grouped[list]) grouped[list] = [];
     grouped[list].push(item);
   });
-  
-  // Ensure user always has at least one watchlist
+
   if (Object.keys(grouped).length === 0) {
     grouped["Watchlist 1"] = [];
   }
-  
+
   res.json(grouped);
 });
 
-// POST - Create a new empty watchlist
 router.post("/create", isLoggedIn, async (req, res) => {
   const { listName } = req.body;
   const userId = req.user._id;
 
   if (!listName || listName.trim().length === 0) {
-    return res.status(400).json({ 
-      success: false, 
-      message: "Watchlist name is required" 
+    return res.status(400).json({
+      success: false,
+      message: "Watchlist name is required",
     });
   }
 
   try {
-    // Check if watchlist already exists
-    const existing = await Watchlist.findOne({ userId, listName: listName.trim() });
+    const existing = await Watchlist.findOne({
+      userId,
+      listName: listName.trim(),
+    });
     if (existing) {
-      return res.status(409).json({ 
-        success: false, 
-        message: "Watchlist with this name already exists" 
+      return res.status(409).json({
+        success: false,
+        message: "Watchlist with this name already exists",
       });
     }
 
-    // Create an empty watchlist by checking if any stocks exist with this listName
-    // If not, the watchlist exists conceptually but is empty
-    res.status(201).json({ 
-      success: true, 
+    res.status(201).json({
+      success: true,
       message: `Watchlist '${listName.trim()}' created successfully`,
-      listName: listName.trim()
+      listName: listName.trim(),
     });
-    
   } catch (err) {
     console.error("Error creating watchlist:", err);
-    res.status(500).json({ 
-      success: false, 
-      message: "Server error while creating watchlist" 
+    res.status(500).json({
+      success: false,
+      message: "Server error while creating watchlist",
     });
   }
 });
 
-// DELETE - Remove complete watchlist and all its stocks
 router.delete("/delete-list/:listName", isLoggedIn, async (req, res) => {
   const { listName } = req.params;
   const userId = req.user._id;
 
   if (!listName || listName.trim().length === 0) {
-    return res.status(400).json({ 
-      success: false, 
-      message: "Watchlist name is required" 
+    return res.status(400).json({
+      success: false,
+      message: "Watchlist name is required",
     });
   }
 
   try {
-    // Check if this is the user's only watchlist
     const allUserWatchlists = await Watchlist.find({ userId });
-    const uniqueListNames = [...new Set(allUserWatchlists.map(item => item.listName))];
-    
+    const uniqueListNames = [
+      ...new Set(allUserWatchlists.map((item) => item.listName)),
+    ];
+
     if (uniqueListNames.length <= 1) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Cannot delete your only watchlist" 
+      return res.status(400).json({
+        success: false,
+        message: "Cannot delete your only watchlist",
       });
     }
 
-    // Delete all stocks in this watchlist
-    const deleteResult = await Watchlist.deleteMany({ 
-      userId, 
-      listName: listName.trim() 
+    const deleteResult = await Watchlist.deleteMany({
+      userId,
+      listName: listName.trim(),
     });
 
-    res.status(200).json({ 
-      success: true, 
+    res.status(200).json({
+      success: true,
       message: `Watchlist '${listName.trim()}' deleted successfully`,
-      deletedCount: deleteResult.deletedCount
+      deletedCount: deleteResult.deletedCount,
     });
-    
   } catch (err) {
     console.error("Error deleting watchlist:", err);
-    res.status(500).json({ 
-      success: false, 
-      message: "Server error while deleting watchlist" 
+    res.status(500).json({
+      success: false,
+      message: "Server error while deleting watchlist",
     });
   }
 });
 
-// POST - Add stock to watchlist (existing route enhanced)
 router.post("/add", isLoggedIn, async (req, res) => {
-  const { name, symbol, price, percent, isDown, listName = "Watchlist 1" } = req.body;
+  const {
+    name,
+    symbol,
+    price,
+    percent,
+    isDown,
+    listName = "Watchlist 1",
+  } = req.body;
   const userId = req.user._id;
 
-  if (!name || !symbol || price === undefined || !percent || isDown === undefined) {
+  if (
+    !name ||
+    !symbol ||
+    price === undefined ||
+    !percent ||
+    isDown === undefined
+  ) {
     return res.status(400).json({
       success: false,
       message: "Missing required fields",
@@ -153,20 +159,22 @@ router.post("/add", isLoggedIn, async (req, res) => {
   }
 });
 
-
-
 router.delete("/delete/:id", isLoggedIn, async (req, res) => {
   const { id } = req.params;
   const userId = req.user._id;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({ success: false, message: "Invalid stock ID" });
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid stock ID" });
   }
 
   try {
     const deleted = await Watchlist.findOneAndDelete({ _id: id, userId });
     if (!deleted) {
-      return res.status(404).json({ success: false, message: "Stock not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Stock not found" });
     }
 
     res.status(200).json({ success: true, message: "Stock deleted" });
@@ -175,7 +183,6 @@ router.delete("/delete/:id", isLoggedIn, async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
-// PUT - Rename watchlist
 router.put("/rename", isLoggedIn, async (req, res) => {
   const { oldName, newName } = req.body;
   const userId = req.user._id;
@@ -183,37 +190,40 @@ router.put("/rename", isLoggedIn, async (req, res) => {
   if (!oldName || !newName || !newName.trim()) {
     return res.status(400).json({
       success: false,
-      message: "Old and new watchlist names are required"
+      message: "Old and new watchlist names are required",
     });
   }
 
   if (oldName.trim() === newName.trim()) {
     return res.status(400).json({
       success: false,
-      message: "New name must be different"
+      message: "New name must be different",
     });
   }
 
   try {
-    // Check if old watchlist exists
-    const oldExists = await Watchlist.findOne({ userId, listName: oldName.trim() });
+    const oldExists = await Watchlist.findOne({
+      userId,
+      listName: oldName.trim(),
+    });
     if (!oldExists) {
       return res.status(404).json({
         success: false,
-        message: "Old watchlist not found"
+        message: "Old watchlist not found",
       });
     }
 
-    // Check if new name already exists
-    const newExists = await Watchlist.findOne({ userId, listName: newName.trim() });
+    const newExists = await Watchlist.findOne({
+      userId,
+      listName: newName.trim(),
+    });
     if (newExists) {
       return res.status(409).json({
         success: false,
-        message: "A watchlist with this name already exists"
+        message: "A watchlist with this name already exists",
       });
     }
 
-    // Update all stocks with the old listName to the new name
     const updateResult = await Watchlist.updateMany(
       { userId, listName: oldName.trim() },
       { $set: { listName: newName.trim() } }
@@ -222,16 +232,15 @@ router.put("/rename", isLoggedIn, async (req, res) => {
     res.status(200).json({
       success: true,
       message: `Watchlist renamed from '${oldName}' to '${newName}'`,
-      modifiedCount: updateResult.modifiedCount
+      modifiedCount: updateResult.modifiedCount,
     });
   } catch (err) {
     console.error("Error renaming watchlist:", err);
     res.status(500).json({
       success: false,
-      message: "Server error while renaming watchlist"
+      message: "Server error while renaming watchlist",
     });
   }
 });
-
 
 module.exports = router;

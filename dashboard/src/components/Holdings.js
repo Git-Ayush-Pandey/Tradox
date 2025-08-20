@@ -1,6 +1,8 @@
 import { useState, useEffect, useContext, useMemo, useRef } from "react";
 import { getQuote } from "../hooks/api";
-import GeneralContext, { enrichHoldingsandPositions } from "../contexts/GeneralContext";
+import GeneralContext, {
+  enrichHoldingsandPositions,
+} from "../contexts/GeneralContext";
 import { isMarketOpen } from "../hooks/isMarketOpen";
 import { useLivePriceContext } from "../contexts/LivePriceContext";
 import InvestmentBarChart from "./ChartJs/InvestmentBarChart";
@@ -19,20 +21,22 @@ const Holdings = () => {
 
   const { livePrices, subscribe, unsubscribe } = useLivePriceContext();
   const marketOpen = useMemo(() => isMarketOpen(), []);
-  const componentId = useRef("holdings-" + Math.random().toString(36).slice(2)).current;
+  const componentId = useRef(
+    "holdings-" + Math.random().toString(36).slice(2)
+  ).current;
 
-  // Subscribe to live prices when market is open and we have holdings
   useEffect(() => {
     if (!marketOpen || !allHoldings || allHoldings.length === 0) return;
-    const symsUpper = [...new Set(allHoldings.map((i) => i.name.toUpperCase()))];
-    subscribe?.(componentId, symsUpper)
+    const symsUpper = [
+      ...new Set(allHoldings.map((i) => i.name.toUpperCase())),
+    ];
+    subscribe?.(componentId, symsUpper);
     return () => {
       unsubscribe?.(componentId);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [marketOpen, allHoldings]);
 
-  // Live updates while market open
   useEffect(() => {
     if (!marketOpen) return;
     setAllHoldings((prev) =>
@@ -42,14 +46,17 @@ const Holdings = () => {
           livePrices[item.name?.toUpperCase?.()] ??
           livePrices[item.name?.toLowerCase?.()];
         if (!live) return item;
-        return enrichHoldingsandPositions(item, live, item.basePrice ?? item.avg);
+        return enrichHoldingsandPositions(
+          item,
+          live,
+          item.basePrice ?? item.avg
+        );
       })
     );
     setLastUpdate(new Date());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [livePrices, marketOpen]);
 
-  // Closed-market polling (refresh c/pc periodically)
   useEffect(() => {
     if (marketOpen) return;
     if (!allHoldings || allHoldings.length === 0) return;
@@ -83,7 +90,11 @@ const Holdings = () => {
           prev.map((h) => {
             const updated = results.find((r) => r.symbol === h.name);
             if (!updated) return h;
-            return enrichHoldingsandPositions(h, updated.price, updated.basePrice);
+            return enrichHoldingsandPositions(
+              h,
+              updated.price,
+              updated.basePrice
+            );
           })
         );
         setLastUpdate(new Date());
@@ -102,10 +113,17 @@ const Holdings = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [marketOpen]);
 
-  const totalInvestment = allHoldings.reduce((acc, s) => acc + s.avg * s.qty, 0);
-  const totalCurrentValue = allHoldings.reduce((acc, s) => acc + s.price * s.qty, 0);
+  const totalInvestment = allHoldings.reduce(
+    (acc, s) => acc + s.avg * s.qty,
+    0
+  );
+  const totalCurrentValue = allHoldings.reduce(
+    (acc, s) => acc + s.price * s.qty,
+    0
+  );
   const totalProfitLoss = totalCurrentValue - totalInvestment;
-  const totalPLPercent = totalInvestment === 0 ? 0 : (totalProfitLoss / totalInvestment) * 100;
+  const totalPLPercent =
+    totalInvestment === 0 ? 0 : (totalProfitLoss / totalInvestment) * 100;
 
   if (appLoading) return <div>Loading...</div>;
 
@@ -122,7 +140,9 @@ const Holdings = () => {
       <div className="market-status">
         <span>
           {marketOpen ? (
-            <span style={{ color: "#4caf50" }}>🟢 Market Open - Live Prices</span>
+            <span style={{ color: "#4caf50" }}>
+              🟢 Market Open - Live Prices
+            </span>
           ) : (
             <span>⚫ Market Closed - Latest Prices</span>
           )}
@@ -168,7 +188,9 @@ const Holdings = () => {
                       <span>{stock.name}</span>
                       <div className="d-flex ms-2">
                         <button
-                          className={`btn btn-danger btn-sm me-2 ${hoveredRow === index ? "" : "invisible"}`}
+                          className={`btn btn-danger btn-sm me-2 ${
+                            hoveredRow === index ? "" : "invisible"
+                          }`}
                           onClick={() => openSellWindow(stock)}
                         >
                           SELL
@@ -189,7 +211,8 @@ const Holdings = () => {
                   </td>
                   <td className={stock.dayChange < 0 ? "loss" : "profit"}>
                     {stock.dayChange >= 0 ? "+" : ""}
-                    {stock.dayChange.toFixed(2)} ({stock.dayChangePercent >= 0 ? "+" : ""}
+                    {stock.dayChange.toFixed(2)} (
+                    {stock.dayChangePercent >= 0 ? "+" : ""}
                     {stock.dayChangePercent.toFixed(2)}%)
                   </td>
                 </tr>
@@ -213,7 +236,9 @@ const Holdings = () => {
           </h5>
         </div>
         <div className="col">
-          <h5 className={totalCurrentValue < totalInvestment ? "loss" : "profit"}>
+          <h5
+            className={totalCurrentValue < totalInvestment ? "loss" : "profit"}
+          >
             ${totalProfitLoss.toFixed(2)} ({totalPLPercent.toFixed(2)}%)
             <br />
             <span>P&L</span>

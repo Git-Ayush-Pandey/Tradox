@@ -6,20 +6,23 @@ import GeneralContext from "../../contexts/GeneralContext";
 const WatchListActions = ({ stock, onDelete }) => {
   const generalContext = useContext(GeneralContext);
   return (
-    <div className="watchlist-actions" style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+    <div
+      className="watchlist-actions"
+      style={{ display: "flex", gap: "4px", alignItems: "center" }}
+    >
       <Tooltip title="Buy" placement="top">
         <Grow in={true} timeout={300}>
-          <button 
+          <button
             className="action-btn buy-btn"
             onClick={() => generalContext.openBuyWindow(stock)}
             style={{
-              background: '#4caf50',
-              color: 'white',
-              border: 'none',
-              padding: '4px 8px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '12px'
+              background: "#4caf50",
+              color: "white",
+              border: "none",
+              padding: "4px 8px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
             }}
           >
             Buy
@@ -29,17 +32,17 @@ const WatchListActions = ({ stock, onDelete }) => {
 
       <Tooltip title="Sell" placement="top">
         <Grow in={true} timeout={400}>
-          <button 
+          <button
             className="action-btn sell-btn"
             onClick={() => generalContext.openSellWindow(stock)}
             style={{
-              background: '#f44336',
-              color: 'white',
-              border: 'none',
-              padding: '4px 8px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '12px'
+              background: "#f44336",
+              color: "white",
+              border: "none",
+              padding: "4px 8px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
             }}
           >
             Sell
@@ -49,10 +52,10 @@ const WatchListActions = ({ stock, onDelete }) => {
 
       <Tooltip title="Analytics" placement="top">
         <Grow in={true} timeout={500}>
-          <IconButton 
+          <IconButton
             size="small"
             onClick={() => generalContext.openAnalyticsWindow(stock)}
-            style={{ padding: '4px' }}
+            style={{ padding: "4px" }}
           >
             <BarChartOutlined fontSize="small" />
           </IconButton>
@@ -61,17 +64,20 @@ const WatchListActions = ({ stock, onDelete }) => {
 
       <Tooltip title="Delete" placement="top">
         <Grow in={true} timeout={600}>
-          <IconButton 
+          <IconButton
             size="small"
             onClick={async () => {
               const result = await onDelete?.();
               if (result?.success) {
-                generalContext.showAlert?.("success", ` ${stock.name} Removed from watchlist.`);
+                generalContext.showAlert?.(
+                  "success",
+                  ` ${stock.name} Removed from watchlist.`
+                );
               } else if (result?.message) {
                 generalContext.showAlert?.("error", result.message);
               }
             }}
-            style={{ padding: '4px' }}
+            style={{ padding: "4px" }}
           >
             <Delete fontSize="small" />
           </IconButton>

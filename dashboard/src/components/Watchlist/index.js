@@ -16,7 +16,6 @@ import { isMarketOpen } from "../../hooks/isMarketOpen";
 import { useLivePriceContext } from "../../contexts/LivePriceContext";
 import GeneralContext from "../../contexts/GeneralContext";
 
-// Helper to enrich stock with live/base price
 const enrichStock = (stock, price, basePrice) => {
   const change = price - basePrice;
   const percent = basePrice ? ((change / basePrice) * 100).toFixed(2) : "0.00";
@@ -48,16 +47,13 @@ const Watchlist = () => {
   } = useWatchlist();
 
   const [pricesFetched, setPricesFetched] = useState(new Set());
-    // NEW: Get subscribe and unsubscribe from the context
-    const { livePrices, subscribe, unsubscribe } = useLivePriceContext();
-    const { showAlert } = useContext(GeneralContext);
+  const { livePrices, subscribe, unsubscribe } = useLivePriceContext();
+  const { showAlert } = useContext(GeneralContext);
 
   const componentId = useRef("watchlist-component").current;
 
   const symbols = useMemo(() => currentList.map((s) => s.name), [currentList]);
   const marketOpen = useMemo(() => isMarketOpen(), []);
-
-  // ✅ Debounced symbol subscription defined at the top level using useRef
 
   const updateWatchlistPrices = useCallback(
     (updatedList) => {
@@ -73,12 +69,11 @@ const Watchlist = () => {
     if (marketOpen && symbols.length > 0) {
       subscribe(componentId, symbols);
     }
-    // CRUCIAL: Cleanup function to unsubscribe when component unmounts or symbols change
     return () => {
       unsubscribe(componentId);
     };
   }, [symbols, marketOpen, subscribe, unsubscribe, componentId]);
-  
+
   useEffect(() => {
     const fetchInitialPrices = async () => {
       if (currentList.length === 0) return;

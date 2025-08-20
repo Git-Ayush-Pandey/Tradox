@@ -13,7 +13,7 @@ const WatchListItem = ({ stock, onDelete }) => {
       <div className="stock-info">
         <div className="stock-name">{stock.symbol}</div>
         <div className="stock-details">
-          <span className="price">$ {(stock.price).toFixed(2)}</span>
+          <span className="price">$ {stock.price.toFixed(2)}</span>
           <span className={`percent ${stock.isDown ? "down" : "up"}`}>
             {stock.percent}
           </span>

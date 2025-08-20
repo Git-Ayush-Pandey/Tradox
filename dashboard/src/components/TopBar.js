@@ -14,7 +14,6 @@ const TopBar = ({ onWatchlistClick }) => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Update visible symbols whenever windowWidth changes
   useEffect(() => {
     if (windowWidth < 768) {
       setVisibleSymbols([]);
@@ -81,7 +80,6 @@ const TopBar = ({ onWatchlistClick }) => {
         width: "100%",
       }}
     >
-      {/* Left Section */}
       <div
         style={{
           display: "flex",
@@ -91,7 +89,6 @@ const TopBar = ({ onWatchlistClick }) => {
           maxWidth: "32%",
         }}
       >
-        {/* Visible index blocks */}
         {visibleSymbols.length === 1 ? (
           <div
             style={{
@@ -151,7 +148,6 @@ const TopBar = ({ onWatchlistClick }) => {
             })}
           </div>
         ) : null}
-        {/* Dropdown */}
         <div
           style={{
             justifyContent: "flex-start",

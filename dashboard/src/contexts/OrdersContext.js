@@ -74,7 +74,7 @@ export function OrdersProvider({ children }) {
   const fetchOrder = async () => {
       try {
         const res = await FetchOrders();
-        setOrders(res.data || []); // ensure default to empty array
+        setOrders(res.data || []);
       } catch (err) {
         console.error("Failed to refresh Orders:", err);
       }

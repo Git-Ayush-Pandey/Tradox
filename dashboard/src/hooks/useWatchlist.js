@@ -14,7 +14,6 @@ export const useWatchlist = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Load watchlists on mount
   useEffect(() => {
     loadWatchlists();
   }, []);
@@ -33,7 +32,6 @@ export const useWatchlist = () => {
     } catch (error) {
       console.error("Error loading watchlists:", error);
       setError("Failed to load watchlists");
-      // Fallback to default watchlist
       setWatchlists({ "Watchlist 1": [] });
       setActiveList("Watchlist 1");
     } finally {
@@ -47,7 +45,6 @@ export const useWatchlist = () => {
     return `Watchlist ${i}`;
   };
 
-  // Enhanced: Create watchlist with backend sync
   const handleCreateNewWatchlist = async (customName = null) => {
     const newName = customName || getNextName();
     setLoading(true);
@@ -57,7 +54,6 @@ export const useWatchlist = () => {
       const response = await createWatchlist(newName);
 
       if (response.data.success) {
-        // Update local state
         setWatchlists((prev) => ({ ...prev, [newName]: [] }));
         setActiveList(newName);
         return { success: true, listName: newName };
@@ -76,7 +72,6 @@ export const useWatchlist = () => {
     }
   };
 
-  // Enhanced: Delete watchlist with backend sync
   const handleDeleteList = async (listName = activeList) => {
     if (Object.keys(watchlists).length <= 1) {
       setError("Cannot delete your only watchlist");
@@ -90,11 +85,9 @@ export const useWatchlist = () => {
       const response = await deleteWatchlist(listName);
 
       if (response.data.success) {
-        // Update local state
         const updated = { ...watchlists };
         delete updated[listName];
 
-        // Switch to next available watchlist if we deleted the active one
         const nextList =
           listName === activeList ? Object.keys(updated)[0] : activeList;
 
@@ -117,14 +110,12 @@ export const useWatchlist = () => {
     }
   };
 
-  // Enhanced: Delete stock with better error handling
   const handleDeleteStock = async (id) => {
     setError(null);
 
     try {
       await deleteStock(id);
 
-      // Update local state
       setWatchlists((prev) => {
         const updatedList = prev[activeList].filter((s) => s._id !== id);
         return { ...prev, [activeList]: updatedList };
@@ -140,7 +131,6 @@ export const useWatchlist = () => {
     }
   };
 
-  // Enhanced: Add stock with better error handling
   const handleAddStock = async (stock) => {
     setError(null);
 
@@ -150,7 +140,6 @@ export const useWatchlist = () => {
       if (res.data?.success) {
         const returnedItem = res.data.item;
 
-        // Update local state
         setWatchlists((prev) => {
           const updatedList = prev[activeList]
             ? [...prev[activeList], returnedItem]
@@ -173,59 +162,58 @@ export const useWatchlist = () => {
     }
   };
 
-  // Rename watchlist functionality
-const handleRenameWatchlist = async (oldName, newName) => {
-  const trimmed = newName.trim();
-  if (!trimmed) return { success: false, message: "Watchlist name cannot be empty" };
-  if (trimmed === oldName) return { success: false, message: "New name must be different" };
-  if (watchlists[trimmed]) return { success: false, message: "Watchlist already exists" };
+  const handleRenameWatchlist = async (oldName, newName) => {
+    const trimmed = newName.trim();
+    if (!trimmed)
+      return { success: false, message: "Watchlist name cannot be empty" };
+    if (trimmed === oldName)
+      return { success: false, message: "New name must be different" };
+    if (watchlists[trimmed])
+      return { success: false, message: "Watchlist already exists" };
 
-  setLoading(true);
-  setError(null);
+    setLoading(true);
+    setError(null);
 
-  // Optimistic update
-  setWatchlists((prev) => {
-    const updated = { ...prev };
-    updated[trimmed] = prev[oldName];
-    delete updated[oldName];
-    return updated;
-  });
-  if (activeList === oldName) setActiveList(trimmed);
+    setWatchlists((prev) => {
+      const updated = { ...prev };
+      updated[trimmed] = prev[oldName];
+      delete updated[oldName];
+      return updated;
+    });
+    if (activeList === oldName) setActiveList(trimmed);
 
-  try {
-    const res = await renameWatchlist(oldName, trimmed);
-    if (res.data?.success) {
-      return { success: true, message: res.data.message };
-    } else {
-      // rollback if failed
+    try {
+      const res = await renameWatchlist(oldName, trimmed);
+      if (res.data?.success) {
+        return { success: true, message: res.data.message };
+      } else {
+        await loadWatchlists();
+        return {
+          success: false,
+          message: res.data?.message || "Rename failed",
+        };
+      }
+    } catch (err) {
       await loadWatchlists();
-      return { success: false, message: res.data?.message || "Rename failed" };
+      const msg = err.response?.data?.message || "Failed to rename watchlist";
+      setError(msg);
+      return { success: false, message: msg };
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    await loadWatchlists(); // rollback on error
-    const msg = err.response?.data?.message || "Failed to rename watchlist";
-    setError(msg);
-    return { success: false, message: msg };
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   const currentList = watchlists[activeList] || [];
   return {
-    // State
     watchlists,
     activeList,
     currentList,
     loading,
     error,
 
-    // Setters
     setWatchlists,
     setActiveList,
 
-    // Actions
     handleCreateNewWatchlist,
     handleDeleteList,
     handleDeleteStock,
@@ -233,7 +221,6 @@ const handleRenameWatchlist = async (oldName, newName) => {
     handleRenameWatchlist,
     loadWatchlists,
 
-    // Utilities
     clearError: () => setError(null),
   };
 };

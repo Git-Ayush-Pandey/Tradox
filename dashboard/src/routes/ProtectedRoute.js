@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { verifyToken } from "../hooks/api";
 
 const ProtectedRoute = ({ children }) => {
-  const [auth, setAuth] = useState(null); 
+  const [auth, setAuth] = useState(null);
 
   useEffect(() => {
     verifyToken()
@@ -16,7 +16,9 @@ const ProtectedRoute = ({ children }) => {
   }, []);
 
   if (auth === null) {
-    return <div style={{ textAlign: "center", marginTop: "50px" }}>Loading...</div>;
+    return (
+      <div style={{ textAlign: "center", marginTop: "50px" }}>Loading...</div>
+    );
   }
 
   if (!auth) {

@@ -33,7 +33,7 @@ async function autoSquareOffIntraday() {
       mode: "SELL",
       type: "Intraday",
       executed: true,
-      executedAt: new Date()
+      executedAt: new Date(),
     });
 
     await order.save();
@@ -42,7 +42,9 @@ async function autoSquareOffIntraday() {
 
     await Position.deleteOne({ _id: pos._id });
 
-    console.log(`🔄 Auto-sold ${qty} of ${pos.name} at ${ltp} for user ${userId}`);
+    console.log(
+      `🔄 Auto-sold ${qty} of ${pos.name} at ${ltp} for user ${userId}`
+    );
   }
 }
 

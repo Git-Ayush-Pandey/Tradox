@@ -10,15 +10,11 @@ router.post("/signup", async (req, res) => {
   try {
     const { email, phone, name, password } = req.body;
 
-    // Create and register the new user
     const newUser = new User({ email, phone, name });
     const registeredUser = await User.register(newUser, password);
 
-    // Initialize Fund with both equity and commodity fields
     const defaultFund = new Fund({
       userId: registeredUser._id,
-
-      // Equity fields
       availableMargin: 0,
       usedMargin: 0,
       availableCash: 0,
@@ -31,7 +27,6 @@ router.post("/signup", async (req, res) => {
       collateralLiquid: 0,
       collateralEquity: 0,
 
-      // Commodity fields
       commodityAvailableMargin: 0,
       commodityUsedMargin: 0,
       commodityAvailableCash: 0,
@@ -45,7 +40,6 @@ router.post("/signup", async (req, res) => {
 
     await defaultFund.save();
 
-    // Issue token
     const token = createSecretToken(registeredUser._id);
     res.cookie("token", token, {
       httpOnly: true,
@@ -53,7 +47,6 @@ router.post("/signup", async (req, res) => {
       secure: false,
     });
 
-    // Respond with safe user info
     const safeUser = {
       id: registeredUser._id,
       name: registeredUser.name,
@@ -69,11 +62,10 @@ router.post("/signup", async (req, res) => {
   } catch (err) {
     res.status(500).json({
       success: false,
-      error: err.message ,
+      error: err.message,
     });
   }
 });
-
 
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;

@@ -8,7 +8,6 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Send OTP via email
 exports.sendEmailOTP = async (to, otp) => {
   const mailOptions = {
     from: `"Tradox Support" <${process.env.EMAIL_USER}>`,
@@ -19,7 +18,6 @@ exports.sendEmailOTP = async (to, otp) => {
   await transporter.sendMail(mailOptions);
 };
 
-// Mock SMS sender — logs OTP to console
 const axios = require("axios");
 
 exports.sendSMSOTP = async (phone, otp) => {
@@ -34,7 +32,7 @@ exports.sendSMSOTP = async (phone, otp) => {
 
     const components = {
       body_1: { type: "text", value: otp },
-      button_1: { subtype: "url", type: "text", value: otp } // always send
+      button_1: { subtype: "url", type: "text", value: otp },
     };
 
     const payload = {
@@ -50,11 +48,11 @@ exports.sendSMSOTP = async (phone, otp) => {
           to_and_components: [
             {
               to: [digits],
-              components
-            }
-          ]
-        }
-      }
+              components,
+            },
+          ],
+        },
+      },
     };
 
     const response = await axios.post(
@@ -69,9 +67,9 @@ exports.sendSMSOTP = async (phone, otp) => {
       }
     );
 
-    console.log(`✅ OTP ${otp} sent to ${digits}:`, response.data);
+    console.log(`OTP ${otp} sent to ${digits}:`, response.data);
   } catch (error) {
-    console.error("❌ MSG91 send error:", error.response?.data || error.message);
+    console.error("MSG91 send error:", error.response?.data || error.message);
     throw error;
   }
 };

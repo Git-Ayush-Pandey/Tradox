@@ -16,10 +16,14 @@ const Orders = () => {
   const [hoveredRow, setHoveredRow] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const { openBuyWindow, openSellWindow, showAlert } = useContext(GeneralContext);
+  const { openBuyWindow, openSellWindow, showAlert } =
+    useContext(GeneralContext);
   const { livePrices, subscribe, unsubscribe } = useLivePriceContext();
   const { orders, setOrders } = useContext(OrdersContext);
-  const symbols = useMemo(() => [...new Set(orders.map((o) => o.name))], [orders]);
+  const symbols = useMemo(
+    () => [...new Set(orders.map((o) => o.name))],
+    [orders]
+  );
   const marketOpen = useMemo(() => isMarketOpen(), []);
   const componentId = "orders-" + Math.random().toString(36).slice(2);
 
@@ -49,14 +53,21 @@ const Orders = () => {
 
         const enriched = orders.map((order) => {
           const found = priceResults.find((p) => p.symbol === order.name);
-          return enrichOrder(order, found?.price ?? order.price, found?.basePrice ?? order.price);
+          return enrichOrder(
+            order,
+            found?.price ?? order.price,
+            found?.basePrice ?? order.price
+          );
         });
 
         enriched.sort((a, b) => new Date(b.placedAt) - new Date(a.placedAt));
         setDisplayOrders(enriched);
 
         if (marketOpen && symbols.length > 0) {
-          subscribe?.(componentId, symbols.map((s) => s.toUpperCase()));
+          subscribe?.(
+            componentId,
+            symbols.map((s) => s.toUpperCase())
+          );
         }
       } catch (err) {
         console.error("Failed to enrich orders:", err);
@@ -75,7 +86,6 @@ const Orders = () => {
     // eslint-disable-next-line
   }, [orders, marketOpen]);
 
-  // Live price updates
   useEffect(() => {
     if (!marketOpen) return;
     setDisplayOrders((prev) =>
@@ -90,7 +100,6 @@ const Orders = () => {
     );
   }, [livePrices, marketOpen]);
 
-  // Closed market polling
   useEffect(() => {
     if (marketOpen) return;
     if (displayOrders.length === 0) return;
@@ -142,7 +151,9 @@ const Orders = () => {
   const handleCancel = async (id) => {
     try {
       await cancelOrder(id);
-      setOrders((prev) => prev.map((o) => (o._id === id ? { ...o, cancelled: true } : o)));
+      setOrders((prev) =>
+        prev.map((o) => (o._id === id ? { ...o, cancelled: true } : o))
+      );
       showAlert("success", "Order cancelled.");
     } catch (err) {
       console.error("Failed to cancel order", err);
@@ -196,14 +207,19 @@ const Orders = () => {
                 >
                   <td className="align-left" style={{ width: "200px" }}>
                     <div className="d-flex align-items-center justify-content-between">
-                      <span className="text-truncate" style={{ maxWidth: "60px" }}>
+                      <span
+                        className="text-truncate"
+                        style={{ maxWidth: "60px" }}
+                      >
                         {order.name}
                       </span>
                       <div
                         className="d-flex gap-2"
                         style={{
                           visibility:
-                            hoveredRow === order._id && !order.executed && !order.cancelled
+                            hoveredRow === order._id &&
+                            !order.executed &&
+                            !order.cancelled
                               ? "visible"
                               : "hidden",
                         }}
@@ -212,8 +228,14 @@ const Orders = () => {
                           className="btn btn-primary btn-sm"
                           onClick={() =>
                             order.mode === "BUY"
-                              ? openBuyWindow({ name: order.name, id: order.id }, order)
-                              : openSellWindow({ name: order.name, id: order.id }, order)
+                              ? openBuyWindow(
+                                  { name: order.name, id: order.id },
+                                  order
+                                )
+                              : openSellWindow(
+                                  { name: order.name, id: order.id },
+                                  order
+                                )
                           }
                         >
                           Edit

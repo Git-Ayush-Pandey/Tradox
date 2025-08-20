@@ -22,43 +22,31 @@ async function updateFundsOnOrderAction(
       fund.usedMargin += total;
       fund.exposure += total;
     }
-  }
-
-  else if (actionType === "cancel") {
+  } else if (actionType === "cancel") {
     if (order.mode === "BUY") {
       fund.availableCash += total;
       fund.usedMargin -= total;
       fund.exposure -= total;
     }
-  }
-
-  else if (actionType === "edit-revert") {
+  } else if (actionType === "edit-revert") {
     if (order.mode === "BUY") {
       fund.availableCash += order.qty * order.price;
       fund.usedMargin -= order.qty * order.price;
       fund.exposure -= order.qty * order.price;
     }
-  }
-
-  else if (actionType === "edit-apply") {
+  } else if (actionType === "edit-apply") {
     if (order.mode === "BUY") {
       fund.availableCash -= total;
       fund.usedMargin += total;
       fund.exposure += total;
     }
-  }
-
-  else if (actionType === "execute") {
+  } else if (actionType === "execute") {
     if (order.mode === "BUY") {
-      // Release the locked margin
       fund.usedMargin -= total;
       fund.exposure -= total;
-    } 
-    else if (order.mode === "SELL") {
-      // Credit proceeds from sale
+    } else if (order.mode === "SELL") {
       fund.availableCash += total;
 
-      // Get avg buy price from DB if not provided
       let avgBuyValue;
       if (order.avg) {
         avgBuyValue = order.avg * qty;
@@ -68,21 +56,18 @@ async function updateFundsOnOrderAction(
         if (asset) {
           avgBuyValue = asset.avg * qty;
         } else {
-          avgBuyValue = total; // fallback
+          avgBuyValue = total;
         }
       }
 
-      // Release margin based on buy cost
       fund.usedMargin -= avgBuyValue;
       fund.exposure -= avgBuyValue;
 
-      // Update realised P&L
       const realisedPL = total - avgBuyValue;
       fund.realisedPnL = (fund.realisedPnL || 0) + realisedPL;
     }
   }
 
-  // Recalculate availableMargin
   fund.availableMargin =
     fund.availableCash + fund.collateralLiquid + fund.collateralEquity;
 

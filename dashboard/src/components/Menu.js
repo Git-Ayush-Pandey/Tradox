@@ -66,13 +66,8 @@ const Menu = ({ onWatchlistClick }) => {
         borderBottom: "1px solid #e0e0e0",
       }}
     >
-      <img
-        src="logo.png"
-        alt="Logo"
-        style={{ width: "50px"}}
-      />
+      <img src="logo.png" alt="Logo" style={{ width: "50px" }} />
 
-      {/* Desktop Nav */}
       {!isMobile && (
         <ul
           style={{
@@ -114,7 +109,7 @@ const Menu = ({ onWatchlistClick }) => {
       >
         {isMobile && (
           <Button
-            onClick={onWatchlistClick} // ✅ use the prop instead
+            onClick={onWatchlistClick}
             style={{
               marginRight: "12px",
               border: "1px solid #ccc",

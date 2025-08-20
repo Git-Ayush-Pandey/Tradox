@@ -78,21 +78,21 @@ app.use("/otp", otpRoute);
 const connectToMongoDB = async () => {
   try {
     await mongoose.connect(MONGO_URL);
-    console.log("✅ Connected to MongoDB");
+    console.log("Connected to MongoDB");
   } catch (err) {
-    console.error("❌ MongoDB Connection Failed:", err.message);
+    console.error("MongoDB Connection Failed:", err.message);
     process.exit(1);
   }
 };
 connectToMongoDB();
 
 cron.schedule("50 0 * * 1-5", async () => {
-  console.log("🚀 Running auto square-off job at 12:50 AM IST...");
+  console.log("Running auto square-off job at 12:50 AM IST...");
   try {
     await autoSquareOffIntraday();
-    console.log("✅ Auto square-off completed.");
+    console.log(" Auto square-off completed.");
   } catch (err) {
-    console.error("❌ Auto square-off error:", err);
+    console.error(" Auto square-off error:", err);
   }
 });
 
@@ -101,10 +101,9 @@ const finnhubSocket = new WebSocket(
 );
 
 finnhubSocket.on("open", () => {
-  console.log("🔗 Connected to Finnhub WebSocket");
+  console.log("Connected to Finnhub WebSocket");
 });
 
-// Broadcast Finnhub trade data to all connected WebSocket clients
 finnhubSocket.on("message", (data) => {
   const parsed = JSON.parse(data);
   if (parsed.type === "trade" && parsed.data) {
@@ -117,14 +116,10 @@ finnhubSocket.on("message", (data) => {
   }
 });
 
-// 🆕 Symbol subscription map: { symbol: Set of client sockets }
-// ... all your requires & app setup remains the same
-
-// Symbol subscription map: { symbol: Set<WebSocket> }
 const symbolSubscriptions = {};
 
 wss.on("connection", (ws) => {
-  console.log("🟢 Client connected to WebSocket");
+  console.log("Client connected to WebSocket");
 
   ws.subscribedSymbols = new Set();
 
@@ -133,7 +128,7 @@ wss.on("connection", (ws) => {
     try {
       parsed = JSON.parse(msg);
     } catch (err) {
-      console.error("⚠️ Invalid JSON from client:", err.message);
+      console.error("Invalid JSON from client:", err.message);
       return;
     }
 
@@ -143,7 +138,7 @@ wss.on("connection", (ws) => {
     const upperSymbol = symbol.toUpperCase();
 
     if (type === "subscribe") {
-      if (ws.subscribedSymbols.has(upperSymbol)) return; // ✅ already subscribed
+      if (ws.subscribedSymbols.has(upperSymbol)) return;
 
       ws.subscribedSymbols.add(upperSymbol);
 
@@ -189,5 +184,5 @@ wss.on("connection", (ws) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`🚀 App + WebSocket running at http://localhost:${PORT}`);
+  console.log(`App + WebSocket running at http://localhost:${PORT}`);
 });

@@ -2,8 +2,7 @@ import { useContext, useEffect } from "react";
 import GeneralContext from "../contexts/GeneralContext";
 
 const Summary = () => {
-  const { user, holdings, positions, loading } =
-    useContext(GeneralContext);
+  const { user, holdings, positions, loading } = useContext(GeneralContext);
 
   const formatINR = (val) =>
     `$${val.toLocaleString("en-IN", { minimumFractionDigits: 2 })} `;
