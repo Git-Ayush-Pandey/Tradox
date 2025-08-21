@@ -1,6 +1,6 @@
 require("dotenv").config();
-require("./util/orderCleaner");
 
+const registerCronJobs = require("./util/cronJobs");
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -9,8 +9,6 @@ const passport = require("passport");
 const localStr = require("passport-local").Strategy;
 const http = require("http");
 const WebSocket = require("ws");
-const cron = require("node-cron");
-const { autoSquareOffIntraday } = require("./util/autoSquareOff");
 
 const app = express();
 const server = http.createServer(app);
@@ -87,15 +85,7 @@ const connectToMongoDB = async () => {
 };
 connectToMongoDB();
 
-cron.schedule("50 0 * * 1-5", async () => {
-  console.log("Running auto square-off job at 12:50 AM IST...");
-  try {
-    await autoSquareOffIntraday();
-    console.log(" Auto square-off completed.");
-  } catch (err) {
-    console.error(" Auto square-off error:", err);
-  }
-});
+registerCronJobs();
 
 const finnhubSocket = new WebSocket(
   `wss://ws.finnhub.io?token=${process.env.LIVEPRICE_API_KEY}`

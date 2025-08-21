@@ -1,32 +1,25 @@
-import React, { useState, useEffect, useCallback } from "react";
+// src/contexts/GeneralContext.js
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  createContext,
+  useRef,
+} from "react";
 import {
   verifyToken,
   fetchHoldings,
   fetchPositions,
   getQuote,
   FetchFunds,
+  executeOrder,
+  FetchOrders,
 } from "../hooks/api";
-import BuyActionWindow from "../components/windows/BuyActionWindow";
-import SellActionWindow from "../components/windows/SellActionWindow";
-import AnalyticsWindow from "../components/windows/AnalyticsWindow";
-import Alert from "../components/windows/alert";
+import { useLivePriceContext } from "./LivePriceContext";
 import { isMarketOpen } from "../hooks/isMarketOpen";
+import Alert from "../components/windows/alert";
 
-const GeneralContext = React.createContext({
-  user: null,
-  holdings: [],
-  setHoldings: () => {},
-  positions: [],
-  setPositions: () => {},
-  loading: true,
-  openBuyWindow: () => {},
-  closeBuyWindow: () => {},
-  openSellWindow: () => {},
-  closeSellWindow: () => {},
-  openAnalyticsWindow: () => {},
-  closeAnalyticsWindow: () => {},
-  analyticsStock: null,
-});
+const GeneralContext = createContext();
 
 export const enrichHoldingsandPositions = (item, price, basePrice) => {
   const currentValue = price * item.qty;
@@ -43,8 +36,8 @@ export const enrichHoldingsandPositions = (item, price, basePrice) => {
   if (!isMarketOpen() && boughtToday) {
     refPrice = item.avg;
   }
-  console.log(item.avg, basePrice, price);
-  let dayChange = (price - refPrice) * item.qty;
+
+  const dayChange = (price - refPrice) * item.qty;
   const dayChangePercent = ((price - refPrice) / refPrice) * 100;
   const totalChange = price - item.avg;
   const totalChangePercent = (totalChange / item.avg) * 100;
@@ -62,63 +55,68 @@ export const enrichHoldingsandPositions = (item, price, basePrice) => {
   };
 };
 
-export const GeneralContextProvider = (props) => {
+export const GeneralContextProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  // UI states
   const [isBuyWindowOpen, setIsBuyWindowOpen] = useState(false);
   const [isSellWindowOpen, setIsSellWindowOpen] = useState(false);
+  const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const [selectedStock, setSelectedStock] = useState(null);
   const [editOrder, setEditOrder] = useState(null);
-  const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const [analyticsStock, setAnalyticsStock] = useState(null);
+  const [alert, setAlert] = useState(null);
+
+  // Trading data
   const [holdings, setHoldings] = useState([]);
   const [positions, setPositions] = useState([]);
-  const [alert, setAlert] = useState(null);
   const [orders, setOrders] = useState([]);
   const [funds, setFunds] = useState(null);
 
-  const handleOpenBuyWindow = (stock, order = null) => {
+  const { livePrices } = useLivePriceContext();
+  const executingRef = useRef(new Set());
+
+  /** ---------- UI HANDLERS ---------- */
+  const openBuyWindow = (stock, order = null) => {
     setIsBuyWindowOpen(true);
     setSelectedStock(stock);
     setEditOrder(order);
   };
+  const closeBuyWindow = () => {
+    setIsBuyWindowOpen(false);
+    setSelectedStock(null);
+    setEditOrder(null);
+  };
+  const openSellWindow = (stock, order = null) => {
+    setIsSellWindowOpen(true);
+    setSelectedStock(stock);
+    setEditOrder(order);
+  };
+  const closeSellWindow = () => {
+    setIsSellWindowOpen(false);
+    setSelectedStock(null);
+    setEditOrder(null);
+  };
+  const openAnalyticsWindow = (stock) => {
+    setAnalyticsStock(stock);
+    setIsAnalyticsOpen(true);
+  };
+  const closeAnalyticsWindow = () => {
+    setAnalyticsStock(null);
+    setIsAnalyticsOpen(false);
+  };
 
+  /** ---------- ALERTS ---------- */
   const showAlert = useCallback((type, message, duration = 3000) => {
     setAlert({ type, message });
     setTimeout(() => setAlert(null), duration);
   }, []);
 
-  const handleCloseBuyWindow = () => {
-    setIsBuyWindowOpen(false);
-    setSelectedStock(null);
-    setEditOrder(null);
-  };
-
-  const handleOpenSellWindow = (stock, order = null) => {
-    setIsSellWindowOpen(true);
-    setSelectedStock(stock);
-    setEditOrder(order);
-  };
-
-  const handleCloseSellWindow = () => {
-    setIsSellWindowOpen(false);
-    setSelectedStock(null);
-    setEditOrder(null);
-  };
-
-  const handleOpenAnalyticsWindow = (stock) => {
-    setAnalyticsStock(stock);
-    setIsAnalyticsOpen(true);
-  };
-
-  const handleCloseAnalyticsWindow = () => {
-    setAnalyticsStock(null);
-    setIsAnalyticsOpen(false);
-  };
-
+  /** ---------- FETCH HELPERS ---------- */
   const fetchHoldingsWithQuotes = async () => {
     const res = await fetchHoldings();
-    const raw = res.data;
+    const raw = res.data || [];
     const priceResults = await Promise.all(
       raw.map(async (item, idx) => {
         await new Promise((r) => setTimeout(r, idx * 80));
@@ -146,7 +144,7 @@ export const GeneralContextProvider = (props) => {
 
   const fetchPositionsWithQuotes = async () => {
     const res = await fetchPositions();
-    const raw = res.data;
+    const raw = res.data || [];
     const quotes = await Promise.all(
       raw.map(async (item, idx) => {
         await new Promise((r) => setTimeout(r, idx * 80));
@@ -171,6 +169,7 @@ export const GeneralContextProvider = (props) => {
       );
     });
   };
+
   const fetchFund = async () => {
     try {
       const res = await FetchFunds();
@@ -181,19 +180,16 @@ export const GeneralContextProvider = (props) => {
     }
   };
 
-  const fetchData = useCallback(async () => {
+  const fetchOrder = async () => {
     try {
-      const [holdingsEnriched, positionsEnriched] = await Promise.all([
-        fetchHoldingsWithQuotes(),
-        fetchPositionsWithQuotes(),
-      ]);
-      setHoldings(holdingsEnriched || []);
-      setPositions(positionsEnriched || []);
-    } catch (error) {
-      console.error("Failed to fetch holdings or positions", error);
+      const res = await FetchOrders();
+      setOrders(res.data || []);
+    } catch (err) {
+      console.error("Failed to refresh Orders:", err);
     }
-  }, []);
+  };
 
+  /** ---------- REFRESH HELPERS ---------- */
   const refreshData = async () => {
     try {
       const [holdingsEnriched, positionsEnriched] = await Promise.all([
@@ -207,75 +203,138 @@ export const GeneralContextProvider = (props) => {
     }
   };
 
+  const refreshOrders = async () => {
+    await fetchOrder();
+  };
+
+  const refreshFunds = async () => {
+    await fetchFund();
+  };
+
+  const refreshAll = async () => {
+    try {
+      await Promise.all([refreshData(), fetchFund(), fetchOrder()]);
+    } catch (err) {
+      console.error("Portfolio refresh failed:", err);
+    }
+  };
+
+  /** ---------- EFFECTS ---------- */
+  // Load orders initially
+  useEffect(() => {
+    fetchOrder();
+  }, []);
+
+  // Auto-execute orders
+  useEffect(() => {
+    if (!isMarketOpen()) return;
+
+    const executeMatchingOrders = async () => {
+      let executedAny = false;
+      for (const order of orders) {
+        if (
+          order.executed ||
+          order.cancelled ||
+          executingRef.current.has(order._id)
+        )
+          continue;
+
+        const price =
+          livePrices[order.name] ??
+          livePrices[order.name?.toUpperCase?.()] ??
+          livePrices[order.name?.toLowerCase?.()];
+        if (!price) continue;
+
+        const match =
+          (order.mode === "BUY" && price <= order.price) ||
+          (order.mode === "SELL" && price >= order.price);
+
+        if (!match) continue;
+
+        executingRef.current.add(order._id);
+        try {
+          const res = await executeOrder(order._id);
+          setOrders((prev) =>
+            prev.map((o) => (o._id === order._id ? res.data.order : o))
+          );
+          executedAny = true;
+          showAlert("success", `Order for ${order.name} executed.`);
+        } catch (err) {
+          console.error(`Failed to execute order ${order._id}`, err);
+          showAlert("error", `Failed to execute order for ${order.name}.`);
+        } finally {
+          executingRef.current.delete(order._id);
+        }
+      }
+      if (executedAny) {
+        await refreshFunds();
+        await refreshData();
+        await refreshOrders();
+      }
+    };
+
+    executeMatchingOrders();
+    // eslint-disable-next-line
+  }, [livePrices, orders, showAlert]);
+
+  // Verify token and load portfolio
   useEffect(() => {
     setLoading(true);
     verifyToken()
       .then((res) => {
         if (res.data.status) {
           setUser(res.data.safeUser);
-          fetchData();
-          fetchFund();
+          refreshAll();
         } else {
           setUser(null);
         }
       })
       .catch(() => setUser(null))
       .finally(() => setLoading(false));
-  }, [fetchData]);
-
-  const refreshFunds = async () => {
-    await fetchFund();
-  };
-  const refreshAll = async () => {
-    try {
-      await Promise.all([fetchData(), fetchFund()]);
-    } catch (err) {
-      console.error("Portfolio refresh failed:", err);
-    }
-  };
+    // eslint-disable-next-line
+  }, []);
 
   return (
     <GeneralContext.Provider
       value={{
         user,
-        refreshAll,
-        refreshFunds,
         setUser,
         loading,
+
         holdings,
         setHoldings,
         positions,
         setPositions,
-        funds,
-        refreshData,
-        fetchFund,
-        setFunds,
-        openBuyWindow: handleOpenBuyWindow,
-        closeBuyWindow: handleCloseBuyWindow,
-        openSellWindow: handleOpenSellWindow,
-        closeSellWindow: handleCloseSellWindow,
-        openAnalyticsWindow: handleOpenAnalyticsWindow,
-        closeAnalyticsWindow: handleCloseAnalyticsWindow,
-        analyticsStock,
-        alert,
-        showAlert,
         orders,
         setOrders,
+        funds,
+        setFunds,
+
+        refreshData,
+        refreshOrders,
+        refreshFunds,
+        refreshAll,
+
+        openBuyWindow,
+        closeBuyWindow,
+        openSellWindow,
+        closeSellWindow,
+        openAnalyticsWindow,
+        closeAnalyticsWindow,
+
+        isBuyWindowOpen,
+        isSellWindowOpen,
+        isAnalyticsOpen,
+
+        selectedStock,
+        editOrder,
+        analyticsStock,
+
+        alert,
+        showAlert,
       }}
     >
-      {props.children}
-      {isBuyWindowOpen && (
-        <BuyActionWindow uid={selectedStock} existingOrder={editOrder} />
-      )}
-      {isSellWindowOpen && (
-        <SellActionWindow uid={selectedStock} existingOrder={editOrder} />
-      )}
-      {isAnalyticsOpen && (
-        <AnalyticsWindow
-          stock={analyticsStock}
-          onClose={handleCloseAnalyticsWindow}
-        />
-      )}
+      {children}
       {alert && (
         <div style={{ position: "fixed", top: 20, right: 20, zIndex: 9999 }}>
           <Alert type={alert.type} message={alert.message} />

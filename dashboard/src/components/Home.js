@@ -1,13 +1,29 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import Dashboard from "./Dashboard";
 import WatchList from "./Watchlist/index";
 import { Drawer, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import TopBar from "./TopBar";
+import GeneralContext from "../contexts/GeneralContext";
+import BuyActionWindow from "../components/windows/BuyActionWindow";
+import SellActionWindow from "../components/windows/SellActionWindow";
+import AnalyticsWindow from "../components/windows/AnalyticsWindow";
 
 const Home = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 992);
   const [watchlistOpen, setWatchlistOpen] = useState(false);
+
+  const {
+    isBuyWindowOpen,
+    isSellWindowOpen,
+    isAnalyticsOpen,
+    selectedStock,
+    editOrder,
+    analyticsStock,
+    closeBuyWindow,
+    closeSellWindow,
+    closeAnalyticsWindow,
+  } = useContext(GeneralContext);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 992);
@@ -28,6 +44,30 @@ const Home = () => {
 
         <div className="content" style={{ position: "relative" }}>
           <Dashboard />
+
+          {/* Windows rendered on top of Dashboard */}
+          {isBuyWindowOpen && (
+            <BuyActionWindow
+              uid={selectedStock}
+              existingOrder={editOrder}
+              onClose={closeBuyWindow}
+            />
+          )}
+
+          {isSellWindowOpen && (
+            <SellActionWindow
+              uid={selectedStock}
+              existingOrder={editOrder}
+              onClose={closeSellWindow}
+            />
+          )}
+
+          {isAnalyticsOpen && (
+            <AnalyticsWindow
+              stock={analyticsStock}
+              onClose={closeAnalyticsWindow}
+            />
+          )}
         </div>
       </div>
 

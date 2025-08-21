@@ -8,8 +8,8 @@ const PositionsSchema = new Schema({
   day: String,
   isLoss: Boolean,
   boughtday: {
-  type: Date,
-  default: Date.now
+    type: Date,
+    default: Date.now,
   },
   userId: {
     type: Schema.Types.ObjectId,
@@ -18,5 +18,5 @@ const PositionsSchema = new Schema({
   },
 });
 
-const Position = new model("Position", PositionsSchema);
+const Position = model("Position", PositionsSchema);
 module.exports = { Position };

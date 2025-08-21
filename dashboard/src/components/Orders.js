@@ -3,7 +3,6 @@ import { getQuote, cancelOrder } from "../hooks/api";
 import GeneralContext from "../contexts/GeneralContext";
 import { isMarketOpen } from "../hooks/isMarketOpen";
 import { useLivePriceContext } from "../contexts/LivePriceContext";
-import { OrdersContext } from "../contexts/OrdersContext";
 
 const enrichOrder = (order, livePrice, basePrice) => ({
   ...order,
@@ -16,10 +15,9 @@ const Orders = () => {
   const [hoveredRow, setHoveredRow] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const { openBuyWindow, openSellWindow, showAlert } =
+  const { openBuyWindow, openSellWindow, showAlert, refreshFunds, orders, setOrders, refreshOrders } =
     useContext(GeneralContext);
   const { livePrices, subscribe, unsubscribe } = useLivePriceContext();
-  const { orders, setOrders } = useContext(OrdersContext);
   const symbols = useMemo(
     () => [...new Set(orders.map((o) => o.name))],
     [orders]
@@ -155,6 +153,8 @@ const Orders = () => {
         prev.map((o) => (o._id === id ? { ...o, cancelled: true } : o))
       );
       showAlert("success", "Order cancelled.");
+      await refreshFunds();
+      await refreshOrders();
     } catch (err) {
       console.error("Failed to cancel order", err);
       showAlert("error", "Failed to cancel order.");

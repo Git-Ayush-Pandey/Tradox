@@ -13,7 +13,6 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import { FetchFunds, editOrder, placeOrder } from "../../hooks/api";
 import GeneralContext from "../../contexts/GeneralContext";
-import { OrdersContext } from "../../contexts/OrdersContext";
 import { isMarketOpen } from "../../hooks/isMarketOpen";
 
 const BuyActionWindow = ({ uid, existingOrder = null }) => {
@@ -23,9 +22,8 @@ const BuyActionWindow = ({ uid, existingOrder = null }) => {
   const [orderType, setOrderType] = useState(existingOrder?.type || "Delivery");
   const [marginRequired, setMarginRequired] = useState(0.0);
   const [availableMargin, setAvailableMargin] = useState(null);
-  const { closeBuyWindow, showAlert, refreshFunds } =
+  const { closeBuyWindow, showAlert, refreshFunds, refreshOrders } =
     useContext(GeneralContext);
-  const { refreshOrders } = useContext(OrdersContext);
 
   useEffect(() => {
     setMarginRequired(stockQuantity * stockPrice);

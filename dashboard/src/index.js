@@ -6,7 +6,6 @@ import Home from "./components/Home";
 import { LivePriceProvider } from "./contexts/LivePriceContext";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { GeneralContextProvider } from "./contexts/GeneralContext";
-import { OrdersProvider } from "./contexts/OrdersContext";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
 const resizeObserverErr =
@@ -32,22 +31,20 @@ console.error = (...args) => {
   originalError.apply(console, args);
 };
 
-
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
-    <GeneralContextProvider>
-      <LivePriceProvider>
-        <OrdersProvider>
+    <LivePriceProvider>
+      <GeneralContextProvider>
+        <BrowserRouter>
           <ProtectedRoute>
-            <BrowserRouter>
-              <Routes>
-                <Route path="/*" element={<Home />} />
-              </Routes>
-            </BrowserRouter>
+            <Routes>
+              <Route path="/*" element={<Home />} />
+            </Routes>
           </ProtectedRoute>
-        </OrdersProvider>
-      </LivePriceProvider>
-    </GeneralContextProvider>
+        </BrowserRouter>
+      </GeneralContextProvider>
+    </LivePriceProvider>
   </React.StrictMode>
 );
+
