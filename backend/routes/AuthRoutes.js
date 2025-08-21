@@ -43,8 +43,9 @@ router.post("/signup", async (req, res) => {
     const token = createSecretToken(registeredUser._id);
     res.cookie("token", token, {
       httpOnly: true,
-      sameSite: "Lax",
-      secure: false,
+      sameSite: "none",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     const safeUser = {
@@ -82,8 +83,9 @@ router.post("/login", async (req, res) => {
   const token = createSecretToken(user._id);
   res.cookie("token", token, {
     httpOnly: true,
-    sameSite: "Lax",
-    secure: false,
+    sameSite: "none",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   });
   const safeUser = {
     id: user._id,
