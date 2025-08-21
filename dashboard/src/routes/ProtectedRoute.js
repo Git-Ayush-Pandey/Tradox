@@ -22,7 +22,7 @@ const ProtectedRoute = ({ children }) => {
   }
 
   if (!auth) {
-    window.location.href = "http://localhost:3001/signup";
+    window.location.href = process.env.REACT_APP_LOGOUT_REDIRECT_URL;
     return null;
   }
 
