@@ -17,7 +17,15 @@ export const verifyToken = () =>
 
 export const getMe = () =>
   axios.get(`${BASE}/auth/me`, { withCredentials: true });
+export const getPnL = () =>
+  axios.get(`${BASE}/auth/pnl`, { withCredentials: true });
 
+export const updateUnrealisedPnL = (unrealisedPnL) =>
+  axios.post(
+    `${BASE}/auth/update-unrealised-pnl`,
+    { unrealisedPnL },
+    { withCredentials: true }
+  );
 // FUNDS ROUTES
 
 export const FetchFunds = () =>

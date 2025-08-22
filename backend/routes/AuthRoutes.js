@@ -137,5 +137,55 @@ router.get("/me", isLoggedIn, (req, res) => {
     },
   });
 });
+router.post("/update-unrealised-pnl", isLoggedIn, async (req, res) => {
+  try {
+    const { unrealisedPnL } = req.body;
+
+    if (typeof unrealisedPnL !== "number") {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid PnL value" });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user)
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+
+    // ✅ Correct field name
+    user.unrealizedPL = unrealisedPnL;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: "Unrealised PnL updated",
+      unrealisedPnL,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+router.get("/pnl", isLoggedIn, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select(
+      "realizedPL unrealizedPL"
+    );
+    if (!user)
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+
+    res.json({
+      success: true,
+      realizedPL: user.realizedPL || 0,
+      unrealizedPL: user.unrealizedPL || 0,
+      totalPL: (user.realizedPL || 0) + (user.unrealizedPL || 0),
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 module.exports = router;

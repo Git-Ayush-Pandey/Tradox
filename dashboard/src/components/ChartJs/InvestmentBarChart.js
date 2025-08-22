@@ -55,7 +55,7 @@ const PortfolioStackedChart = ({ data, title = "Portfolio Composition" }) => {
   return (
     <div className="mt-4">
       <h4>{title}</h4>
-      <div style={{ width: "100%", height: 400 }}>
+      <div style={{ width: "100%", height: 400, minHeight: 400 }}>
         <ResponsiveContainer>
           <BarChart
             data={chartData}

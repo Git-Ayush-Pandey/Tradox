@@ -1,4 +1,3 @@
-// src/contexts/GeneralContext.js
 import React, {
   useState,
   useEffect,
@@ -59,7 +58,6 @@ export const GeneralContextProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // UI states
   const [isBuyWindowOpen, setIsBuyWindowOpen] = useState(false);
   const [isSellWindowOpen, setIsSellWindowOpen] = useState(false);
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
@@ -68,7 +66,6 @@ export const GeneralContextProvider = ({ children }) => {
   const [analyticsStock, setAnalyticsStock] = useState(null);
   const [alert, setAlert] = useState(null);
 
-  // Trading data
   const [holdings, setHoldings] = useState([]);
   const [positions, setPositions] = useState([]);
   const [orders, setOrders] = useState([]);
@@ -77,7 +74,6 @@ export const GeneralContextProvider = ({ children }) => {
   const { livePrices } = useLivePriceContext();
   const executingRef = useRef(new Set());
 
-  /** ---------- UI HANDLERS ---------- */
   const openBuyWindow = (stock, order = null) => {
     setIsBuyWindowOpen(true);
     setSelectedStock(stock);
@@ -107,13 +103,11 @@ export const GeneralContextProvider = ({ children }) => {
     setIsAnalyticsOpen(false);
   };
 
-  /** ---------- ALERTS ---------- */
   const showAlert = useCallback((type, message, duration = 3000) => {
     setAlert({ type, message });
     setTimeout(() => setAlert(null), duration);
   }, []);
 
-  /** ---------- FETCH HELPERS ---------- */
   const fetchHoldingsWithQuotes = async () => {
     const res = await fetchHoldings();
     const raw = res.data || [];
@@ -189,7 +183,6 @@ export const GeneralContextProvider = ({ children }) => {
     }
   };
 
-  /** ---------- REFRESH HELPERS ---------- */
   const refreshData = async () => {
     try {
       const [holdingsEnriched, positionsEnriched] = await Promise.all([
@@ -219,13 +212,10 @@ export const GeneralContextProvider = ({ children }) => {
     }
   };
 
-  /** ---------- EFFECTS ---------- */
-  // Load orders initially
   useEffect(() => {
     fetchOrder();
   }, []);
 
-  // Auto-execute orders
   useEffect(() => {
     if (!isMarketOpen()) return;
 
@@ -277,7 +267,6 @@ export const GeneralContextProvider = ({ children }) => {
     // eslint-disable-next-line
   }, [livePrices, orders, showAlert]);
 
-  // Verify token and load portfolio
   useEffect(() => {
     setLoading(true);
     verifyToken()

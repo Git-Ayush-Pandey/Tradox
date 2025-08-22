@@ -23,6 +23,9 @@ const userSchema = new Schema({
   },
   isEmailVerified: { type: Boolean, default: false },
   isPhoneVerified: { type: Boolean, default: false },
+
+  realizedPL: { type: Number, default: 0 },
+  unrealizedPL: { type: Number, default: 0 },
 });
 
 userSchema.plugin(passportLocalMongoose, {

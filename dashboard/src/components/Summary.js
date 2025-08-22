@@ -1,5 +1,6 @@
 import { useContext, useEffect } from "react";
 import GeneralContext from "../contexts/GeneralContext";
+import { updateUnrealisedPnL } from "../hooks/api";
 
 const Summary = () => {
   const { user, holdings, positions, loading } = useContext(GeneralContext);
@@ -26,18 +27,15 @@ const Summary = () => {
   const holdingsPL = calculatePL(holdings);
   const positionsPL = calculatePL(positions);
 
+  const unrealised = holdingsPL.pnl + positionsPL.pnl;
+
   useEffect(() => {
-    if (!loading) {
-      if (holdings.length === 0 && positions.length === 0) {
-      }
+    if (holdings.length > 0 || positions.length > 0) {
+      updateUnrealisedPnL(unrealised)
+        .then(() => console.log("Unrealised PnL updated:", unrealised))
+        .catch((err) => console.error("Error updating unrealised PnL:", err));
     }
-  }, [
-    loading,
-    holdings.length,
-    positions.length,
-    holdingsPL.pnl,
-    positionsPL.pnl,
-  ]);
+  }, [unrealised, holdings.length, positions.length]);
 
   if (loading)
     return <div className="text-center mt-4">Loading summary...</div>;

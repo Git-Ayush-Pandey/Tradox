@@ -21,6 +21,7 @@
     "express": "^5.1.0",
     "faker": "^6.6.6",
     "jsonwebtoken": "^9.0.2",
+    "lightweight-charts": "^5.0.8",
     "lodash.debounce": "^4.0.8",
     "mongoose": "^8.16.1",
     "nodemon": "^3.1.10",

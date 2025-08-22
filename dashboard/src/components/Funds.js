@@ -1,22 +1,32 @@
 import { useContext, useEffect, useState } from "react";
-import { addFunds, withdrawFunds, FetchFunds } from "../hooks/api";
+import { addFunds, FetchFunds, withdrawFunds, getPnL } from "../hooks/api";
 import FundWindow from "../components/windows/FundWindow";
 import GeneralContext from "../contexts/GeneralContext";
 
 const Funds = () => {
-  const [fund, setFund] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState(null);
   const [amount, setAmount] = useState("");
-  const { showAlert } = useContext(GeneralContext);
+  const { user, setUser, showAlert, funds, setFunds } =
+    useContext(GeneralContext);
 
   const fetchFunds = async () => {
     try {
       const res = await FetchFunds();
-      setFund(res.data);
+      setFunds(res.data);
+
+      const pnlRes = await getPnL();
+      if (pnlRes.data.success) {
+        setUser((prev) => ({
+          ...prev,
+          realizedPL: pnlRes.data.realizedPL,
+          unrealizedPL: pnlRes.data.unrealizedPL,
+          totalPL: pnlRes.data.totalPL,
+        }));
+      }
     } catch (err) {
-      console.error("Error fetching fund data:", err);
-      showAlert("error", "Failed to fetch fund data.");
+      console.error(err);
+      showAlert("error", "Failed to fetch funds or PnL.");
     }
   };
 
@@ -24,8 +34,7 @@ const Funds = () => {
     fetchFunds();
     // eslint-disable-next-line
   }, []);
-
-  if (!fund) return <p>Loading fund data...</p>;
+  if (!funds) return <p>Loading fund data...</p>;
 
   const handleSubmit = async () => {
     if (!amount || isNaN(amount) || Number(amount) <= 0) {
@@ -98,52 +107,85 @@ const Funds = () => {
                   <tr>
                     <td>Available margin</td>
                     <td>
-                      <strong>{(fund?.availableMargin ?? 0).toFixed(2)}</strong>
+                      <strong>
+                        {(funds?.availableMargin ?? 0).toFixed(2)}
+                      </strong>
                     </td>
                   </tr>
                   <tr>
                     <td>Used margin</td>
                     <td>
-                      <strong>{(fund?.usedMargin ?? 0).toFixed(2)}</strong>
+                      <strong>{(funds?.usedMargin ?? 0).toFixed(2)}</strong>
                     </td>
                   </tr>
                   <tr className="table-active">
                     <td>Available cash</td>
                     <td>
-                      <strong>{(fund?.availableCash ?? 0).toFixed(2)}</strong>
+                      <strong>{(funds?.availableCash ?? 0).toFixed(2)}</strong>
                     </td>
                   </tr>
                   <tr>
                     <td>Opening balance</td>
-                    <td>{(fund?.openingBalance ?? 0).toFixed(2)}</td>
+                    <td>{(funds?.openingBalance ?? 0).toFixed(2)}</td>
                   </tr>
                   <tr>
                     <td>Payin</td>
-                    <td>{(fund?.payin ?? 0).toFixed(2)}</td>
+                    <td>{(funds?.payin ?? 0).toFixed(2)}</td>
                   </tr>
                   <tr>
+                    <td>Total P&L</td>
+                    <td
+                      style={{
+                        color: (user?.totalPL ?? 0) >= 0 ? "green" : "red",
+                      }}
+                    >
+                      <strong>{(user?.totalPL ?? 0).toFixed(2)}</strong>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Realised P&L</td>
+                    <td
+                      style={{
+                        color: (user?.realizedPL ?? 0) >= 0 ? "green" : "red",
+                      }}
+                    >
+                      <strong>{(user?.realizedPL ?? 0).toFixed(2)}</strong>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Unrealised P&L</td>
+                    <td
+                      style={{
+                        color: (user?.unrealizedPL ?? 0) >= 0 ? "green" : "red",
+                      }}
+                    >
+                      <strong>{(user?.unrealizedPL ?? 0).toFixed(2)}</strong>
+                    </td>
+                  </tr>
+
+                  <tr>
                     <td>SPAN</td>
-                    <td>{(fund?.span ?? 0).toFixed(2)}</td>
+                    <td>{(funds?.span ?? 0).toFixed(2)}</td>
                   </tr>
                   <tr>
                     <td>Delivery margin</td>
-                    <td>{(fund?.deliveryMargin ?? 0).toFixed(2)}</td>
+                    <td>{(funds?.deliveryMargin ?? 0).toFixed(2)}</td>
                   </tr>
                   <tr>
                     <td>Exposure</td>
-                    <td>{(fund?.exposure ?? 0).toFixed(2)}</td>
+                    <td>{(funds?.exposure ?? 0).toFixed(2)}</td>
                   </tr>
                   <tr className="table-active">
                     <td>Options premium</td>
-                    <td>{(fund?.optionsPremium ?? 0).toFixed(2)}</td>
+                    <td>{(funds?.optionsPremium ?? 0).toFixed(2)}</td>
                   </tr>
                   <tr>
                     <td>Collateral (Liquid funds)</td>
-                    <td>{(fund?.collateralLiquid ?? 0).toFixed(2)}</td>
+                    <td>{(funds?.collateralLiquid ?? 0).toFixed(2)}</td>
                   </tr>
                   <tr>
                     <td>Collateral (Equity)</td>
-                    <td>{(fund?.collateralEquity ?? 0).toFixed(2)}</td>
+                    <td>{(funds?.collateralEquity ?? 0).toFixed(2)}</td>
                   </tr>
                   <tr>
                     <td>
@@ -152,8 +194,9 @@ const Funds = () => {
                     <td>
                       <strong>
                         {(
-                          (fund?.collateralLiquid ?? 0) +
-                          (fund?.collateralEquity ?? 0)
+                          funds?.collateralLiquid ??
+                          0 + funds?.collateralEquity ??
+                          0
                         ).toFixed(2)}
                       </strong>
                     </td>
@@ -176,7 +219,7 @@ const Funds = () => {
                     <td>Available margin</td>
                     <td>
                       <strong>
-                        {(fund?.commodityAvailableMargin ?? 0).toFixed(2)}
+                        {(funds?.commodityAvailableMargin ?? 0).toFixed(2)}
                       </strong>
                     </td>
                   </tr>
@@ -184,7 +227,7 @@ const Funds = () => {
                     <td>Used margin</td>
                     <td>
                       <strong>
-                        {(fund?.commodityUsedMargin ?? 0).toFixed(2)}
+                        {(funds?.commodityUsedMargin ?? 0).toFixed(2)}
                       </strong>
                     </td>
                   </tr>
@@ -192,33 +235,33 @@ const Funds = () => {
                     <td>Available cash</td>
                     <td>
                       <strong>
-                        {(fund?.commodityAvailableCash ?? 0).toFixed(2)}
+                        {(funds?.commodityAvailableCash ?? 0).toFixed(2)}
                       </strong>
                     </td>
                   </tr>
                   <tr>
                     <td>Opening balance</td>
-                    <td>{(fund?.commodityOpeningBalance ?? 0).toFixed(2)}</td>
+                    <td>{(funds?.commodityOpeningBalance ?? 0).toFixed(2)}</td>
                   </tr>
                   <tr>
                     <td>Payin</td>
-                    <td>{(fund?.commodityPayin ?? 0).toFixed(2)}</td>
+                    <td>{(funds?.commodityPayin ?? 0).toFixed(2)}</td>
                   </tr>
                   <tr>
                     <td>SPAN</td>
-                    <td>{(fund?.commoditySpan ?? 0).toFixed(2)}</td>
+                    <td>{(funds?.commoditySpan ?? 0).toFixed(2)}</td>
                   </tr>
                   <tr>
                     <td>Delivery margin</td>
-                    <td>{(fund?.commodityDeliveryMargin ?? 0).toFixed(2)}</td>
+                    <td>{(funds?.commodityDeliveryMargin ?? 0).toFixed(2)}</td>
                   </tr>
                   <tr>
                     <td>Exposure</td>
-                    <td>{(fund?.commodityExposure ?? 0).toFixed(2)}</td>
+                    <td>{(funds?.commodityExposure ?? 0).toFixed(2)}</td>
                   </tr>
                   <tr>
                     <td>Options premium</td>
-                    <td>{(fund?.commodityOptionsPremium ?? 0).toFixed(2)}</td>
+                    <td>{(funds?.commodityOptionsPremium ?? 0).toFixed(2)}</td>
                   </tr>
                 </tbody>
               </table>
