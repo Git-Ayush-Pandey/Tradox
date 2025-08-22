@@ -17,7 +17,6 @@ const Holdings = () => {
   } = useContext(GeneralContext);
 
   const [hoveredRow, setHoveredRow] = useState(null);
-  const [lastUpdate, setLastUpdate] = useState(null);
 
   const { livePrices, subscribe, unsubscribe } = useLivePriceContext();
   const marketOpen = useMemo(() => isMarketOpen(), []);
@@ -53,7 +52,6 @@ const Holdings = () => {
         );
       })
     );
-    setLastUpdate(new Date());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [livePrices, marketOpen]);
 
@@ -97,7 +95,6 @@ const Holdings = () => {
             );
           })
         );
-        setLastUpdate(new Date());
       } catch (err) {
         console.error("Closed-market price refresh failed", err);
         showAlert("error", "Failed to refresh prices.");
@@ -146,13 +143,6 @@ const Holdings = () => {
           ) : (
             <span>⚫ Market Closed - Latest Prices</span>
           )}
-        </span>
-        <span>
-          {lastUpdate &&
-            `Last Updated: ${lastUpdate.toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}`}
         </span>
       </div>
 
