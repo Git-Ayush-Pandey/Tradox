@@ -1,297 +1,308 @@
+import { Link } from "react-router-dom";
+
 function CreateTicket() {
   return (
     <div className="container">
       <div className="row p-5 mt-5 mb-5">
         <h1 className="fs-2">To create a ticket, select a relevant topic</h1>
+
+        {/* Account Opening */}
         <div className="col-4 p-5 mt-2 mb-2">
           <h4 style={{ fontWeight: 400, fontSize: "20px" }}>
-            <i class="fa fa-plus-circle" aria-hidden="true"></i> Account Opening
+            <i className="fa fa-plus-circle" aria-hidden="true"></i> Account
+            Opening
           </h4>
-
-          <a
-            href="link"
+          <Link
+            to="link"
             className="blue-link"
             style={{ textDecoration: "none", lineHeight: "2.5" }}
           >
             Resident individual
-          </a>
+          </Link>
           <br />
-          <a
-            href="link"
+          <Link
+            to="link"
             className="blue-link"
             style={{ textDecoration: "none", lineHeight: "2.5" }}
           >
             Minor
-          </a>
+          </Link>
           <br />
-          <a
-            href="link"
+          <Link
+            to="link"
             className="blue-link"
             style={{ textDecoration: "none", lineHeight: "2.5" }}
           >
             Non Resident Indian (NRI)
-          </a>
+          </Link>
           <br />
-          <a
-            href="link"
+          <Link
+            to="link"
             className="blue-link"
             style={{ textDecoration: "none", lineHeight: "2.5" }}
           >
             Company, Partnership, HUF and LLP
-          </a>
+          </Link>
           <br />
-          <a
-            href="link"
+          <Link
+            to="link"
             className="blue-link"
             style={{ textDecoration: "none", lineHeight: "2.5" }}
           >
             Glossary
-          </a>
-
+          </Link>
           <br />
         </div>
+
+        {/* Your Tradox Account */}
         <div className="col-4 p-5 mt-2 mb-2">
           <h4 style={{ fontWeight: 400, fontSize: "20px" }}>
-            <i class="fa fa-plus-circle" aria-hidden="true"></i> Your Tradox
+            <i className="fa fa-plus-circle" aria-hidden="true"></i> Your Tradox
             Account
           </h4>
-          <a
-            href="link"
+          <Link
+            to="link"
             className="blue-link"
             style={{ textDecoration: "none", lineHeight: "2.5" }}
           >
             Your Profile
-          </a>
+          </Link>
           <br />
-          <a
-            href="link"
+          <Link
+            to="link"
             className="blue-link"
             style={{ textDecoration: "none", lineHeight: "2.5" }}
           >
             Account modification
-          </a>
+          </Link>
           <br />
-          <a
-            href="link"
+          <Link
+            to="link"
             className="blue-link"
             style={{ textDecoration: "none", lineHeight: "2.5" }}
           >
             Client Master Report (CMR) and Depository Participant (DP)
-          </a>
+          </Link>
           <br />
-          <a
-            href="link"
+          <Link
+            to="link"
             className="blue-link"
             style={{ textDecoration: "none", lineHeight: "2.5" }}
           >
             Nomination
-          </a>
+          </Link>
           <br />
-          <a
-            href="link"
+          <Link
+            to="link"
             className="blue-link"
             style={{ textDecoration: "none", lineHeight: "2.5" }}
           >
             Transfer and conversion of securities
-          </a>
+          </Link>
           <br />
         </div>
+
+        {/* Kite */}
         <div className="col-4 p-5 mt-2 mb-2">
           <h4 style={{ fontWeight: 400, fontSize: "20px" }}>
-            <i class="fa fa-plus-circle" aria-hidden="true"></i> Kite
+            <i className="fa fa-plus-circle" aria-hidden="true"></i> Kite
           </h4>
-          <a
-            href="link"
+          <Link
+            to="link"
             className="blue-link"
             style={{ textDecoration: "none", lineHeight: "2.5" }}
           >
             IPO
-          </a>
+          </Link>
           <br />
-          <a
-            href="link"
+          <Link
+            to="link"
             className="blue-link"
             style={{ textDecoration: "none", lineHeight: "2.5" }}
           >
             Trading FAQs
-          </a>
+          </Link>
           <br />
-          <a
-            href="link"
+          <Link
+            to="link"
             className="blue-link"
             style={{ textDecoration: "none", lineHeight: "2.5" }}
           >
             Margin Trading Facility (MTF) and Margins
-          </a>
+          </Link>
           <br />
-          <a
-            href="link"
+          <Link
+            to="link"
             className="blue-link"
             style={{ textDecoration: "none", lineHeight: "2.5" }}
           >
             Charts and orders
-          </a>
+          </Link>
           <br />
-          <a
-            href="link"
+          <Link
+            to="link"
             className="blue-link"
             style={{ textDecoration: "none", lineHeight: "2.5" }}
           >
             Alerts and Nudges
-          </a>
+          </Link>
           <br />
-          <a
-            href="link"
+          <Link
+            to="link"
             className="blue-link"
             style={{ textDecoration: "none", lineHeight: "2.5" }}
           >
             General
-          </a>
+          </Link>
           <br />
         </div>
+
+        {/* Funds */}
         <div className="col-4 p-5 mt-2 mb-2">
           <h4 style={{ fontWeight: 400, fontSize: "20px" }}>
-            <i class="fa fa-plus-circle" aria-hidden="true"></i> Funds
+            <i className="fa fa-plus-circle" aria-hidden="true"></i> Funds
           </h4>
-          <a
-            href="link"
+          <Link
+            to="link"
             className="blue-link"
             style={{ textDecoration: "none", lineHeight: "2.5" }}
           >
             Add money
-          </a>
+          </Link>
           <br />
-          <a
-            href="link"
+          <Link
+            to="link"
             className="blue-link"
             style={{ textDecoration: "none", lineHeight: "2.5" }}
           >
             Withdraw money
-          </a>
+          </Link>
           <br />
-          <a
-            href="link"
+          <Link
+            to="link"
             className="blue-link"
             style={{ textDecoration: "none", lineHeight: "2.5" }}
           >
             Add bank accounts
-          </a>
+          </Link>
           <br />
-          <a
-            href="link"
+          <Link
+            to="link"
             className="blue-link"
             style={{ textDecoration: "none", lineHeight: "2.5" }}
           >
             eMandates
-          </a>
+          </Link>
           <br />
         </div>
+
+        {/* Console */}
         <div className="col-4 p-5 mt-2 mb-2">
           <h4 style={{ fontWeight: 400, fontSize: "20px" }}>
-            <i class="fa fa-plus-circle" aria-hidden="true"></i> Console
+            <i className="fa fa-plus-circle" aria-hidden="true"></i> Console
           </h4>
-          <a
-            href="link"
+          <Link
+            to="link"
             className="blue-link"
             style={{ textDecoration: "none", lineHeight: "2.5" }}
           >
             Portfolio
-          </a>
+          </Link>
           <br />
-          <a
-            href="link"
+          <Link
+            to="link"
             className="blue-link"
             style={{ textDecoration: "none", lineHeight: "2.5" }}
           >
             Corporate actions
-          </a>
+          </Link>
           <br />
-          <a
-            href="link"
+          <Link
+            to="link"
             className="blue-link"
             style={{ textDecoration: "none", lineHeight: "2.5" }}
           >
             Funds statement
-          </a>
+          </Link>
           <br />
-          <a
-            href="link"
+          <Link
+            to="link"
             className="blue-link"
             style={{ textDecoration: "none", lineHeight: "2.5" }}
           >
             Reports
-          </a>
+          </Link>
           <br />
-          <a
-            href="link"
+          <Link
+            to="link"
             className="blue-link"
             style={{ textDecoration: "none", lineHeight: "2.5" }}
           >
             Profile
-          </a>
+          </Link>
           <br />
-          <a
-            href="link"
+          <Link
+            to="link"
             className="blue-link"
             style={{ textDecoration: "none", lineHeight: "2.5" }}
           >
             Segments
-          </a>
+          </Link>
           <br />
         </div>
+
+        {/* Coin */}
         <div className="col-4 p-5 mt-2 mb-2">
           <h4 style={{ fontWeight: 400, fontSize: "20px" }}>
-            <i class="fa fa-plus-circle" aria-hidden="true"></i> Coin
+            <i className="fa fa-plus-circle" aria-hidden="true"></i> Coin
           </h4>
-          <a
-            href="link"
+          <Link
+            to="link"
             className="blue-link"
             style={{ textDecoration: "none", lineHeight: "2.5" }}
           >
             Mutual funds
-          </a>
+          </Link>
           <br />
-          <a
-            href="link"
+          <Link
+            to="link"
             className="blue-link"
             style={{ textDecoration: "none", lineHeight: "2.5" }}
           >
             National Pension Scheme (NPS)
-          </a>
+          </Link>
           <br />
-          <a
-            href="link"
+          <Link
+            to="link"
             className="blue-link"
             style={{ textDecoration: "none", lineHeight: "2.5" }}
           >
             Fixed Deposit (FD)
-          </a>
+          </Link>
           <br />
-          <a
-            href="link"
+          <Link
+            to="link"
             className="blue-link"
             style={{ textDecoration: "none", lineHeight: "2.5" }}
           >
             Features on Coin
-          </a>
+          </Link>
           <br />
-          <a
-            href="link"
+          <Link
+            to="link"
             className="blue-link"
             style={{ textDecoration: "none", lineHeight: "2.5" }}
           >
             Payments and Orders
-          </a>
+          </Link>
           <br />
-          <a
-            href="link"
+          <Link
+            to="link"
             className="blue-link"
             style={{ textDecoration: "none", lineHeight: "2.5" }}
           >
             General
-          </a>
-          <br />
-
+          </Link>
           <br />
         </div>
       </div>

@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 function Hero() {
   return (
     <div className="container p-5 mb-5">
@@ -8,8 +10,8 @@ function Hero() {
           online platform to invest in everything, derivatives, mutual funds,and
           more.
         </p>
-        <a
-          href="/signup"
+        <Link
+          to="/signup"
           className="p-2 btn btn-primary fs-5 mb-5"
           style={{
             width: "20%",
@@ -19,7 +21,7 @@ function Hero() {
           }}
         >
           Signup now
-        </a>
+        </Link>
       </div>
     </div>
   );

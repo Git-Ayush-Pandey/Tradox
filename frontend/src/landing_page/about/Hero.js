@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 function Hero() {
   return (
     <div className="container">
@@ -43,33 +45,33 @@ function Hero() {
             exploring the platform.
           </p>
           <p>
-            <a
+            <Link
               className="blue-link"
-              href="link"
+              to="link"
               style={{ textDecoration: "none" }}
             >
               Tradox Labs
-            </a>{" "}
+            </Link>{" "}
             is a dedicated space for experimenting with new ideas — from
             automated alerts to AI-assisted trading insights.
           </p>
           <p>
             Stay tuned for the latest updates on our{" "}
-            <a
+            <Link
               className="blue-link"
-              href="link"
+              to="link"
               style={{ textDecoration: "none" }}
             >
               blog
-            </a>{" "}
+            </Link>{" "}
             or explore our{" "}
-            <a
+            <Link
               className="blue-link"
-              href="link"
+              to="link"
               style={{ textDecoration: "none" }}
             >
               design philosophy
-            </a>{" "}
+            </Link>{" "}
             to understand the thought process behind the platform.
           </p>
         </div>

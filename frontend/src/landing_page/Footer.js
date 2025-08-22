@@ -1,12 +1,14 @@
+import { Link } from "react-router-dom";
+
 function Footer() {
   return (
     <footer
-      className="footer  main-footer"
+      className="footer main-footer"
       style={{ backgroundColor: "rgb(250,250,250)" }}
     >
       <div className="container border-top mt-5 footer-container">
         <div className="row mt-5 text-muted footer-links">
-          <div className="col-3  mr-5 footer-details">
+          <div className="col-3 mr-5 footer-details">
             <div className="info">
               <img
                 className="mb-3"
@@ -21,7 +23,7 @@ function Footer() {
               </p>
             </div>
             <div className="links">
-              <a href="link">
+              <Link to="link">
                 <i className="fa fa-instagram" aria-hidden="true"></i>
                 <i className="fa fa-facebook-official" aria-hidden="true"></i>
                 <i className="fa fa-linkedin-square" aria-hidden="true"></i>
@@ -33,11 +35,10 @@ function Footer() {
                     opacity: 0.5,
                   }}
                 />
-
                 <i className="fa fa-youtube-play" aria-hidden="true"></i>
                 <i className="fa fa-whatsapp" aria-hidden="true"></i>
                 <i className="fa fa-telegram" aria-hidden="true"></i>
-              </a>
+              </Link>
             </div>
           </div>
 
@@ -45,21 +46,21 @@ function Footer() {
             <div className="col">
               <p>
                 Account <br />
-                <a href="link">Open an account</a>
+                <Link to="link">Open an account</Link>
                 <br />
-                <a href="link">Minor demat account</a>
+                <Link to="link">Minor demat account</Link>
                 <br />
-                <a href="link">NRI demat account</a>
+                <Link to="link">NRI demat account</Link>
                 <br />
-                <a href="link">Commodity</a>
+                <Link to="link">Commodity</Link>
                 <br />
-                <a href="link">Dematerialisation</a>
+                <Link to="link">Dematerialisation</Link>
                 <br />
-                <a href="link">Fund transfer</a>
+                <Link to="link">Fund transfer</Link>
                 <br />
-                <a href="link">MTF</a>
+                <Link to="link">MTF</Link>
                 <br />
-                <a href="link">Minor demat account</a>
+                <Link to="link">Minor demat account</Link>
                 <br />
               </p>
             </div>
@@ -68,21 +69,21 @@ function Footer() {
               <p>
                 Support
                 <br />
-                <a href="link">Contact us</a>
+                <Link to="link">Contact us</Link>
                 <br />
-                <a href="link">Support portal</a>
+                <Link to="link">Support portal</Link>
                 <br />
-                <a href="link">How to file a complaint?</a>
+                <Link to="link">How to file a complaint?</Link>
                 <br />
-                <a href="link">Status of your complaints</a>
+                <Link to="link">Status of your complaints</Link>
                 <br />
-                <a href="link">Bulletin</a>
+                <Link to="link">Bulletin</Link>
                 <br />
-                <a href="link">Circular</a>
+                <Link to="link">Circular</Link>
                 <br />
-                <a href="link">Z-Connect blog</a>
+                <Link to="link">Z-Connect blog</Link>
                 <br />
-                <a href="link">Downloads</a>
+                <Link to="link">Downloads</Link>
                 <br />
               </p>
             </div>
@@ -91,19 +92,19 @@ function Footer() {
               <p>
                 Company
                 <br />
-                <a href="link">About</a>
+                <Link to="link">About</Link>
                 <br />
-                <a href="link">Philosophy</a>
+                <Link to="link">Philosophy</Link>
                 <br />
-                <a href="link">Press & media</a>
+                <Link to="link">Press & media</Link>
                 <br />
-                <a href="link">Careers</a>
+                <Link to="link">Careers</Link>
                 <br />
-                <a href="link">Tradox Cares (CSR)</a>
+                <Link to="link">Tradox Cares (CSR)</Link>
                 <br />
-                <a href="link">Tradox.tech</a>
+                <Link to="link">Tradox.tech</Link>
                 <br />
-                <a href="link">Open source</a>
+                <Link to="link">Open source</Link>
                 <br />
               </p>
             </div>
@@ -112,19 +113,19 @@ function Footer() {
               <p>
                 Quick links
                 <br />
-                <a href="link">Upcoming IPOs</a>
+                <Link to="link">Upcoming IPOs</Link>
                 <br />
-                <a href="link">Brokerage charges</a>
+                <Link to="link">Brokerage charges</Link>
                 <br />
-                <a href="link">Market holidays</a>
+                <Link to="link">Market holidays</Link>
                 <br />
-                <a href="link">Economic calendar</a>
+                <Link to="link">Economic calendar</Link>
                 <br />
-                <a href="link">Calculators</a>
+                <Link to="link">Calculators</Link>
                 <br />
-                <a href="link">ZMarkets</a>
+                <Link to="link">ZMarkets</Link>
                 <br />
-                <a href="link">Sectors</a>
+                <Link to="link">Sectors</Link>
                 <br />
               </p>
             </div>
@@ -148,31 +149,31 @@ function Footer() {
             Public School, J.P Nagar 4th Phase, Bengaluru - 560078, Karnataka,
             India. For any complaints pertaining to securities broking please
             write to{" "}
-            <a className="blue-link" href="link">
+            <Link className="blue-link" to="link">
               complaints@Tradox.com
-            </a>
+            </Link>
             , for DP related to{" "}
-            <a className="blue-link" href="link">
+            <Link className="blue-link" to="link">
               dp@Tradox.com
-            </a>
+            </Link>
             . Please ensure you carefully read the Risk Disclosure Document as
             prescribed by SEBI | ICF <br />
             <br />
             Procedure to file a complaint on{" "}
-            <a className="blue-link" href="link">
+            <Link className="blue-link" to="link">
               SEBI SCORES
-            </a>{" "}
+            </Link>{" "}
             : Register on SCORES portal. Mandatory details for filing complaints
             on SCORES: Name, PAN, Address, Mobile Number, E-mail ID. Benefits:
             Effective Communication, Speedy redressal of the grievances <br />
             <br />
-            <a className="blue-link" href="link">
+            <Link className="blue-link" to="link">
               Smart Online Dispute Resolution
-            </a>{" "}
+            </Link>{" "}
             |{" "}
-            <a className="blue-link" href="link">
+            <Link className="blue-link" to="link">
               Grievances Redressal
-            </a>{" "}
+            </Link>{" "}
             <br />
             <br />
             Mechanism Investments in securities market are subject to market
@@ -203,9 +204,9 @@ function Footer() {
             bank account. As a business we don't give stock tips, and have not
             authorized anyone to trade on behalf of others. If you find anyone
             claiming to be part of Tradox and offering such services, please{" "}
-            <a className="blue-link" href="link">
+            <Link className="blue-link" to="link">
               create a ticket here.
-            </a>
+            </Link>
           </p>
         </div>
       </div>

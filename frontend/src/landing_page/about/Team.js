@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 function Team() {
   return (
     <div className="container">
@@ -21,7 +23,7 @@ function Team() {
             alt="Ayush Pandey"
           />
           <h4 className="mt-4 mb-1">Ayush Pandey</h4>
-          <h6 className="text-secondary">Full Stack Developer</h6>
+          <h6 className="text-secondary">Full Stack Web Developer</h6>
         </div>
 
         <div className="col-lg-8 col-md-7 col-12 p-3">
@@ -42,21 +44,21 @@ function Team() {
           </p>
           <p>
             Connect with me on{" "}
-            <a
+            <Link
               className="blue-link"
-              href="https://github.com/Git-Ayush-Pandey"
+              to="https://github.com/Git-Ayush-Pandey"
               style={{ textDecoration: "none" }}
             >
               GitHub
-            </a>{" "}
+            </Link>{" "}
             /{" "}
-            <a
+            <Link
               className="blue-link"
-              href="https://www.linkedin.com/in/ayush-pandey-108ap/"
+              to="https://www.linkedin.com/in/ayush-pandey-108ap/"
               style={{ textDecoration: "none" }}
             >
               LinkedIn
-            </a>{" "}
+            </Link>{" "}
           </p>
         </div>
       </div>

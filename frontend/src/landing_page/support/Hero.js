@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 function Hero() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -50,34 +51,34 @@ function Hero() {
 
           <div className="d-flex flex-wrap gap-.5">
             <p>
-              <a href="link">Track account opening</a>
+              <Link to="/track-account">Track account opening</Link>
             </p>
             <p>
-              <a href="link">Track segment activation</a>
+              <Link to="/segment-activation">Track segment activation</Link>
             </p>
             <p>
-              <a href="link">Intraday margins</a>
+              <Link to="/intraday-margins">Intraday margins</Link>
             </p>
             <p>
-              <a href="link">Kite user manual</a>
+              <Link to="/kite-manual">Kite user manual</Link>
             </p>
           </div>
         </div>
 
         <div className="col-5">
-          <a href="link">Track Tickets</a>
+          <Link to="/tickets">Track Tickets</Link>
           <h1 className="fs-3 mt-5">Featured</h1>
           <ol>
             <li>
-              <a href="link">
+              <Link to="/exclusion-fno">
                 Exclusion of F&O contracts on 8 securities from August 29, 2025
-              </a>
+              </Link>
             </li>
             <br />
             <li>
-              <a href="link">
+              <Link to="/expiry-revision">
                 Revision in expiry day of Index and Stock derivatives contracts
-              </a>
+              </Link>
             </li>
           </ol>
         </div>

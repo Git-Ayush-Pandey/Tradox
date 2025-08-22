@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 function LeftSection({
   imageURL,
   productName,
@@ -17,28 +19,28 @@ function LeftSection({
           <h1>{productName}</h1>
           <p>{productDesription}</p>
           <div>
-            <a className="blue-link" href={tryDemo}>
+            <Link className="blue-link" to={tryDemo}>
               Try Demo
-            </a>
-            <a
+            </Link>
+            <Link
               className="blue-link"
-              href={learnMore}
+              to={learnMore}
               style={{ marginLeft: "50px" }}
             >
               Learn More
-            </a>
+            </Link>
           </div>
           <div className="mt-3">
-            <a className="blue-link" href={googlePlay}>
+            <Link className="blue-link" to={googlePlay}>
               <img src="media/images/googlePlayBadge.svg" alt="img" />
-            </a>
-            <a className="blue-link" href={appStore}>
+            </Link>
+            <Link className="blue-link" to={appStore}>
               <img
                 src="media/images/appstoreBadge.svg"
                 style={{ marginLeft: "50px" }}
                 alt="img"
               />
-            </a>
+            </Link>
           </div>
         </div>
       </div>

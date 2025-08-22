@@ -218,14 +218,15 @@ function Signup() {
 
           <p className="text-muted text-12 m-0">
             By proceeding, you agree to the Tradox
-            <a className="blue-link" href="link">
+            <Link to="/terms" className="blue-link">
               {" "}
               terms{" "}
-            </a>
-            &amp;{" "}
-            <a className="blue-link" href="link">
+            </Link>
+            &amp;
+            <Link to="/privacy" className="blue-link">
+              {" "}
               privacy policy
-            </a>
+            </Link>
           </p>
         </div>
       </div>

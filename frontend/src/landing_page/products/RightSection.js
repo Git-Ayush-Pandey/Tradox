@@ -1,18 +1,25 @@
-function RightSection({ imageURL, productName, productDesription, learnMore }) {
+import { Link } from "react-router-dom";
+
+function RightSection({
+  imageURL,
+  productName,
+  productDescription,
+  learnMore,
+}) {
   return (
     <div className="container mt-5 productPage">
       <div className="row">
         <div className="col-6 p-5 mt-5">
           <h1>{productName}</h1>
-          <p>{productDesription}</p>
+          <p>{productDescription}</p>
           <div>
-            <a className="blue-link" href={learnMore}>
+            <Link className="blue-link" to={learnMore}>
               Learn More
-            </a>
+            </Link>
           </div>
         </div>
         <div className="col-6">
-          <img src={imageURL} alt="img" />
+          <img src={imageURL} alt={productName} className="img-fluid" />
         </div>
       </div>
     </div>

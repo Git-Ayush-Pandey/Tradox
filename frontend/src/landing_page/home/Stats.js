@@ -1,7 +1,9 @@
+import { Link } from "react-router-dom";
+
 function Stats() {
   return (
     <div className="container p-3">
-      <div className=" row p-5">
+      <div className="row p-5">
         <div className="col-6 p-5">
           <h1 className="fs-2 mb-5">Trust with Confidence</h1>
           <h2 className="fs-4">Customer-first Always</h2>
@@ -33,22 +35,22 @@ function Stats() {
             alt="img"
           />
           <div className="text-center">
-            <a
-              href="link"
-              className=" mx-5 blue-link"
+            <Link
+              to="link"
+              className="mx-5 blue-link"
               style={{ textDecoration: "none" }}
             >
               Explore our Products{" "}
-              <i class="fa fa-long-arrow-right" aria-hidden="true"></i>
-            </a>
-            <a
-              className=" mx-5 blue-link"
-              href="link"
+              <i className="fa fa-long-arrow-right" aria-hidden="true"></i>
+            </Link>
+            <Link
+              to="link"
+              className="mx-5 blue-link"
               style={{ textDecoration: "none" }}
             >
               Try Kite Demo{" "}
-              <i class="fa fa-long-arrow-right" aria-hidden="true"></i>
-            </a>
+              <i className="fa fa-long-arrow-right" aria-hidden="true"></i>
+            </Link>
           </div>
         </div>
       </div>

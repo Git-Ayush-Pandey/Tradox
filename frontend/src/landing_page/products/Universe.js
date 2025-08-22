@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 function Universe() {
   return (
     <div className="product-universe container mt-5">
@@ -52,9 +54,9 @@ function Universe() {
           </p>
         </div>
         <div className="d-flex justify-content-center">
-          <a href="/signup" className="btn btn-primary fs-5 px-4 py-2 mb-5">
+          <Link to="/signup" className="btn btn-primary fs-5 px-4 py-2 mb-5">
             Signup for Free!!
-          </a>
+          </Link>
         </div>
       </div>
     </div>
