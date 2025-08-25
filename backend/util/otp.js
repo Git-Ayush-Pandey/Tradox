@@ -25,9 +25,8 @@ exports.sendSMSOTP = async (phone, otp) => {
     const templateName = process.env.MSG91_TEMPLATE_NAME || "otptemplate";
     const languageCode = process.env.MSG91_TEMPLATE_LANG || "en_US";
     let digits = String(phone || "").replace(/\D/g, "");
-    if (!digits.startsWith("91")) {
-      if (digits.length === 10) digits = `91${digits}`;
-      else digits = `91${digits}`;
+    if (digits.length === 10 && !digits.startsWith("91")) {
+      digits = `91${digits}`;
     }
 
     const components = {
@@ -63,7 +62,7 @@ exports.sendSMSOTP = async (phone, otp) => {
           "Content-Type": "application/json",
           authkey: process.env.MSG91_AUTH_KEY,
         },
-        timeout: 10000,
+        timeout: 20000,
       }
     );
 
