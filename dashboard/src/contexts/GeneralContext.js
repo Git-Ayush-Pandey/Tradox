@@ -1,10 +1,4 @@
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  createContext,
-  useRef,
-} from "react";
+import { useState, useEffect, useCallback, createContext, useRef } from "react";
 import {
   verifyToken,
   fetchHoldings,
@@ -13,6 +7,7 @@ import {
   FetchFunds,
   executeOrder,
   FetchOrders,
+  updateRealisedPnL,
 } from "../hooks/api";
 import { useLivePriceContext } from "./LivePriceContext";
 import { isMarketOpen } from "../hooks/isMarketOpen";
@@ -247,6 +242,30 @@ export const GeneralContextProvider = ({ children }) => {
           setOrders((prev) =>
             prev.map((o) => (o._id === order._id ? res.data.order : o))
           );
+          if (order.mode === "SELL") {
+            let buyPrice = null;
+
+            if (order.type === "Delivery") {
+              const holding = holdings.find((h) => h.name === order.name);
+              if (holding) {
+                buyPrice = holding.avg;
+              }
+            } else {
+              const position = positions.find((p) => p.name === order.name);
+              if (position) {
+                buyPrice = position.avg;
+              }
+            }
+
+            if (buyPrice !== null) {
+              const realizedDelta = (order.price - buyPrice) * order.qty;
+              updateRealisedPnL(realizedDelta);
+            } else {
+              console.warn(
+                `No matching holding/position found for ${order.name}`
+              );
+            }
+          }
           executedAny = true;
           showAlert("success", `Order for ${order.name} executed.`);
         } catch (err) {

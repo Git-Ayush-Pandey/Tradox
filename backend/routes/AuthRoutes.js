@@ -169,6 +169,34 @@ router.post("/update-unrealised-pnl", isLoggedIn, async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+router.post("/update-realised-pnl", isLoggedIn, async (req, res) => {
+  try {
+    const { realisedPnL } = req.body;
+
+    if (typeof realisedPnL !== "number") {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid PnL value" });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user)
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+
+    user.realizedPL = realisedPnL;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: "Unrealised PnL updated",
+      realisedPnL,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 router.get("/pnl", isLoggedIn, async (req, res) => {
   try {

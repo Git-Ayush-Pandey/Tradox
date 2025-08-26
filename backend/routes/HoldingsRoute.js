@@ -1,7 +1,6 @@
 const router = require("express").Router();
 const { Holding } = require("../model/HoldingsModel");
 const { isLoggedIn } = require("../middleware");
-const { User } = require("../model/UserModel");
 
 router.get("/", isLoggedIn, async (req, res) => {
   const userId = req.user._id;
@@ -52,29 +51,20 @@ router.post("/add", isLoggedIn, async (req, res) => {
 router.put("/sell/:name", isLoggedIn, async (req, res) => {
   const userId = req.user._id;
   const { name } = req.params;
-  const { qtySold, sellPrice } = req.body;
+  const { qtySold } = req.body;
 
   try {
     const holding = await Holding.findOne({ name, userId });
     if (!holding) return res.status(404).send("Holding not found");
-
-    const user = await User.findById(userId);
-
-    const pl = (sellPrice - holding.avg) * qtySold;
-
     if (qtySold >= holding.qty) {
       await Holding.deleteOne({ _id: holding._id });
-    } else {
-      holding.qty -= qtySold;
-      await holding.save();
+      return res.status(200).send("Holding fully sold and deleted");
     }
-
-    user.realizedPL = (user.realizedPL || 0) + pl;
-    await user.save();
-
+    holding.qty -= qtySold;
+    await holding.save();
     res
       .status(200)
-      .json({ message: "Holding sold", realizedPL: user.realizedPL });
+      .json({ message: "Holding partially sold", updated: holding });
   } catch (err) {
     console.error("Sell holding error:", err);
     res.status(500).send("Server error");

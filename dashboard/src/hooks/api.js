@@ -26,6 +26,12 @@ export const updateUnrealisedPnL = (unrealisedPnL) =>
     { unrealisedPnL },
     { withCredentials: true }
   );
+export const updateRealisedPnL = (realisedPnL) =>
+  axios.post(
+    `${BASE}/auth/update-realised-pnl`,
+    { realisedPnL },
+    { withCredentials: true }
+  );
 // FUNDS ROUTES
 
 export const FetchFunds = () =>
@@ -47,7 +53,7 @@ export const addStock = (payload) =>
 
 export const deleteStock = (id) =>
   axios.delete(`${BASE}/watchlist/delete/${id}`, { withCredentials: true });
-// Add these new exports to your existing api.js
+
 export const createWatchlist = (listName) =>
   axios.post(
     `${BASE}/watchlist/create`,
