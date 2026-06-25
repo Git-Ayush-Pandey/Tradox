@@ -1,0 +1,165 @@
+import { useState, useEffect } from "react";
+import { Modal, Box, Button, TextField, Typography } from "@mui/material";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import axios from "axios";
+
+const OTPVerifyWindow = ({ open, onClose, type, value, onVerified }) => {
+  const [otp, setOtp] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [devOtp, setDevOtp] = useState("");
+
+  useEffect(() => {
+    if (open) {
+      sendOtp();
+    }
+    // eslint-disable-next-line
+  }, [open]);
+
+  const sendOtp = async () => {
+    if (!value) return toast.error(`Missing ${type} value`);
+
+    setSending(true);
+    try {
+      const res = await axios.post(
+        `${process.env.REACT_APP_API_BASE_URL}/otp/send-otp`,
+        {
+          type,
+          value,
+        },
+      );
+
+      if (res.data.success) {
+        setDevOtp(res.data.otp);
+
+        toast.success(`${type === "phone" ? "Phone" : "Email"} OTP generated`);
+      } else {
+        throw new Error(res.data.message || "OTP send failed");
+      }
+    } catch (err) {
+      console.error(err);
+      onClose();
+      toast.error(`Failed to send OTP for ${type}`);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const verifyOtp = async () => {
+    if (!otp.trim()) return toast.error("Please enter the OTP");
+
+    setVerifying(true);
+    try {
+      const res = await axios.post(
+        `${process.env.REACT_APP_API_BASE_URL}/otp/verify-otp`,
+        {
+          type,
+          value,
+          otp,
+        },
+      );
+
+      if (res.data.success) {
+        toast.success(`${type} verified!`);
+        onVerified();
+        onClose();
+      } else {
+        toast.error("Invalid OTP");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("OTP verification failed");
+    } finally {
+      setVerifying(false);
+    }
+
+    setOtp("");
+  };
+
+  return (
+    <Modal open={open} onClose={onClose}>
+      <Box
+        sx={{
+          bgcolor: "background.paper",
+          p: 4,
+          borderRadius: 2,
+          maxWidth: 450,
+          mx: "auto",
+          mt: "20vh",
+          boxShadow: 24,
+        }}
+      >
+        <Typography variant="h6" mb={2}>
+          Verify your {type}
+        </Typography>
+
+        <Typography variant="body2" mb={1}>
+          OTP will be sent to:{" "}
+          <strong>
+            {type === "phone" ? `Whattsapp no. +91 ${value}` : value}
+          </strong>
+        </Typography>
+        {devOtp && (
+          <Box
+            sx={{
+              mb: 2,
+              p: 2,
+              bgcolor: "#fff3cd",
+              borderRadius: 1,
+              border: "1px solid #ffeeba",
+              textAlign: "center",
+            }}
+          >
+            <Typography
+              variant="body2"
+              sx={{
+                color: "#856404",
+                fontWeight: 600,
+              }}
+            >
+              Development Mode
+            </Typography>
+
+            <Typography variant="body2" sx={{ color: "#856404" }}>
+              Email/SMS service disabled
+            </Typography>
+
+            <Typography
+              variant="h4"
+              sx={{
+                mt: 1,
+                fontWeight: "bold",
+                letterSpacing: 4,
+              }}
+            >
+              {devOtp}
+            </Typography>
+          </Box>
+        )}
+        <TextField
+          fullWidth
+          label="Enter OTP"
+          value={otp}
+          onChange={(e) => setOtp(e.target.value)}
+          sx={{ mb: 2 }}
+        />
+
+        <Box display="flex" justifyContent="space-between">
+          <Button onClick={sendOtp} disabled={sending}>
+            {sending ? "Sending..." : "Resend OTP"}
+          </Button>
+          <Button
+            variant="contained"
+            onClick={verifyOtp}
+            disabled={verifying || !otp}
+          >
+            {verifying ? "Verifying..." : "Verify"}
+          </Button>
+        </Box>
+      </Box>
+    </Modal>
+  );
+};
+
+export default OTPVerifyWindow;

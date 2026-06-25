@@ -1,0 +1,144 @@
+import axios from "axios";
+const BASE = process.env.REACT_APP_API_BASE_URL;
+
+// AUTHENTICATION ROUTES
+
+export const signup = (payload) =>
+  axios.post(`${BASE}/auth/signup`, payload, { withCredentials: true });
+
+export const login = (payload) =>
+  axios.post(`${BASE}/auth/login`, payload, { withCredentials: true });
+
+export const logout = () =>
+  axios.get(`${BASE}/auth/logout`, { withCredentials: true });
+
+export const verifyToken = () =>
+  axios.get(`${BASE}/auth/verify`, { withCredentials: true });
+
+// FIX: getMe removed (never called in dashboard; /auth/verify covers auth check)
+// export const getMe = () => ...
+
+export const getPnL = () =>
+  axios.get(`${BASE}/auth/pnl`, { withCredentials: true });
+
+export const updateUnrealisedPnL = (unrealisedPnL) =>
+  axios.post(
+    `${BASE}/auth/update-unrealised-pnl`,
+    { unrealisedPnL },
+    { withCredentials: true }
+  );
+export const updateRealisedPnL = (realisedPnL) =>
+  axios.post(
+    `${BASE}/auth/update-realised-pnl`,
+    { realisedPnL },
+    { withCredentials: true }
+  );
+
+// FUNDS ROUTES
+
+export const FetchFunds = () =>
+  axios.get(`${BASE}/funds`, { withCredentials: true });
+
+export const addFunds = (payload) =>
+  axios.post(`${BASE}/funds/add`, payload, { withCredentials: true });
+
+export const withdrawFunds = (payload) =>
+  axios.post(`${BASE}/funds/withdraw`, payload, { withCredentials: true });
+
+// WATCHLIST ROUTES
+
+export const fetchWatchlists = () =>
+  axios.get(`${BASE}/watchlist`, { withCredentials: true });
+
+export const addStock = (payload) =>
+  axios.post(`${BASE}/watchlist/add`, payload, { withCredentials: true });
+
+export const deleteStock = (id) =>
+  axios.delete(`${BASE}/watchlist/delete/${id}`, { withCredentials: true });
+
+export const createWatchlist = (listName) =>
+  axios.post(
+    `${BASE}/watchlist/create`,
+    { listName },
+    { withCredentials: true }
+  );
+
+export const deleteWatchlist = (listName) =>
+  axios.delete(
+    `${BASE}/watchlist/delete-list/${encodeURIComponent(listName)}`,
+    {
+      withCredentials: true,
+    }
+  );
+
+export const renameWatchlist = (oldName, newName) =>
+  axios.put(
+    `${BASE}/watchlist/rename`,
+    { oldName, newName },
+    { withCredentials: true }
+  );
+
+// HOLDINGS ROUTES
+
+export const fetchHoldings = () =>
+  axios.get(`${BASE}/holdings`, { withCredentials: true });
+
+// FIX: addHolding and sellHolding removed — these routes are now disabled (403)
+// on the backend; all holding mutations go through the Orders flow.
+// export const addHolding = ...
+// export const sellHolding = ...
+
+// POSITIONS ROUTES
+
+export const fetchPositions = () =>
+  axios.get(`${BASE}/positions`, { withCredentials: true });
+
+// FIX: addPosition and sellPosition removed — these routes are disabled (403)
+// export const addPosition = ...
+// export const sellPosition = ...
+
+// ORDERS ROUTES
+
+export const FetchOrders = () =>
+  axios.get(`${BASE}/orders`, { withCredentials: true });
+
+export const placeOrder = (payload) =>
+  axios.post(`${BASE}/orders/new`, payload, { withCredentials: true });
+
+export const deleteOrder = (id) =>
+  axios.delete(`${BASE}/orders/delete/${id}`, { withCredentials: true });
+
+export const executeOrder = (id) =>
+  axios.post(`${BASE}/orders/execute/${id}`, {}, { withCredentials: true });
+
+export const editOrder = (id, payload) =>
+  axios.put(`${BASE}/orders/edit/${id}`, payload, { withCredentials: true });
+
+export const cancelOrder = (id) =>
+  axios.post(`${BASE}/orders/cancel/${id}`, {}, { withCredentials: true });
+
+// STOCK DATA (FINNHUB)
+
+export const searchStocks = (keyword) =>
+  axios.get(`${BASE}/stock/search`, {
+    params: { keywords: keyword },
+    withCredentials: true,
+  });
+
+export const getQuote = (symbol) =>
+  axios.get(`${BASE}/stock/price`, {
+    params: { symbol },
+    withCredentials: true,
+  });
+
+export const fetchOverview = (symbol) =>
+  axios.get(`${BASE}/stock/overview`, {
+    params: { symbol },
+    withCredentials: true,
+  });
+
+export const fetchNews = (symbol, from, to) =>
+  axios.get(`${BASE}/stock/news`, {
+    params: { symbol, from, to },
+    withCredentials: true,
+  });
